@@ -65,9 +65,9 @@
 			</fileset>
 		</copy>
 	</target>
-	<target name="jars">
+	<target depends="build" name="jars">
 		<!-- 20200930 MatsudairaSyume -->
-<!--		<jar basedir="${build.classes}" destfile="${build.lib}/${app.jar}" includes="${build.classes}/**"/>-->
+	<!--<jar basedir="${build.classes}" destfile="${build.lib}/${app.jar}" includes="${build.classes}/**"/>-->
 		<jar basedir="${build.classes}" jarfile="${build.lib}/${app.jar}" />
 	</target>
 	<target depends="jars" description="creates the API documentation" name="javadocs">
