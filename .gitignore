@@ -5,7 +5,7 @@
 build
 # Ignore Gradle compiler temp directory
 bin
-SEQNO
+SEQNO/*
 .classpath
 .gradle
 .project
