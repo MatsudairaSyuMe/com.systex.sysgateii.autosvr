@@ -399,10 +399,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			atlog.info("Auto Printer type define error!");
 			return;
 		}
-		// 20210702 MatsudairaSyuMe Log Forging
-		String s1 = StrUtil.convertValidLog(this.brws.substring(0, 3));
-		String s2 = StrUtil.convertValidLog(this.brws.substring(3));
-		log.info("=================={} {}",s1, s2);
+		// 20210714 MatsudairaSyuMe Log Forging
+		//String s1 = StrUtil.convertValidLog(this.brws.substring(0, 3));
+		//String s2 = StrUtil.convertValidLog(this.brws.substring(3));
+		log.info("------MainThreadId={}------", pid);//s1, s2
 		this.statusfields = PrnSvr.statustbfields;
 		
 		ipAddrPars nodePars = new ipAddrPars();
@@ -499,13 +499,28 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		if (channel_ != null && channel_.isActive()) {
 			//20200827 converto to UTF-8 message
 //			aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, new String(msg)));
+			// 20210714 MatsudairaSyuMe Log Forging
+			String cnvStr = "";
 			try {
-				//20210204 MatsudairaSyuMe
-				final String logStr = String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, charcnv.BIG5bytesUTF8str(msg));
-				aslog.info(logStr);
+				cnvStr = charcnv.BIG5bytesUTF8str(msg);
 			} catch (Exception e) {
 				e.printStackTrace();
+			} finally {
+				if (cnvStr == null || cnvStr.trim().length() == 0)
+					cnvStr = new String(msg);
 			}
+			String logStr = "";
+			try {
+				logStr = String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, cnvStr);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				if (logStr == null || logStr.trim().length() == 0)
+					logStr = "";
+			}
+			aslog.info(logStr);
+			logStr = null;
+			cnvStr = null;
 			//----
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(msg);
 			channel_.writeAndFlush(buf);
@@ -1390,9 +1405,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug("pr_datalog=[{}]", pr_datalog);
 				//20200826
 				//20210204,20210428 MatsudairaSyuMe Log Forging
-				// 20210702 MatsudairaSyuMe Log Forging
-				String chkpr_datalog = StrUtil.convertValidLog(pr_datalog);
-				atlog.info(": PbDataFormat() -- All Data=[{}]",chkpr_datalog);
+				// 20210714 MatsudairaSyuMe Log Forging
+				String chkpr_datalog = "";
+				try {
+					chkpr_datalog = StrUtil.convertValidLog(pr_datalog);
+				} catch (Exception ce) {
+					ce.printStackTrace();
+				} finally {
+					if (chkpr_datalog == null || chkpr_datalog.trim().length() > 0)
+						atlog.info(": PbDataFormat() -- All Data=[]");
+					else
+						atlog.info(": PbDataFormat() -- All Data=[{}]",chkpr_datalog);
+				}
+				chkpr_datalog = null;
 				//----
 				//Print Data
 				//20200915

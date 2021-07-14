@@ -195,9 +195,9 @@ public class Conductor implements Runnable {
 									if (Conductor.svridnodeMap != null && Conductor.svridnodeMap.size() > 0) {
 										if (Conductor.svridnodeMap.containsKey(cmdary[0])) {
 											//20210204,20210427 MatsudairaSyuMe Log Forging remove final
-											// 20210702 MatsudairaSyuMe Log Forging
-											String chkcmd = StrUtil.convertValidLog(cmdary[0]);
-											log.error("!!! cmd object node=[{}] already in nodeMap please STOP this node before START !!!", chkcmd);
+											// 20210714 MatsudairaSyuMe Log Forging
+											//String chkcmd = StrUtil.convertValidLog(cmdary[0]);
+											log.error("!!! cmd object node already in nodeMap please STOP this node before START !!!");//chkcmd
 											createNode = false;
 										} else {
 											//20210204 MatsudairaSyuMe
@@ -312,9 +312,9 @@ public class Conductor implements Runnable {
 								case Constants.STOP://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 									if (!Conductor.svridnodeMap.containsKey(cmdary[0])) {
 										//20210204,20210427 MatsudairaSyuMe Log Forging remove final
-										// 20210702 MatsudairaSyuMe Log Forging
-										String logStr2 = StrUtil.convertValidLog(cmdary[0]);
-										log.info("cmd object node=[{}] current is not running in this server no need to STOP!!", logStr2);
+										// 20210714 MatsudairaSyuMe Log Forging
+										//String logStr2 = StrUtil.convertValidLog(cmdary[0]);
+										log.info("current cmd object node is not running in this server no need to STOP!!"); //logStr2
 										//---
 									} else {
 										//20210302 MatsudairaSyuMe
@@ -407,14 +407,14 @@ public class Conductor implements Runnable {
 							}
 						} else {
 							//20210204 ,20210427 MatsudairaSyuMe Log Forging
-							// 20210702 MatsudairaSyuMe Log Forging
-							String chks = StrUtil.convertValidLog(s);
-							log.error("!!!current row cmd error [{}]", chks);
+							// 20210713 MatsudairaSyuMe Log Forging
+							//String chks = StrUtil.convertValidLog(s);
+							log.error("!!!current row cmd error"); // chks
 							//---
 						}
 					} else {
-						// 20210702 MatsudairaSyuMe Log Forging
-						log.warn("select raw command data [{}] error drop it", StrUtil.convertValidLog(s));
+						// 20210713 MatsudairaSyuMe Log Forging
+						log.warn("select raw command data error drop it");//, StrUtil.convertValidLog(s)
 					}
 				}
 				//20210302----

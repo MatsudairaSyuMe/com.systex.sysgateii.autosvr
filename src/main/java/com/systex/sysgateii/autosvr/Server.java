@@ -162,9 +162,9 @@ public class Server {
 //				auid = dcf.getAuid();
 //				svrip = dcf.getSvrip();
 				//20201116 change to use given svrid, 20210204 MatsudairaSyuMe
-				// 20210702 MatsudairaSyuMe Log Forging
-				String logStr = String.format("sysgateii server start complete! auid=[%s] svrip=[%s]", auid, svrip);
-				log.info(StrUtil.convertValidLog(logStr));
+				// 20210714 MatsudairaSyuMe Log Forging
+				//String logStr = String.format("sysgateii server start complete! auid=[%s] svrip=[%s]", auid, svrip);
+				log.info("sysgateii server start complete!");//log.info(StrUtil.convertValidLog(logStr));
 				if (auid.trim().length() == 0 || auid.trim().length() == 0) {
 					auid = "0";
 					setIsShouldShutDown(true);

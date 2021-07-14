@@ -146,9 +146,9 @@ public class ipAddrPars {
 					try {
 						remotePort = Integer.parseInt(sParts[1]);
 					} catch (NumberFormatException e) {
-						// 20210702 MatsudairaSyuMe Log Forging
-						final String chksParts = StrUtil.convertValidLog(sParts[1]);
-						log.error("port format error!! :{}", chksParts);
+						// 20210714 MatsudairaSyuMe Log Forging
+						//final String chksParts = StrUtil.convertValidLog(sParts[1]);
+						log.error("port format error!!");//, chksParts
 						this.formatError = true;
 						return formatCorrect;
 					}
@@ -168,9 +168,9 @@ public class ipAddrPars {
 						remoteHostAddr = sParts[0];
 //                log.debug("2===>add remoteHostAddr: {}", remoteHostAddr);
 					} else {
-						// 20210702 MatsudairaSyuMe Log Forging
-						final String chksParts = StrUtil.convertValidLog(sParts[1]);
-						log.error("port format error!! :{}", chksParts);
+						// 20210714 MatsudairaSyuMe Log Forging
+						//final String chksParts = StrUtil.convertValidLog(sParts[1]);
+						log.error("port format error!! ");//, chksParts
 						this.formatError = true;
 						return formatCorrect;
 					}
@@ -193,9 +193,9 @@ public class ipAddrPars {
 							remotePort = Integer.parseInt(s);
 //                   log.debug("remotePort ={}",s);
 						} catch (NumberFormatException e) {
-							// 20210702 MatsudairaSyuMe Log Forging
-							final String chks = StrUtil.convertValidLog(s);
-							log.error("remotePort format error!! >{}", chks);
+							// 20210714 MatsudairaSyuMe Log Forging
+							//final String chks = StrUtil.convertValidLog(s);
+							log.error("remotePort format error!!");//, chks
 							this.formatError = true;
 							return formatCorrect;
 						}
