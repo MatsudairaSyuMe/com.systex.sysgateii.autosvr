@@ -440,12 +440,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		} catch (Exception e) {
 			log.error("Address format error!!! {}", e.getMessage());
 		}
-		//20210630 MatsudairaSyuME for Path Manipulation
-        String[] saddr = this.rmtaddr.getAddress().getHostAddress().split("\\.");
-        String result = "";
-        for (int i = 0; i < saddr.length; i++)
-            result = result + String.format("%03d",Integer.parseInt(saddr[i]));
-        result = result + String.format("%05d",this.rmtaddr.getPort());
+		//20210630 MatsudairaSyuMe for Path Manipulation, 20210716 Often Misused: Authentication
+        //String[] saddr = this.rmtaddr.getAddress().getHostAddress().split("\\.");
+		String result = cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort());;
 		log.debug("==>remote seqno result=[{}]", result);
 		//20210324 MatsudairaSyume initialize sequence no. from 0 at first time build
 		try {
@@ -4491,15 +4488,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		log.info("setTITA_TOTA_START=[{}]", PRT_CLI_TITA_TOTA_START);
 	}
 	//----
-	//20210319 MAtsudairaSyuMe
+	//20210716 MatsudairaSyuMe
 	// convert remote socket IPv4 address to string
 	private String cnvIPv4Addr2Str(String sIP, int sPort) {
 		String rtn = "";
 		if (sIP == null || sIP.trim().length() == 0)
 			rtn = "000000000000";
 		else {
+			if (sIP.trim().equals("localhost"))
+				sIP = "127.0.0.1";
 			String[] sIPary = sIP.split("\\.");
-			System.out.println(sIP + ":" + sIPary.length);
+			//System.out.println(sIP + ":" + sIPary.length);
 			for (String s : sIPary)
 				rtn = rtn + String.format("%03d", Integer.parseInt(s));
 		}
