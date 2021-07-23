@@ -414,8 +414,10 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 				}
 				// 20200621
 			// 20210407 MatsudairaSyuMe check Null Dereference
-			} else
+			} else {
 				LOG.error("!!! doConnect fail !!!!");
+				scheduleConnect(nodeAddr);  //20210722 schedultConnect
+			}
 			//----
 		} catch (Exception ex) {
 			scheduleConnect(nodeAddr);

@@ -446,7 +446,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		log.debug("==>remote seqno result=[{}]", result);
 		//20210324 MatsudairaSyume initialize sequence no. from 0 at first time build
 		try {
-			this.seqNoFile = new File("SEQNO", "SEQNO_" + result);
+			//20210723 MatsudairaSyuMe Manipulation
+			this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + result));
+			//----
 			log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
 			if (seqNoFile.exists() == false) {
 				File parent = seqNoFile.getParentFile();
@@ -493,6 +495,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 	//----
 	public void sendBytes(byte[] msg) throws IOException {
+		//20210723 MatsudairaSyuMe
+		if (msg == null || msg.length <= 0) {
+			log.error("input data buffer null");
+			return;
+		}
+		//----
 		if (channel_ != null && channel_.isActive()) {
 			//20200827 converto to UTF-8 message
 //			aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, new String(msg)));
@@ -1402,14 +1410,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug("pr_datalog=[{}]", pr_datalog);
 				//20200826
 				//20210204,20210428 MatsudairaSyuMe Log Forging
-				// 20210714 MatsudairaSyuMe Log Forging
+				// 20210723 MatsudairaSyuMe Log Forging
 				String chkpr_datalog = "";
 				try {
 					chkpr_datalog = StrUtil.convertValidLog(pr_datalog);
 				} catch (Exception ce) {
 					ce.printStackTrace();
 				} finally {
-					if (chkpr_datalog == null || chkpr_datalog.trim().length() > 0)
+					if (chkpr_datalog == null || chkpr_datalog.trim().length() <= 0)
 						atlog.info(": PbDataFormat() -- All Data=[]");
 					else
 						atlog.info(": PbDataFormat() -- All Data=[{}]",chkpr_datalog);
@@ -4522,5 +4530,4 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	public String getLocalHostAddr() {
 		return this.localHostAddr;
 	}
-
 }
