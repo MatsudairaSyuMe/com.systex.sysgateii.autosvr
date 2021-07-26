@@ -4,9 +4,8 @@
 # Ignore Gradle build output directory
 build
 # Ignore Gradle compiler temp directory
-bin
-bin/*
-SEQNO/*
+bin/
+SEQNO/
 .classpath
 .gradle
 .project
