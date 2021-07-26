@@ -290,9 +290,11 @@ public class Cli {
 									if (s.length() > 0 && s.indexOf(',') > -1) {
 										String[] cmdary = s.split(",");
 										if (cmdary.length > 1) {
+											//20210726 change cmdary from 2,3,4,7 to 1,2,3,6
 											System.out.println(
 													String.format("SVRIP=[%s] CURSTS=[%s] PID=[%s] lastupdatetime=[%s]",
-															cmdary[2], cmdary[3], cmdary[4], cmdary[7]));
+															cmdary[1], cmdary[2], cmdary[3], cmdary[6]));
+											//20210726----
 										} else
 											System.out.println(
 													"!!! data object node=[" + cmdary[0] + "] format error !!!");
