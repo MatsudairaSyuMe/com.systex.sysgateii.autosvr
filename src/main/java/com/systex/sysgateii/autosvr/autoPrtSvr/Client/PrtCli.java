@@ -515,15 +515,21 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					cnvStr = new String(msg);
 			}
 			String logStr = "";
+			//20210730 MatshdairaSyuMe
 			try {
 				logStr = String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, cnvStr);
+				if(StrUtil.convertValidLog(logStr))
+					aslog.info(logStr);
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally {
+				log.error("atlog data length error");
+			}/* finally {
 				if (logStr == null || logStr.trim().length() == 0)
 					logStr = "";
 			}
 			aslog.info(logStr);
+			*/
+			//----
 			logStr = null;
 			cnvStr = null;
 			//----
@@ -1410,19 +1416,23 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug("pr_datalog=[{}]", pr_datalog);
 				//20200826
 				//20210204,20210428 MatsudairaSyuMe Log Forging
-				// 20210723 MatsudairaSyuMe Log Forging
-				String chkpr_datalog = "";
+				// 20210723 MatsudairaSyuMe Log Forging, 20210730
+				//String chkpr_datalog = "";
 				try {
-					chkpr_datalog = StrUtil.convertValidLog(pr_datalog);
+					//chkpr_datalog = StrUtil.convertValidLog(pr_datalog);
+					if (StrUtil.convertValidLog(pr_datalog))
+						atlog.info(": PbDataFormat() -- All Data=[{}]",pr_datalog);
 				} catch (Exception ce) {
 					ce.printStackTrace();
-				} finally {
+					atlog.info(": PbDataFormat() -- All Data=[]"); //20210730 add
+				}/* finally {
 					if (chkpr_datalog == null || chkpr_datalog.trim().length() <= 0)
 						atlog.info(": PbDataFormat() -- All Data=[]");
 					else
 						atlog.info(": PbDataFormat() -- All Data=[{}]",chkpr_datalog);
 				}
 				chkpr_datalog = null;
+				*/
 				//----
 				//Print Data
 				//20200915

@@ -87,7 +87,7 @@ public class StrUtil {
 	}
 
 	//20210702 MatsudairasyuMe function for Log Forging
-    public static String convertValidLog(String log){
+/*    public static String convertValidLog(String log){
         List<String> list = new ArrayList<String>();
         list.add("%0d");
         list.add("\r");
@@ -99,6 +99,19 @@ public class StrUtil {
         for(String toReplaceStr : list)
             encode = encode.replace(toReplaceStr, "");
         return encode;
+    }*/
+    public static boolean convertValidLog(String log){
+        List<String> list = new ArrayList<String>();
+        list.add("%0d");
+        list.add("\r");
+        list.add("%0a");
+        list.add("\n");
+
+        // normalize the log content
+        String encode = Normalizer.normalize(log, Normalizer.Form.NFKC);
+        for(String toReplaceStr : list)
+            encode = encode.replace(toReplaceStr, "");
+        return (log.length() == encode.length()? true:false);
     }
     //20210723 MatshdairaSyuMe add for Path Manipulation
 	public static String cleanString(String aString) {
