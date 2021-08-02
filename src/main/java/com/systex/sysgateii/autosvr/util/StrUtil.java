@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 //20210702 MatsudairasyuMe import for Log Forging
 import java.util.List;
+//20210802 MatsudairaSyuMe import for Log forging
+//import org.owasp.esapi.ESAPI;
 
 public class StrUtil {
 	public static boolean isNotEmpty(String s) {
@@ -100,19 +102,13 @@ public class StrUtil {
             encode = encode.replace(toReplaceStr, "");
         return encode;
     }*/
-    public static boolean convertValidLog(String log){
-        List<String> list = new ArrayList<String>();
-        list.add("%0d");
-        list.add("\r");
-        list.add("%0a");
-        list.add("\n");
-
-        // normalize the log content
-        String encode = Normalizer.normalize(log, Normalizer.Form.NFKC);
-        for(String toReplaceStr : list)
-            encode = encode.replace(toReplaceStr, "");
-        return (log.length() == encode.length()? true:false);
+	//20210802 MatsudairaSyuMe function for Log Forging
+	public static String convertValidLog(String message){
+		message = message.replace('\n', '_').replace('\r', '_').replace('\t', '_');
+		//message = ESAPI.encoder().encodeForHTML(message);
+		return message;
     }
+	//----
     //20210723 MatshdairaSyuMe add for Path Manipulation
 	public static String cleanString(String aString) {
 		if (aString == null) return null;
