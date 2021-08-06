@@ -514,17 +514,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				if (cnvStr == null || cnvStr.trim().length() == 0)
 					cnvStr = new String(msg);
 			}
-			String logStr = "";
-			try {
-				logStr = String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, cnvStr);
-				//20210802 MAtshdairaSyuMe Log Forging
-				aslog.info(StrUtil.convertValidLog(logStr));
+			try {//20210803 MAtsydairaSyuMe change to use ESAPI for Log Forging
+				aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, StrUtil.convertValidLog(cnvStr)));
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error("aslog data format error");
 			}
 			//----
-			logStr = null;
 			cnvStr = null;
 			//----
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(msg);

@@ -10,7 +10,7 @@ import java.util.Arrays;
 //20210702 MatsudairasyuMe import for Log Forging
 import java.util.List;
 //20210802 MatsudairaSyuMe import for Log forging
-//import org.owasp.esapi.ESAPI;
+import org.owasp.esapi.ESAPI;
 
 public class StrUtil {
 	public static boolean isNotEmpty(String s) {
@@ -102,10 +102,14 @@ public class StrUtil {
             encode = encode.replace(toReplaceStr, "");
         return encode;
     }*/
-	//20210802 MatsudairaSyuMe function for Log Forging
+	//20210803 MatsudairaSyuMe function use ESPI for Log Forging
 	public static String convertValidLog(String message){
 		message = message.replace('\n', '_').replace('\r', '_').replace('\t', '_');
-		//message = ESAPI.encoder().encodeForHTML(message);
+		try {
+			message = ESAPI.encoder().encodeForHTML(message);
+		} catch (Exception e) {
+			;//e.printStackTrace();
+		}
 		return message;
     }
 	//----
