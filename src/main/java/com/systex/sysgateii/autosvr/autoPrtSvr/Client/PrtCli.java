@@ -468,13 +468,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //20200910 change to used new UPSERT
 //		String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //				this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
+		//20210827 MatsudairaSyuMe set dev state to Constants.STSNOTUSED on init
 		String updValue = String.format(updValueptrn,this.remoteHostAddr,//20210427 MatsudairaSyuMe Often Misused: Authentication
-				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
+				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSNOTUSED);
+		//----
 		try {
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
-			log.debug("total {} records update  status [{}]", row, Constants.STSUSEDINACT);
+			//20210827 MatsudairaSyuMe set dev state to Constants.STSNOTUSED on init
+			log.debug("total {} records update  status [{}]", row, Constants.STSNOTUSED);
+			//----
 			jsel2ins.CloseConnect();
 			jsel2ins = null;
 		} catch (Exception e) {
@@ -867,14 +871,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//20200910 change to use new UPSERT
 //		String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //				this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
-		//20210826 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED or Constants.STSUSEDINACT
+		//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device state set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
 		String updValue = String.format(updValueptrn,this.remoteHostAddr, //20210427 MatsudairaSyuMe Often Misused: Authentication
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, (getCurMode() == EventType.SHUTDOWN || getCurMode() == EventType.RESTART) ? Constants.STSNOTUSED : Constants.STSUSEDINACT );
 		try {
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
-			//20210826 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED or Constants.STSUSEDINACT
+			//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device state set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
 			log.debug("total {} records update  status [{}]", row, (getCurMode() == EventType.SHUTDOWN || getCurMode() == EventType.RESTART) ? Constants.STSNOTUSED : Constants.STSUSEDINACT );
 			jsel2ins.CloseConnect();
 			jsel2ins = null;
