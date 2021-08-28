@@ -77,8 +77,18 @@ public class Server {
 						setIsConductor(true);
 						//20210419 MatsudairaSyuMe mark
 //						log.info("sysgateii server conductor mode");
+						//20210828 MatsudairaSyuMe start conductor only
+						svrip = "";
+						//----
 						System.out.println("sysgateii server conductor mode");
 					}
+					//20210828 MatsudairaSyuMe start conductor only
+					else if (args[j].equalsIgnoreCase("--restore")) {
+						setIsConductor(true);
+						svrip = "r";
+						System.out.println("sysgateii server conductor mode");
+					}
+					//----
 				}
 			}
 			//20210419 MatsudairaSyuMe set get logger
@@ -97,7 +107,10 @@ public class Server {
 			DynamicProps dcf = new DynamicProps("rateprtservice.xml");
 			//20201116 change to use given svrid
 			auid = dcf.getAuid();
-			svrip = dcf.getSvrip();
+			//20210828 MatsudairaSyuMe start conductor only
+			if (!isConductor.get() || !svrip.equalsIgnoreCase("r"))
+				svrip = dcf.getSvrip();
+			//----
 			dburl = dcf.getConHashMap().get("system.db[@url]");
 			dbuser = dcf.getConHashMap().get("system.db[@user]");
 			dbpass = dcf.getConHashMap().get("system.db[@pass]");

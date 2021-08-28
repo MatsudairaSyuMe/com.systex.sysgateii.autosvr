@@ -57,58 +57,63 @@ public class Conductor implements Runnable {
 	}
 
 	public static void startServer() {
-		log.debug("Enter startServer Conductor check table[{}] svrnodelist size=[{}]",svrprmtb, Conductor.svridnodeMap.size());
-		try {
-			jsel2ins = new GwDao(dburl, dbuser, dbpass, false);
-			String[] svrflds = jsel2ins.SELMFLD(svrprmtb, "SVRID", "IP",
-					"'" + getSvrip() + "'", false);
-			if(svrflds != null && svrflds.length > 0) {
-				for (String s: svrflds) {
-					s = s.trim();
-					log.debug("current svrfld [{}]", s);
-					if (s.length() > 0 && s.indexOf(',') > -1) {
-						String[] svrfldsary = s.split(",");
-						for (int idx = 0; idx < svrfldsary.length; idx++) {
-							log.debug("idx:[{}]=[{}]", idx, svrfldsary[idx].trim());
-						}
-					} else if (s.length() > 0) {
-						log.debug("get SERVICE [{}] in service table [{}]", s, svrprmtb);
-						//20210302 MatsudairsSyuMe
+		log.debug("Enter startServer Conductor check table[{}] svrnodelist size=[{}]", svrprmtb,
+				Conductor.svridnodeMap.size());
+		// 20210828 MatsudairaSyuMe start conductor only
+		if (!getSvrip().equalsIgnoreCase("r")) {
+			// ----
+			try {
+				jsel2ins = new GwDao(dburl, dbuser, dbpass, false);
+				String[] svrflds = jsel2ins.SELMFLD(svrprmtb, "SVRID", "IP", "'" + getSvrip() + "'", false);
+				if (svrflds != null && svrflds.length > 0) {
+					for (String s : svrflds) {
+						s = s.trim();
+						log.debug("current svrfld [{}]", s);
+						if (s.length() > 0 && s.indexOf(',') > -1) {
+							String[] svrfldsary = s.split(",");
+							for (int idx = 0; idx < svrfldsary.length; idx++) {
+								log.debug("idx:[{}]=[{}]", idx, svrfldsary[idx].trim());
+							}
+						} else if (s.length() > 0) {
+							log.debug("get SERVICE [{}] in service table [{}]", s, svrprmtb);
+							// 20210302 MatsudairsSyuMe
 //						String[] setArg = {"bin/autosvr", "start", "--svrid", s};
 //						DoProcessBuilder dp = new DoProcessBuilder(setArg);
 //						DoProcessBuilder dp = new DoProcessBuilder("bin/autosvr", "start", "--svrid", s);
 //						dp.Go();
-						//20210202 MatsudairsSyuMe
-						DoProcessBuilder dp = new DoProcessBuilder();
-						dp.Go("bin/autosvr", "start", "--svrid", s);
-						//----
-						//store new service
-						Conductor.svridnodeMap.put(s, getSvrip());
-					} else
-						log.error("ERROR!!! SERVICE parameters error in service table [{}] !!!", svrprmtb);
+							// 20210202 MatsudairsSyuMe
+							DoProcessBuilder dp = new DoProcessBuilder();
+							dp.Go("bin/autosvr", "start", "--svrid", s);
+							// ----
+							// store new service
+							Conductor.svridnodeMap.put(s, getSvrip());
+						} else
+							log.error("ERROR!!! SERVICE parameters error in service table [{}] !!!", svrprmtb);
+					}
+				} else {
+					log.error("ERROR!!! no svrid exist in table while IP=[{}] !!!", getSvrip());
 				}
-			} else {
-				log.error("ERROR!!! no svrid exist in table while IP=[{}] !!!", getSvrip());									
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.info("read database error [{}]", e.toString());
-		} finally {
-			try {
-				jsel2ins.CloseConnect();
 			} catch (Exception e) {
 				e.printStackTrace();
-				log.error("close connect from database error [{}]", e.toString());
+				log.info("read database error [{}]", e.toString());
+			} finally {
+				try {
+					jsel2ins.CloseConnect();
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("close connect from database error [{}]", e.toString());
+				}
+				jsel2ins = null;
 			}
-			jsel2ins = null;
+			// 20210828 MatsudairaSyuMe start conductor only
 		}
+		// ----
 		server = getMe();
 		if (dburl != null && dburl.trim().length() > 0)
 			server.run();
 		else
 			log.error("ERROR!!! url not set conductor moniter can't be initiated !!!!");
 	}
-
 	public static void stopServer() {
 		if (server != null) {
 			server.stop(0);
