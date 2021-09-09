@@ -53,6 +53,8 @@ public class Server {
 	//----
 	//20201119 conduct mode
 	private static AtomicBoolean isConductor = new AtomicBoolean(false);
+	//202010909 conduct restore mode
+	private static AtomicBoolean isConductorRestore = new AtomicBoolean(false);
 	//----
 	public static void main(String[] args) {
 		System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, "." + File.separator + "logback.xml");
@@ -78,15 +80,19 @@ public class Server {
 						//20210419 MatsudairaSyuMe mark
 //						log.info("sysgateii server conductor mode");
 						//20210828 MatsudairaSyuMe start conductor only
-						svrip = "";
+//						svrip = "";
 						//----
+						//20210909 MatsudairaSyuMe conductor mode
+						setIsConductorRestore(false);
+						//---
 						System.out.println("sysgateii server conductor mode");
 					}
-					//20210828 MatsudairaSyuMe start conductor only
+					//20210828,20210909 MatsudairaSyuMe start conductor only
 					else if (args[j].equalsIgnoreCase("--restore")) {
 						setIsConductor(true);
-						svrip = "r";
-						System.out.println("sysgateii server conductor mode");
+						setIsConductorRestore(true);
+//						svrip = "r";
+						System.out.println("sysgateii server conductor restore mode");
 					}
 					//----
 				}
@@ -107,9 +113,9 @@ public class Server {
 			DynamicProps dcf = new DynamicProps("rateprtservice.xml");
 			//20201116 change to use given svrid
 			auid = dcf.getAuid();
-			//20210828 MatsudairaSyuMe start conductor only
-			if (!isConductor.get() || !svrip.equalsIgnoreCase("r"))
-				svrip = dcf.getSvrip();
+//			//20210828 MatsudairaSyuMe start conductor only
+//			if (!isConductor.get() || !svrip.equalsIgnoreCase("r"))
+			svrip = dcf.getSvrip();
 			//----
 			dburl = dcf.getConHashMap().get("system.db[@url]");
 			dbuser = dcf.getConHashMap().get("system.db[@user]");
@@ -313,4 +319,20 @@ public class Server {
 	public static void setIsConductor(boolean isConductor) {
 		Server.isConductor.set(isConductor);
 	}
+
+	//20210909 MatsudairaSyuMe for ConductorResstorMode
+	/**
+	 * @return the isConductorRestore
+	 */
+	public static boolean getIsConductorRestore() {
+		return isConductorRestore.get();
+	}
+
+	/**
+	 * @param isConductorRestore the isConductorRestore to set
+	 */
+	public static void setIsConductorRestore(boolean isConductorRestore) {
+		Server.isConductorRestore.set(isConductorRestore);;
+	}
+	//----
 }

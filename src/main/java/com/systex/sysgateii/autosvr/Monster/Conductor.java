@@ -13,11 +13,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+//20210909 MatsudairaSyuMe conductor only
+import com.systex.sysgateii.autosvr.Server;
+//---
 import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.dao.GwDao;
 import com.systex.sysgateii.autosvr.util.DateTimeUtil;
-import com.systex.sysgateii.autosvr.util.StrUtil;
+//import com.systex.sysgateii.autosvr.util.StrUtil; 20210909 markup
 
 public class Conductor implements Runnable {
 	private static Logger log = LoggerFactory.getLogger(Conductor.class);
@@ -60,53 +62,56 @@ public class Conductor implements Runnable {
 		log.debug("Enter startServer Conductor check table[{}] svrnodelist size=[{}]", svrprmtb,
 				Conductor.svridnodeMap.size());
 		// 20210828 MatsudairaSyuMe start conductor only
-		if (!getSvrip().equalsIgnoreCase("r")) {
+//		if (!getSvrip().equalsIgnoreCase("r")) {  20210909 mark up
 			// ----
-			try {
-				jsel2ins = new GwDao(dburl, dbuser, dbpass, false);
-				String[] svrflds = jsel2ins.SELMFLD(svrprmtb, "SVRID", "IP", "'" + getSvrip() + "'", false);
-				if (svrflds != null && svrflds.length > 0) {
-					for (String s : svrflds) {
-						s = s.trim();
-						log.debug("current svrfld [{}]", s);
-						if (s.length() > 0 && s.indexOf(',') > -1) {
-							String[] svrfldsary = s.split(",");
-							for (int idx = 0; idx < svrfldsary.length; idx++) {
-								log.debug("idx:[{}]=[{}]", idx, svrfldsary[idx].trim());
-							}
-						} else if (s.length() > 0) {
-							log.debug("get SERVICE [{}] in service table [{}]", s, svrprmtb);
-							// 20210302 MatsudairsSyuMe
+		try {
+			jsel2ins = new GwDao(dburl, dbuser, dbpass, false);
+			String[] svrflds = jsel2ins.SELMFLD(svrprmtb, "SVRID", "IP", "'" + getSvrip() + "'", false);
+			if (svrflds != null && svrflds.length > 0) {
+				for (String s : svrflds) {
+					s = s.trim();
+					log.debug("current svrfld [{}]", s);
+					if (s.length() > 0 && s.indexOf(',') > -1) {
+						String[] svrfldsary = s.split(",");
+						for (int idx = 0; idx < svrfldsary.length; idx++) {
+							log.debug("idx:[{}]=[{}]", idx, svrfldsary[idx].trim());
+						}
+					} else if (s.length() > 0) {
+						log.debug("get SERVICE [{}] in service table [{}]", s, svrprmtb);
+						// 20210302 MatsudairsSyuMe
 //						String[] setArg = {"bin/autosvr", "start", "--svrid", s};
 //						DoProcessBuilder dp = new DoProcessBuilder(setArg);
 //						DoProcessBuilder dp = new DoProcessBuilder("bin/autosvr", "start", "--svrid", s);
 //						dp.Go();
-							// 20210202 MatsudairsSyuMe
+						//2021090 9MatsudairsSyuMe check if start conductor only
+						// 20210202, MatsudairsSyuMe
+						if (!Server.getIsConductorRestore()) {
 							DoProcessBuilder dp = new DoProcessBuilder();
 							dp.Go("bin/autosvr", "start", "--svrid", s);
-							// ----
 							// store new service
 							Conductor.svridnodeMap.put(s, getSvrip());
-						} else
-							log.error("ERROR!!! SERVICE parameters error in service table [{}] !!!", svrprmtb);
-					}
-				} else {
-					log.error("ERROR!!! no svrid exist in table while IP=[{}] !!!", getSvrip());
+						}
+						// ----
+					} else
+						log.error("ERROR!!! SERVICE parameters error in service table [{}] !!!", svrprmtb);
 				}
+			} else {
+				log.error("ERROR!!! no svrid exist in table while IP=[{}] !!!", getSvrip());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.info("read database error [{}]", e.toString());
+		} finally {
+			try {
+				jsel2ins.CloseConnect();
 			} catch (Exception e) {
 				e.printStackTrace();
-				log.info("read database error [{}]", e.toString());
-			} finally {
-				try {
-					jsel2ins.CloseConnect();
-				} catch (Exception e) {
-					e.printStackTrace();
-					log.error("close connect from database error [{}]", e.toString());
-				}
-				jsel2ins = null;
+				log.error("close connect from database error [{}]", e.toString());
 			}
-			// 20210828 MatsudairaSyuMe start conductor only
+			jsel2ins = null;
 		}
+		// 20210828 MatsudairaSyuMe start conductor only
+//		} 20210909 mark up
 		// ----
 		server = getMe();
 		if (dburl != null && dburl.trim().length() > 0)
