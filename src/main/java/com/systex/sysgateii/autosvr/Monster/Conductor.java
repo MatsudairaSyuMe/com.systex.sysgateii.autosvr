@@ -88,9 +88,10 @@ public class Conductor implements Runnable {
 						if (!Server.getIsConductorRestore()) {
 							DoProcessBuilder dp = new DoProcessBuilder();
 							dp.Go("bin/autosvr", "start", "--svrid", s);
-							// store new service
-							Conductor.svridnodeMap.put(s, getSvrip());
-						}
+						}// store new service
+						//20210911 MatsudairaSyuMe init set svridnode while conductor and restore mode
+						Conductor.svridnodeMap.put(s, getSvrip());
+						//----
 						// ----
 					} else
 						log.error("ERROR!!! SERVICE parameters error in service table [{}] !!!", svrprmtb);
