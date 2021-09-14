@@ -237,191 +237,261 @@ public class PrnSvr implements MessageListener<byte[]> {
 
 	public void start() {
 		try {
+			//20210914 MatsudairaSyuMe change for threads of printer and monitor separately running
 			if (!threadList.isEmpty()) {
 				for (Thread t : threadList) {
 					t.start();
 					log.info("thread [{}] start", t.getName());
 				}
-				monitorThread = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						while (true) {
-							log.info("monitorThread");
-							if (PrnSvr.dburl != null && PrnSvr.dburl.trim().length() > 0) {
-								String selfld = "";
-								String selkey = "";
-								String[] sno = null;
-								if (PrnSvr.cmdtbfields.indexOf(',') > -1) {
-									selfld = PrnSvr.cmdtbfields.substring(PrnSvr.cmdtbfields.indexOf(',') + 1);
-									selkey = PrnSvr.cmdtbfields.substring(0, PrnSvr.cmdtbfields.indexOf(','));
-								} else {
-									selfld = PrnSvr.cmdtbfields;
-									selkey = PrnSvr.cmdtbsearkey;
-								}
-								try {
-									jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-									log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, PrnSvr.cmdtbsearkey);
-									String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
-									if(cmd != null && cmd.length > 0)
-										for (String s: cmd) {
-											s = s.trim();
-											log.debug("current row cmd [{}]", s);
-											if (s.length() > 0 && s.indexOf(',') > -1) {
-												String[] cmdary = s.split(",");
+			}
+			//----
+			monitorThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					while (true) {
+						log.info("monitorThread");
+						if (PrnSvr.dburl != null && PrnSvr.dburl.trim().length() > 0) {
+							String selfld = "";
+							String selkey = "";
+							String[] sno = null;
+							if (PrnSvr.cmdtbfields.indexOf(',') > -1) {
+								selfld = PrnSvr.cmdtbfields.substring(PrnSvr.cmdtbfields.indexOf(',') + 1);
+								selkey = PrnSvr.cmdtbfields.substring(0, PrnSvr.cmdtbfields.indexOf(','));
+							} else {
+								selfld = PrnSvr.cmdtbfields;
+								selkey = PrnSvr.cmdtbsearkey;
+							}
+							try {
+								jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+								log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, PrnSvr.cmdtbsearkey);
+								String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
+								if(cmd != null && cmd.length > 0)
+									for (String s: cmd) {
+										s = s.trim();
+										log.debug("current row cmd [{}]", s);
+										if (s.length() > 0 && s.indexOf(',') > -1) {
+											String[] cmdary = s.split(",");
+											//20201006
+//											log.debug("cmd object node=[{}] curState=[{}] cmd getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurState(), getMe().nodeList.get(cmdary[0]).getCurMode());
+											//----
+											if (cmdary.length > 1) {
+//												if (!getMe().nodeList.containsKey(cmdary[0])) {
+//													log.debug("!!! cmd object node=[{}] not found in nodeList !!!", cmdary[0]);
+//													continue;
+//												}
 												//20201006
-//												log.debug("cmd object node=[{}] curState=[{}] cmd getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurState(), getMe().nodeList.get(cmdary[0]).getCurMode());
+//												log.debug("cmd object node=[{}] curState=[{}] cmd getCurMode=[{}]",
+//														getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurState(), getMe().nodeList.get(cmdary[0]).getCurMode());
 												//----
-												if (cmdary.length > 1) {
-//													if (!getMe().nodeList.containsKey(cmdary[0])) {
-//														log.debug("!!! cmd object node=[{}] not found in nodeList !!!", cmdary[0]);
-//														continue;
-//													}
-													//20201006
-//													log.debug("cmd object node=[{}] curState=[{}] cmd getCurMode=[{}]",
-//															getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurState(), getMe().nodeList.get(cmdary[0]).getCurMode());
-													//----
-													//20201026
-													int idx = 0;
-													String sts = "0";
-													//20201028
-													sno = null;
-													boolean createNode = false;
-													boolean restartAlreadyStop = false;
-													if (DateTimeUtil.MinDurationToCurrentTime(3,cmdary[3])) {
-														log.debug("brws=[{}] keep in cmd table longer then 3 minutes will be cleared",cmdary[0]);
-														if (cmdary[1].trim().length() > 0) {
-															log.debug("brws=[{}] cmd[{}] not execute will be marked fail in cmdhis",cmdary[0], cmdary[1]);
-															if (cmdhiscon == null)
-																cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-															//20201119
-															String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
-															SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-															String t = sdf.format(new java.util.Date());
-															//20201119
-															String failfldvals = String.format(hisfldvalssptrn4, PrnSvr.svrid, cmdary[2], cmdary[0],cmdary[1],cmdary[3],"FAIL",t,cmdary[4]);
-															if (chksno == null || chksno.length == 0) {
-																chksno = new String[1];
-																chksno[0] = "-1";
-															}
-															sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO", failfldvals, PrnSvr.devcmdhistbsearkey, chksno[0], false, false);
-															cmdhiscon.CloseConnect();
-															cmdhiscon = null;
-															sno = null;
+												//20201026
+												int idx = 0;
+												String sts = "0";
+												//20201028
+												sno = null;
+												boolean createNode = false;
+												boolean restartAlreadyStop = false;
+												if (DateTimeUtil.MinDurationToCurrentTime(3,cmdary[3])) {
+													log.debug("brws=[{}] keep in cmd table longer then 3 minutes will be cleared",cmdary[0]);
+													if (cmdary[1].trim().length() > 0) {
+														log.debug("brws=[{}] cmd[{}] not execute will be marked fail in cmdhis",cmdary[0], cmdary[1]);
+														if (cmdhiscon == null)
+															cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+														//20201119
+														String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
+														SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+														String t = sdf.format(new java.util.Date());
+														//20201119
+														String failfldvals = String.format(hisfldvalssptrn4, PrnSvr.svrid, cmdary[2], cmdary[0],cmdary[1],cmdary[3],"FAIL",t,cmdary[4]);
+														if (chksno == null || chksno.length == 0) {
+															chksno = new String[1];
+															chksno[0] = "-1";
 														}
-														jdawcon.DELETETB(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'");
-														continue;
+														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO", failfldvals, PrnSvr.devcmdhistbsearkey, chksno[0], false, false);
+														cmdhiscon.CloseConnect();
+														cmdhiscon = null;
+														sno = null;
+													}
+													jdawcon.DELETETB(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'");
+													continue;
+												}
+												//----
+												for (String ss: cmdary)
+													log.debug("cmd[{}]=[{}]",idx++, ss);
+												String curcmd = cmdary[1].trim().toUpperCase();
+												//20201026 for cmdhis
+												if (curcmd != null && curcmd.length() > 0) {
+													cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+													if (getMe().nodeList != null && getMe().nodeList.size() > 0) {
+														if (getMe().nodeList.containsKey(cmdary[0])) {
+														//20210204, 20210714 MatsudairaSyuMe Log Forging
+														//final String logStr = String.format("!!! cmd object node=[%s] already in nodeList please STOP this node before START !!!", cmdary[0]);
+															//if (Constants.FilterNewlinePattern.matcher(logStr).find())
+															log.error("!!! cmd object node already in nodeList please STOP this node before START !!! check dashboard");
+															//else
+															//	log.error(logStr);
+															if (getMe().nodeList.get(cmdary[0]).getCurState() >= 0)
+																sts = "2";
+															createNode = false;
+														} else {
+															log.debug("!!! cmd object node=[{}] not in nodeList will be created", cmdary[0]);
+															createNode = true;
+														}
+													}
+													String fldvals = String.format(hisfldvalssptrn, PrnSvr.svrid, cmdary[2], cmdary[0],cmdary[1],cmdary[3],sts,cmdary[4]);
+													//20201028 check sno if command already insert to cmdhis
+//													sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistb, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CURSTUS", "1,1,'9838901','START','2020-10-21 09:46:38.368000','0'", PrnSvr.evcmdhistbsearkey, "-1", false, true);
+													String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
+//													log.debug("chksno=[{}]",chksno);
+													if (chksno != null && chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {
+														for (String sss: chksno)
+															log.debug("sno[{}] already exist",sss);
+														//20210413 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison change equals to 
+														if (curcmd.equalsIgnoreCase("RESTART")) { // current command is RESTART check cmdhis if already done STOP
+															for (int i = 0; i < chksno.length; i++) {
+																String chkcmdresult = cmdhiscon.SELONEFLD(PrnSvr.devcmdhistbname, "CMDRESULT", "SNO", chksno[0], false);
+																log.debug("table sno=[{}] cmdhis cmd is RESTART and cmdresult=[{}]", chksno[i], chkcmdresult);
+																if (chkcmdresult != null && chkcmdresult.trim().length() > 0 && chkcmdresult.equals("STOP")) {
+																	if (!restartAlreadyStop) {
+																		sno = null; // prepared to start new node
+																		restartAlreadyStop = true;
+																	} else {
+																		sno = new String[1];
+																		sno[0] = chksno[i];																																				
+																	}
+																	log.debug("table son=[{}] chksno=[{}] cmdhis cmd is RESTART and cmdresult=[{}] restartAlreadyStop=[{}]", sno, chksno[i], chkcmdresult, restartAlreadyStop);
+																} else {
+																// current command is RESTART and waiting to STOP or already set ACTIVE waiting to finish
+																	sno = new String[1];
+																	sno[0] = chksno[i];																	
+																}
+															}
+														} else {
+															// current command is not RESTART and waiting to finish
+															sno = new String[1];
+															sno[0] = chksno[0];
+														}
+													}
+													if (sno == null) {// first time receive command insert new record to cmdhis
+														//20201119 add EMPNO
+														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CURSTUS,EMPNO", fldvals, PrnSvr.devcmdhistbsearkey, "-1", false, false);
+														if (sno != null) {
+															for (int i = 0; i < sno.length; i++)
+																log.debug("sno[{}]=[{}]",i,sno[i]);
+															} else
+																log.error("sno null");
 													}
 													//----
-													for (String ss: cmdary)
-														log.debug("cmd[{}]=[{}]",idx++, ss);
-													String curcmd = cmdary[1].trim().toUpperCase();
-													//20201026 for cmdhis
-													if (curcmd != null && curcmd.length() > 0) {
-														cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-														if (getMe().nodeList != null && getMe().nodeList.size() > 0) {
-															if (getMe().nodeList.containsKey(cmdary[0])) {
-																//20210204, 20210714 MatsudairaSyuMe Log Forging
-																//final String logStr = String.format("!!! cmd object node=[%s] already in nodeList please STOP this node before START !!!", cmdary[0]);
-																//if (Constants.FilterNewlinePattern.matcher(logStr).find())
-																log.error("!!! cmd object node already in nodeList please STOP this node before START !!! check dashboard");
-																//else
-																//	log.error(logStr);
-																if (getMe().nodeList.get(cmdary[0]).getCurState() >= 0)
-																	sts = "2";
-																createNode = false;
-															} else {
-																log.debug("!!! cmd object node=[{}] not in nodeList will be created", cmdary[0]);
-																createNode = true;
-															}
-														}
-														String fldvals = String.format(hisfldvalssptrn, PrnSvr.svrid, cmdary[2], cmdary[0],cmdary[1],cmdary[3],sts,cmdary[4]);
-														//20201028 check sno if command already insert to cmdhis
-//														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistb, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CURSTUS", "1,1,'9838901','START','2020-10-21 09:46:38.368000','0'", PrnSvr.evcmdhistbsearkey, "-1", false, true);
-														String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
-//														log.debug("chksno=[{}]",chksno);
-														if (chksno != null && chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {
-															for (String sss: chksno)
-																log.debug("sno[{}] already exist",sss);
-															//20210413 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison change equals to 
-															if (curcmd.equalsIgnoreCase("RESTART")) { // current command is RESTART check cmdhis if already done STOP
-																for (int i = 0; i < chksno.length; i++) {
-																	String chkcmdresult = cmdhiscon.SELONEFLD(PrnSvr.devcmdhistbname, "CMDRESULT", "SNO", chksno[0], false);
-																	log.debug("table sno=[{}] cmdhis cmd is RESTART and cmdresult=[{}]", chksno[i], chkcmdresult);
-																	if (chkcmdresult != null && chkcmdresult.trim().length() > 0 && chkcmdresult.equals("STOP")) {
-																		if (!restartAlreadyStop) {
-																			sno = null; // prepared to start new node
-																			restartAlreadyStop = true;
-																		} else {
-																			sno = new String[1];
-																			sno[0] = chksno[i];																																				
-																		}
-																		log.debug("table son=[{}] chksno=[{}] cmdhis cmd is RESTART and cmdresult=[{}] restartAlreadyStop=[{}]", sno, chksno[i], chkcmdresult, restartAlreadyStop);
-																	} else {
-																	// current command is RESTART and waiting to STOP or already set ACTIVE waiting to finish
-																		sno = new String[1];
-																		sno[0] = chksno[i];																	
-																	}
-																}
-															} else {
-																// current command is not RESTART and waiting to finish
-																sno = new String[1];
-																sno[0] = chksno[0];
-															}
-														}
-														if (sno == null) {// first time receive command insert new record to cmdhis
-															//20201119 add EMPNO
-															sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CURSTUS,EMPNO", fldvals, PrnSvr.devcmdhistbsearkey, "-1", false, false);
-															if (sno != null) {
-																for (int i = 0; i < sno.length; i++)
-																	log.debug("sno[{}]=[{}]",i,sno[i]);
-																} else
-																	log.error("sno null");
-														}
+												}
+												//----
+												log.debug("table sno=[{}] createNode=[{}] restartAlreadyStop=[{}]", (sno == null ? 0: sno[0]), createNode, restartAlreadyStop);
+												//20210413 MatsudairaSyuMe prevent Null Dereference
+												if (sno == null) {
+													sno = new String[1];
+													sno[0] = "";
+												}
+												//----
+												//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
+												int selCmd = Constants.UNKNOWN;
+												if (curcmd.toUpperCase(Locale.ENGLISH).equals("START"))
+													selCmd = Constants.START;
+												else if(curcmd.toUpperCase(Locale.ENGLISH).equals("STOP"))
+													selCmd = Constants.STOP;
+												else if(curcmd.toUpperCase(Locale.ENGLISH).equals("RESTART"))
+													selCmd = Constants.RESTART;
+												switch (selCmd) {//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
+												case Constants.START://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
+													//20201006, 20201026 cmdhis
+													createNode(cmdary[0]);
+													//----
+													if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
+														//20201026 for cmdhis
+														getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.ACTIVE, sno[0]);
+														log.debug("cmd object node=[{}] enable session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
+													} else {
+														SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+														String t = sdf.format(new java.util.Date());
+														int row = jdawcon.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','START','" + t + "'",
+																"SVRID,BRWS", PrnSvr.svrid + "," + cmdary[0]);
+														//----
+														log.debug("total {} records update", row);
+														log.debug("cmd object node=[{}] already active!!!! getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
+														//20201026
+//														String fldvals2 = String.format(hisfldvalssptrn2, "", cmdary[1], t, sts);
+														PrtCli conn = getMe().nodeList.get(cmdary[0]);
+														//20201119 add EMPNO
+														//20201218 add original cmd to devcmdhis
+														String fldvals3 = String.format(hisfldvalssptrn3, cmdary[1], cmdary[1], t, conn.getRemoteHostAddr(),//20210427 MatsudairaSyuMe Often Misused: Authentication
+																conn.getRmtaddr().getPort(),conn.getLocalHostAddr(), conn.getLocaladdr().getPort(),sts,cmdary[4]);
+														//----
+														//---
+//														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,CURSTUS", "1,1,'9838901','','2020-10-21 09:46:38.368000','START','2020-10-21 09:46:38.368000','0','2'", "SNO", "31", false, true);
+														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "CMD,CMDRESULT,CMDRESULTTIME,DEVIP,DEVPORT,SVRIP,SVRPORT,RESULTSTUS,EMPNO", fldvals3, PrnSvr.devcmdhistbsearkey, sno[0], false, true);
+														//----
+														if (sno != null) {
+															for (int i = 0; i < sno.length; i++)
+																log.debug("sno[{}]=[{}]",i,sno[i]);
+														} else
+															log.error("sno null");
 														//----
 													}
+													break;
+												case Constants.STOP://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
+													if (getMe().nodeList.get(cmdary[0]).getCurState() != -1) {
+														//20201026 for cmdhis
+														getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.SHUTDOWN, sno[0]);
+														log.debug("cmd object node=[{}] stop session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
+													} else {
+														SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+														String t = sdf.format(new java.util.Date());
+														int row = jdawcon.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','STOP','" + t + "'",
+																"SVRID,BRWS", PrnSvr.svrid + "," + cmdary[0]);
+														log.debug("total {} records update", row);
+														log.debug("cmd object node=[{}] already shutdown!!!! getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
+														//20201026
+														//20201119 add EMPNO
+														//20201218 add original cmd to devcmdhis
+														String fldvals2 = String.format(hisfldvalssptrn2, cmdary[1], cmdary[1], t, sts,cmdary[4]);
+														//----
+														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "CMD,CMDRESULT,CMDRESULTTIME,RESULTSTUS,EMPNO", fldvals2, PrnSvr.devcmdhistbsearkey, sno[0], false, true);
+														//----
+														if (sno != null) {
+															for (int i = 0; i < sno.length; i++)
+																log.debug("sno[{}]=[{}]",i,sno[i]);
+														} else
+															log.error("sno null");
+														//----
+														}
+													break;
+												case Constants.RESTART://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
+													//20201221 1st time RESTART mode node already STOP
+													if (!restartAlreadyStop && createNode)
+														restartAlreadyStop = true;
 													//----
-													log.debug("table sno=[{}] createNode=[{}] restartAlreadyStop=[{}]", (sno == null ? 0: sno[0]), createNode, restartAlreadyStop);
-													//20210413 MatsudairaSyuMe prevent Null Dereference
-													if (sno == null) {
-														sno = new String[1];
-														sno[0] = "";
-													}
-													//----
-													//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
-													int selCmd = Constants.UNKNOWN;
-													if (curcmd.toUpperCase(Locale.ENGLISH).equals("START"))
-														selCmd = Constants.START;
-													else if(curcmd.toUpperCase(Locale.ENGLISH).equals("STOP"))
-														selCmd = Constants.STOP;
-													else if(curcmd.toUpperCase(Locale.ENGLISH).equals("RESTART"))
-														selCmd = Constants.RESTART;
-													switch (selCmd) {//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
-													case Constants.START://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
-														//20201006, 20201026 cmdhis
+													//20201028 add cmdhis
+													if (!restartAlreadyStop && !createNode && getMe().nodeList.get(cmdary[0]).getCurState() != -1) {
+														getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.RESTART, sno[0]);
+														log.debug("cmd object node=[{}] stop session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
+													} else {
+														//start to create new node and start
+														log.debug("start to create new node and start sno=[{}]", sno[0]);
 														createNode(cmdary[0]);
 														//----
 														if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
-															//20201026 for cmdhis
 															getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.ACTIVE, sno[0]);
 															log.debug("cmd object node=[{}] enable session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
 														} else {
 															SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 															String t = sdf.format(new java.util.Date());
-															int row = jdawcon.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','START','" + t + "'",
+															int row = jdawcon.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','RESTART','" + t + "'",
 																	"SVRID,BRWS", PrnSvr.svrid + "," + cmdary[0]);
-															//----
 															log.debug("total {} records update", row);
 															log.debug("cmd object node=[{}] already active!!!! getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
-															//20201026
-//															String fldvals2 = String.format(hisfldvalssptrn2, "", cmdary[1], t, sts);
 															PrtCli conn = getMe().nodeList.get(cmdary[0]);
 															//20201119 add EMPNO
 															//20201218 add original cmd to devcmdhis
 															String fldvals3 = String.format(hisfldvalssptrn3, cmdary[1], cmdary[1], t, conn.getRemoteHostAddr(),//20210427 MatsudairaSyuMe Often Misused: Authentication
 																	conn.getRmtaddr().getPort(),conn.getLocalHostAddr(), conn.getLocaladdr().getPort(),sts,cmdary[4]);
 															//----
-															//---
-//															sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,CURSTUS", "1,1,'9838901','','2020-10-21 09:46:38.368000','START','2020-10-21 09:46:38.368000','0','2'", "SNO", "31", false, true);
 															sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "CMD,CMDRESULT,CMDRESULTTIME,DEVIP,DEVPORT,SVRIP,SVRPORT,RESULTSTUS,EMPNO", fldvals3, PrnSvr.devcmdhistbsearkey, sno[0], false, true);
 															//----
 															if (sno != null) {
@@ -429,107 +499,39 @@ public class PrnSvr implements MessageListener<byte[]> {
 																	log.debug("sno[{}]=[{}]",i,sno[i]);
 															} else
 																log.error("sno null");
-															//----
 														}
-														break;
-													case Constants.STOP://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
-														if (getMe().nodeList.get(cmdary[0]).getCurState() != -1) {
-															//20201026 for cmdhis
-															getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.SHUTDOWN, sno[0]);
-															log.debug("cmd object node=[{}] stop session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
-														} else {
-															SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-															String t = sdf.format(new java.util.Date());
-															int row = jdawcon.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','STOP','" + t + "'",
-																	"SVRID,BRWS", PrnSvr.svrid + "," + cmdary[0]);
-															log.debug("total {} records update", row);
-															log.debug("cmd object node=[{}] already shutdown!!!! getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
-															//20201026
-															//20201119 add EMPNO
-															//20201218 add original cmd to devcmdhis
-															String fldvals2 = String.format(hisfldvalssptrn2, cmdary[1], cmdary[1], t, sts,cmdary[4]);
-															//----
-															sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "CMD,CMDRESULT,CMDRESULTTIME,RESULTSTUS,EMPNO", fldvals2, PrnSvr.devcmdhistbsearkey, sno[0], false, true);
-															//----
-															if (sno != null) {
-																for (int i = 0; i < sno.length; i++)
-																	log.debug("sno[{}]=[{}]",i,sno[i]);
-															} else
-																log.error("sno null");
-															//----
-
-														}
-														break;
-													case Constants.RESTART://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
-														//20201221 1st time RESTART mode node already STOP
-														if (!restartAlreadyStop && createNode)
-															restartAlreadyStop = true;
-														//----
-														//20201028 add cmdhis
-														if (!restartAlreadyStop && !createNode && getMe().nodeList.get(cmdary[0]).getCurState() != -1) {
-															getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.RESTART, sno[0]);
-															log.debug("cmd object node=[{}] stop session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
-														} else {
-															//start to create new node and start
-															log.debug("start to create new node and start sno=[{}]", sno[0]);
-															createNode(cmdary[0]);
-															//----
-															if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
-																getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.ACTIVE, sno[0]);
-																log.debug("cmd object node=[{}] enable session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
-															} else {
-																SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-																String t = sdf.format(new java.util.Date());
-																int row = jdawcon.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','RESTART','" + t + "'",
-																		"SVRID,BRWS", PrnSvr.svrid + "," + cmdary[0]);
-																log.debug("total {} records update", row);
-																log.debug("cmd object node=[{}] already active!!!! getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
-																PrtCli conn = getMe().nodeList.get(cmdary[0]);
-																//20201119 add EMPNO
-																//20201218 add original cmd to devcmdhis
-																String fldvals3 = String.format(hisfldvalssptrn3, cmdary[1], cmdary[1], t, conn.getRemoteHostAddr(),//20210427 MatsudairaSyuMe Often Misused: Authentication
-																		conn.getRmtaddr().getPort(),conn.getLocalHostAddr(), conn.getLocaladdr().getPort(),sts,cmdary[4]);
-																//----
-																sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "CMD,CMDRESULT,CMDRESULTTIME,DEVIP,DEVPORT,SVRIP,SVRPORT,RESULTSTUS,EMPNO", fldvals3, PrnSvr.devcmdhistbsearkey, sno[0], false, true);
-																//----
-																if (sno != null) {
-																	for (int i = 0; i < sno.length; i++)
-																		log.debug("sno[{}]=[{}]",i,sno[i]);
-																} else
-																	log.error("sno null");
-															}
-														}
-														break;
-													default:
-														log.debug("!!! cmd object node=[{}] cmd [{}] ignore", cmdary[0], cmdary[1]);
-														break;
 													}
-												} else
-													log.debug("!!! cmd object node=[{}] format error !!!", cmdary[0]);													
-											} else {
-												// 20210714 MatsudairaSyuMe Log Forging
-												//final String chks = StrUtil.convertValidLog(s);
-												log.error("!!!current row cmd error"); //chks
-											}
+													break;
+												default:
+													log.debug("!!! cmd object node=[{}] cmd [{}] ignore", cmdary[0], cmdary[1]);
+													break;
+												}
+											} else
+												log.debug("!!! cmd object node=[{}] format error !!!", cmdary[0]);													
+										} else {
+											// 20210714 MatsudairaSyuMe Log Forging
+											//final String chks = StrUtil.convertValidLog(s);
+											log.error("!!!current row cmd error"); //chks
 										}
-									jdawcon.CloseConnect();
-									jdawcon = null;
-									//20201026
-									if (cmdhiscon != null)
-										cmdhiscon.CloseConnect();
-									cmdhiscon = null;
-									//----
-								} catch (Exception e) {
-									e.printStackTrace();
-									log.info("monitorThread read database error [{}]", e.toString());
-								}
+									}
+								jdawcon.CloseConnect();
+								jdawcon = null;
+								//20201026
+								if (cmdhiscon != null)
+									cmdhiscon.CloseConnect();
+								cmdhiscon = null;
+								//----
+							} catch (Exception e) {
+								e.printStackTrace();
+								log.info("monitorThread read database error [{}]", e.toString());
 							}
-							sleep(3);
-						} // while
-					}
-				});// monitorThread
-				monitorThread.start();
-			}
+						}
+						sleep(3);
+					} // while
+				}
+			});// monitorThread
+			monitorThread.start();
+			//20210914 MatsudairaSyuMe change for threads of printer and monitor separately running
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.error(e.getMessage());
