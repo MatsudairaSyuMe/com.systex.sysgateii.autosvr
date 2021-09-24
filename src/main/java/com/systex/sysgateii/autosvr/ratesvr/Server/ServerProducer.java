@@ -245,13 +245,13 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 							// ---------------- mark 20190820
 
 							// remote address /0:0:0:0:0:0:0:1:10335
-							String clientIp = ch.remoteAddress().getAddress().getHostAddress();
-							log.debug("client from " + clientIp);
-							if (!isValidClientIp(clientIp)) {
-								log.debug("Invalid client ip =" + clientIp);
-								ch.close();
-								return;
-							}
+//20210924							String clientIp = ch.remoteAddress().getAddress().getHostAddress();
+//							log.debug("client from " + clientIp);
+//							if (!isValidClientIp(clientIp)) {
+//								log.debug("Invalid client ip =" + clientIp);
+//								ch.close();
+//								return;
+//----							}
 
 							// Do not call await() inside ChannelHandler
 							// ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(keepAlive, 0,
