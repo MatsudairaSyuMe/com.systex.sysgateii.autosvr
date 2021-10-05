@@ -648,7 +648,6 @@ public class CS4625Impl implements Printer {
 						}*/
 
 						log.debug("0 ===<><>{} {} Prt_Text check chinese Font i={} [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-
 						if (ChkAddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff))) == true)
 						{
 							log.debug("1 ===<><>{} {} Prt_Text i={} AddFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));

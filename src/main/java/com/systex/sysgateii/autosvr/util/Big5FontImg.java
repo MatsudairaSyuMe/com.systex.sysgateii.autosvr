@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * Get Big5 72 bytes image font data utility
@@ -19,12 +18,18 @@ public class Big5FontImg {
 	private FileInputStream fontis = null;
 	private long fsize = 0l;
 	private ConcurrentHashMap<Long, Long> keyadr_map = new ConcurrentHashMap<Long, Long>();
-
+	//20211004 MatsudairaSyuMe change to open key file and glyph file
+	private static String keyname = "";
+	private static String glyphname = "";
+	//20211004 MatsudairaSyuMe read key and glyph file every time load plyph
 	public Big5FontImg(String filenamekey, String filename) throws IOException, Exception {
 		if (filenamekey == null || filename.trim().length() == 0)
 			throw new IOException("filenamekey null or length == 0");
 		if (filename == null || filename.trim().length() == 0)
 			throw new IOException("filename null or length == 0");
+		keyname = filenamekey;
+		glyphname = filename;
+		/*
 		try {
 			// create new file input stream
 			fontkeyis = new FileInputStream(filenamekey);
@@ -62,8 +67,9 @@ public class Big5FontImg {
 			// if any error occurs
 			ex.printStackTrace();
 			throw new Exception(ex.toString());
-		}
+		}*/
 	}
+	//----
 
 	public byte[] toByteArray(long start, int count) throws IOException, Exception {
 		// skip bytes from file input stream
@@ -86,9 +92,40 @@ public class Big5FontImg {
 		return rtn;
 	}
 
+	//20211004 MatsudairaSyuMe read key and glyph file every time load plyph
+//	public byte[] getFontImageData(long start) throws IOException, Exception {
+//		return toByteArray(start, 72);
+//	}
 	public byte[] getFontImageData(long start) throws IOException, Exception {
+		try {
+			// create new file input stream
+			CloseFontFile();
+			fontkeyis = new FileInputStream(keyname);
+			fontis = new FileInputStream(glyphname);
+			this.fsize = fontis.getChannel().size();
+			// read bytes to the buffer
+			long i = 0;
+			long idx = 0;
+			byte[] bs = new byte[6];
+			long key = 0l, addr = 0l;
+			while ((i = fontkeyis.read(bs)) != -1) {
+				idx += 1;
+				key = 0l;
+				addr = 0l;
+				key = (long) (((bs[0] & 0xFF) << 8) | (bs[1] & 0xFF));
+				addr = (long) (((bs[2] & 0xFF) << 24) | ((bs[3] & 0xFF) << 16) | ((bs[4] & 0xFF) << 8)
+						| (bs[5] & 0xFF));
+				keyadr_map.put(key, addr);
+			}
+			if (fontkeyis != null)
+				fontkeyis.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			throw new Exception(ex.toString());
+		}
 		return toByteArray(start, 72);
 	}
+	//----
 
 	public void CloseFontFile() throws IOException, Exception {
 		try {
@@ -105,54 +142,57 @@ public class Big5FontImg {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
+	//20211004 MatsudairaSyuMe read key and glyph file every time load plyph
+	//----
 
-		try {
-			Big5FontImg fd = new Big5FontImg("FontTable_low.bin", "FontData_All.bin");
-
-			byte[] aa = fd.getFontImageData((long) 0x8140);
-			System.out.println("len " + aa.length + ":" + (long) 0x8140);
-			for (byte b : aa)
-				System.out.print(String.format("%02x ", b));
-			System.out.println();
-
-			aa = fd.getFontImageData((long) 0x8141);
-			System.out.println("len " + aa.length + ":" + (long) 0x8141);
-			for (byte b : aa)
-				System.out.print(String.format("%02x ", b));
-			System.out.println();
-			aa = fd.getFontImageData((long) 0xfe9d);
-			System.out.println("len " + aa.length + ":" + (long) 0xfe9d);
-			for (byte b : aa)
-				System.out.print(String.format("%02x ", b));
-			System.out.println();
-			aa = fd.getFontImageData((long) 0xfe9e);
-			System.out.println("0xfe9e len " + aa.length + ":" + (long) 0xfe9e);
-			for (byte b : aa)
-				System.out.print(String.format("%02x ", b));
-			System.out.println();
+	//public static void main(String[] args) throws IOException {
+//
+	//	try {
+	//		Big5FontImg fd = new Big5FontImg("FontTable_low.bin", "FontData_All.bin");
+//
+	//		byte[] aa = fd.getFontImageData((long) 0x8140);
+	//		System.out.println("len " + aa.length + ":" + (long) 0x8140);
+	//		for (byte b : aa)
+	//			System.out.print(String.format("%02x ", b));
+	//		System.out.println();
+//
+	//		aa = fd.getFontImageData((long) 0x8141);
+	//		System.out.println("len " + aa.length + ":" + (long) 0x8141);
+	//		for (byte b : aa)
+	//			System.out.print(String.format("%02x ", b));
+	//		System.out.println();
+	//		aa = fd.getFontImageData((long) 0xfe9d);
+	//		System.out.println("len " + aa.length + ":" + (long) 0xfe9d);
+	//		for (byte b : aa)
+	//			System.out.print(String.format("%02x ", b));
+	//		System.out.println();
+	//		aa = fd.getFontImageData((long) 0xfe9e);
+	//		System.out.println("0xfe9e len " + aa.length + ":" + (long) 0xfe9e);
+	//		for (byte b : aa)
+	//			System.out.print(String.format("%02x ", b));
+	//		System.out.println();
 //			aa = fd.getFontImageData((long) 0xfe9e);
-			aa = fd.getFontImageData((long) 0x95b0);
-			System.out.println("0x95b0 len " + aa.length + ":" + (long) 0x95b0);
-			for (byte b : aa)
-				System.out.print(String.format("%02x ", b));
-			System.out.println();
-			for (int i = 0; i < 20; i++) {
-				aa = fd.getFontImageData((long) 38320);
-				System.out.println("38320 len " + aa.length + ":" + 38320 + ": i=" +i);
-				for (byte b : aa)
-					System.out.print(String.format("%02x ", b));
-				System.out.println();
-			}
-			/*
-			 * aa = fd.getFontImageData((long)0xf9d6); System.out.println("0xf9d6 len " +
-			 * aa.length + ":" + (long)0xf9d6); for (byte b : aa)
-			 * System.out.print(String.format("%02x ", b)); System.out.println();
-			 */
-			fd.CloseFontFile();
-		} catch (Exception ex) {
-			// if any error occurs
-			ex.printStackTrace();
-		}
-	}
+	//		aa = fd.getFontImageData((long) 0x95b0);
+	//		System.out.println("0x95b0 len " + aa.length + ":" + (long) 0x95b0);
+	//		for (byte b : aa)
+	//			System.out.print(String.format("%02x ", b));
+	//		System.out.println();
+	//		for (int i = 0; i < 20; i++) {
+	//			aa = fd.getFontImageData((long) 38320);
+	//			System.out.println("38320 len " + aa.length + ":" + 38320 + ": i=" +i);
+	//			for (byte b : aa)
+	//				System.out.print(String.format("%02x ", b));
+	//			System.out.println();
+	//		}
+	//		/*
+	//		 * aa = fd.getFontImageData((long)0xf9d6); System.out.println("0xf9d6 len " +
+	//		 * aa.length + ":" + (long)0xf9d6); for (byte b : aa)
+	//		 * System.out.print(String.format("%02x ", b)); System.out.println();
+	//		 */
+	//		fd.CloseFontFile();
+	//	} catch (Exception ex) {
+	//		// if any error occurs
+	//		ex.printStackTrace();
+	//	}
+	//}
 }

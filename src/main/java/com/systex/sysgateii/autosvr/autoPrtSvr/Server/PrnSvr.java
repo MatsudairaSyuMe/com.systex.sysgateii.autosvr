@@ -1,5 +1,7 @@
 package com.systex.sysgateii.autosvr.autoPrtSvr.Server;
 
+import java.io.File;
+
 /**
  * 
  * Created by MatsudairaSyume 2019/11/5
@@ -701,7 +703,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 		//----
 		try {
 			p_fun_flag.set(false);
-			big5funt = new Big5FontImg("FontTable_low.bin", "FontData_All.bin");
+			//20211004 MatsudairaSyuMe change the path to "/biscon/tns"
+//			big5funt = new Big5FontImg("FontTable_low.bin", "FontData_All.bin");
+			big5funt = new Big5FontImg(File.separator + "biscon" + File.separator + "tns" + File.separator + "FontTable_low.bin", File.separator + "biscon" + File.separator + "tns" + File.separator +  "FontData_All.bin");
+			//----
 			p_fun_flag.set(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
