@@ -491,7 +491,8 @@ public class CS5240Impl implements Printer {
 		int j, offset = 0;
 		boolean bLineFeed;
 		boolean bHalf = false;
-		byte[] hBuf = new byte[600];
+		//20211012 MatsudiaraSyuMe extend size of hBuf from 600 to 1280
+		byte[] hBuf = new byte[1280];
 
 		// filter space 91.10.09
 		bLineFeed = false;
