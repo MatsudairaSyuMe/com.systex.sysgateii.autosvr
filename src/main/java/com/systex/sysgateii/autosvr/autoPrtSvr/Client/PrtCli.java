@@ -172,35 +172,36 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	public static final int SETSIGAFTERCHKBARCODE = 11; // Show Signal after get Passbook's Page Type=2
 	public static final int EJECTAFTERPAGEERROR = 12; // Show Signal after get Passbook's Page error
 	public static final int EJECTAFTERPAGEERRORWAIT = 13; // Show Signal after get Passbook's Page error
-	public static final int SNDANDRCVTLM = 14; // compose TITA and send tita & Receive TOTA and check error
-	public static final int SETREQSIG = 15; // Show Signal before send telegram to Host
-	public static final int WAITSETREQSIG = 16; // wait Show Signal before send telegram to Host finished
-	public static final int SENDTLM = 17; // start send TOTA and check error
-	public static final int RECVTLM = 18; // Receive TOTA and check error
-	public static final int STARTPROCTLM = 19; // start to send tita & Receive TOTA and check error
+	public static final int READANDCHECKMSR = 14; // read MSR after write and check for previous constant 20211028 MatsudairaSyuMe MSR re-read
+	public static final int SNDANDRCVTLM = 15; // compose TITA and send tita & Receive TOTA and check error
+	public static final int SETREQSIG = 16; // Show Signal before send telegram to Host
+	public static final int WAITSETREQSIG = 17; // wait Show Signal before send telegram to Host finished
+	public static final int SENDTLM = 18; // start send TOTA and check error
+	public static final int RECVTLM = 19; // Receive TOTA and check error
+	public static final int STARTPROCTLM = 20; // start to send tita & Receive TOTA and check error
 	
-	public static final int PBDATAFORMAT = 20; //// Format 列印台幣存摺資料格式  print data
-	public static final int FCDATAFORMAT = 21; //// Format 列印外匯存摺資料格式  print data
-	public static final int GLDATAFORMAT = 22; //// Format 列印黃金存摺資料格式  print data
-	public static final int FORMATPRTDATAERROR = 23; // 61存摺資料補登失敗！Show Signal
-	public static final int WRITEMSR = 24; //// Write MSR
-	public static final int WRITEMSRWAITCONFIRM = 25;  //// Write MSR ware confirm
-	public static final int WRITEMSRERR = 26; //// Write MSR ERROR 71存摺磁條寫入有問題！
-	public static final int READMSRERRAFTERWRITEMSRERR = 27; // 11磁條讀取失敗(1)！
-	public static final int READMSRSUCAFTERWRITEMSRERR = 28; // 12存摺磁條讀取成功(1)！
-	public static final int COMPMSRSUCAFTERWRITEMSRERR = 29; // 12存摺磁條比對正確(1)！
-	public static final int COMPMSRERRAFTERWRITEMSRERR = 30; // 12存摺磁條比對失敗(1)！
-	public static final int EJECTAFTERPAGEERRORWAITSTATUS = 31;
-	public static final int WRITEMSRERRSHOWSIG = 32; // 71存摺磁條寫入失敗！ Show Signal
-	public static final int SNDANDRCVDELTLM = 33; // 72存摺資料補登成功！
-	public static final int SNDANDRCVDELTLMCHKEND = 34;        // 72存摺資料補登成功, 檢查翻頁及燈號開始！
-	public static final int SNDANDRCVDELTLMCHKENDSETSIG = 35; // 72存摺資料補登成功, 檢查翻頁及燈號完成退摺開始！
-	public static final int SNDANDRCVDELTLMCHKENDEJECTPRT = 36; // 72存摺資料補登成功, 檢查翻頁及燈號退摺！
-	public static final int DELPASSBOOKREGCOMPERR = 37; // 73存摺資料補登刪除失敗！Show Signal
+	public static final int PBDATAFORMAT = 21; //// Format 列印台幣存摺資料格式  print data
+	public static final int FCDATAFORMAT = 22; //// Format 列印外匯存摺資料格式  print data
+	public static final int GLDATAFORMAT = 23; //// Format 列印黃金存摺資料格式  print data
+	public static final int FORMATPRTDATAERROR = 24; // 61存摺資料補登失敗！Show Signal
+	public static final int WRITEMSR = 25; //// Write MSR
+	public static final int WRITEMSRWAITCONFIRM = 26;  //// Write MSR ware confirm
+	public static final int WRITEMSRERR = 27; //// Write MSR ERROR 71存摺磁條寫入有問題！
+	public static final int READMSRERRAFTERWRITEMSRERR = 28; // 11磁條讀取失敗(1)！
+	public static final int READMSRSUCAFTERWRITEMSRERR = 29; // 12存摺磁條讀取成功(1)！
+	public static final int COMPMSRSUCAFTERWRITEMSRERR = 30; // 12存摺磁條比對正確(1)！
+	public static final int COMPMSRERRAFTERWRITEMSRERR = 31; // 12存摺磁條比對失敗(1)！
+	public static final int EJECTAFTERPAGEERRORWAITSTATUS = 32;
+	public static final int WRITEMSRERRSHOWSIG = 33; // 71存摺磁條寫入失敗！ Show Signal
+	public static final int SNDANDRCVDELTLM = 34; // 72存摺資料補登成功！
+	public static final int SNDANDRCVDELTLMCHKEND = 35;        // 72存摺資料補登成功, 檢查翻頁及燈號開始！
+	public static final int SNDANDRCVDELTLMCHKENDSETSIG = 36; // 72存摺資料補登成功, 檢查翻頁及燈號完成退摺開始！
+	public static final int SNDANDRCVDELTLMCHKENDEJECTPRT = 37; // 72存摺資料補登成功, 檢查翻頁及燈號退摺！
+	public static final int DELPASSBOOKREGCOMPERR = 38; // 73存摺資料補登刪除失敗！Show Signal
 //	public static final int NOTFINISH = 38; // iEnd != 0 continue printing
 //	public static final int NOTFINISHATP = 39; // iEnd != 0 continue printing, Auto turn page
 //	public static final int NOTFINISHHTP = 40; // iEnd != 0 continue printing, Handy turn page, Show Reentry signal.
-	public static final int FINISH = 38; // iEnd == 0 printing finished,
+	public static final int FINISH = 39; // iEnd == 0 printing finished,
 											// === 2 超過存摺頁次, 仍然顯示補登完成燈號
 											// go to capture
 	private int curState = SESSIONBREAK;
@@ -240,6 +241,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private String account = "";
 	private String catagory = "";   // working passbook workstation no
 	private byte[] cusid = null;
+	//20211028 MatsudairaSyuMe MSR re-read check buffer
+	private byte[] reReadcusid = null;
+	//----
 	private FASSvr dispatcher;
 	private boolean alreadySendTelegram = false;
 	//20210122
@@ -4058,7 +4062,52 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		case WRITEMSR:
 			log.debug("{} {} {} :AutoPrnCls : process WRITEMSR", brws, catagory, account);
 			if (WMSRFormat(firstOpenConn)) {
-				this.curState = SNDANDRCVDELTLM;
+				/*20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant*/
+				this.curState = READANDCHECKMSR;
+				//amlog.info("[{}][{}][{}]:07存摺磁條寫入成功！", brws, pasname, account);//20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant
+				log.debug("07存摺磁條寫入成功！ 1");
+				reReadcusid = null;
+				if (null != (reReadcusid = prt.MS_Read(firstOpenConn, brws))) {
+					if (reReadcusid.length == 1) {
+						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
+						InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
+						log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from WRITEMSR", brws, catagory, account);
+						atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
+						amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
+						InsertAMStatus(brws, pasname, account, "13磁條比對不符");
+						SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+						prt.Eject(firstOpenConn);
+						Sleep(2 * 1000);
+						resetPassBook();
+					} else {
+						amlog.info("[{}][{}][{}]:12存摺磁條讀取成功(1)！", brws, pasname, account);
+						for (int i = 0; i < reReadcusid.length; i++)
+							reReadcusid[i] = reReadcusid[i] == (byte) '<' ? (byte) '-' : reReadcusid[i];
+						String reReadsid = new String(reReadcusid);
+						atlog.info("[{}]:AutoPrnCls : MS_Read() -- c_Msr(1)=[{}]", brws, reReadsid);
+						amlog.info("[{}][{}][{}]:13寫入資料：{}", brws, pasname, account, tx_area.get("c_Msr"));
+						amlog.info("[{}][{}][{}]:13讀取資料：{}", brws, pasname, account, reReadsid);
+						if (tx_area.get("c_Msr").equals(reReadsid)) {
+							amlog.info("[{}][{}][{}]:12存摺磁條比對正確(1)！", brws, pasname, account);
+							this.curState = SNDANDRCVDELTLM;
+							amlog.info("[{}][{}][{}]:13磁條比對成功", brws, pasname, account);
+							log.debug("{} {} {} AutoPrnCls : --re-read and check Account: from WRITEMSR", brws, catagory, account);
+						} else {
+							amlog.info("[{}][{}][{}]:12存摺磁條比對失敗(1)！{} {}", brws, pasname, account, tx_area.get("c_Msr"), reReadsid);
+							atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
+							InsertAMStatus(brws, pasname, account, "12存摺磁條比對失敗(1)！");
+							amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
+							InsertAMStatus(brws, pasname, account, "13磁條比對不符");
+							log.debug("{} {} {} AutoPrnCls : read MSR ERROR [{}] after write: from WRITEMSR", brws, catagory, account,
+									reReadsid);
+							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+							prt.Eject(firstOpenConn);
+							Sleep(2 * 1000);
+							resetPassBook();
+						}
+					}
+				}
+				//----
 			} else
 				this.curState = WRITEMSRWAITCONFIRM;
 			log.debug("{} {} {} :AutoPrnCls : WMSRFormat() -- c_Msr=[{}]",brws, catagory, account, this.tx_area.get("c_Msr"));
@@ -4073,14 +4122,106 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		case WRITEMSRWAITCONFIRM:
 			log.debug("{} {} {} :AutoPrnCls : process WRITEMSRWAITCONFIRM", brws, catagory, account);
 			if (WMSRFormat(!firstOpenConn)) {
-				amlog.info("[{}][{}][{}]:72存摺資料補登成功！", brws, pasname, account);				
-				this.curState = SNDANDRCVDELTLM;
+				// 20211028 MatsudairaSyuMe read MSR again after write MSR and check the result
+				// with previous write constant
+				//amlog.info("[{}][{}][{}]:07存摺磁條寫入成功！", brws, pasname, account);
+				this.curState = READANDCHECKMSR;
+				log.debug("07存摺磁條寫入成功！ 2");
+				reReadcusid = null;
+				if (null != (reReadcusid = prt.MS_Read(firstOpenConn, brws))) {
+					if (reReadcusid.length == 1) {
+						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
+						atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
+						InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
+						log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from WRITEMSRWAITCONFIRM", brws, catagory, account);
+						amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
+						InsertAMStatus(brws, pasname, account, "13磁條比對不符");
+						SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+						prt.Eject(firstOpenConn);
+						Sleep(2 * 1000);
+						resetPassBook();
+					} else {
+						amlog.info("[{}][{}][{}]:12存摺磁條讀取成功(1)！", brws, pasname, account);
+						for (int i = 0; i < reReadcusid.length; i++)
+							reReadcusid[i] = reReadcusid[i] == (byte) '<' ? (byte) '-' : reReadcusid[i];
+						String reReadsid = new String(reReadcusid);
+						atlog.info("[{}]:AutoPrnCls : MS_Read() -- c_Msr(1)=[{}]", brws, reReadsid);
+						amlog.info("[{}][{}][{}]:13寫入資料：{}", brws, pasname, account, tx_area.get("c_Msr"));
+						amlog.info("[{}][{}][{}]:13讀取資料：{}", brws, pasname, account, reReadsid);
+						if (tx_area.get("c_Msr").equals(reReadsid)) {
+							amlog.info("[{}][{}][{}]:12存摺磁條比對正確(1)！", brws, pasname, account);
+							this.curState = SNDANDRCVDELTLM;
+							amlog.info("[{}][{}][{}]:13磁條比對成功", brws, pasname, account);
+							log.debug("{} {} {} AutoPrnCls : --re-read and check Account: from WRITEMSRWAITCONFIRM", brws, catagory, account);
+						} else {
+							amlog.info("[{}][{}][{}]:12存摺磁條比對失敗(1)！{} {}", brws, pasname, account, tx_area.get("c_Msr"), reReadsid);
+							atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
+							InsertAMStatus(brws, pasname, account, "12存摺磁條比對失敗(1)！");
+							amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
+							InsertAMStatus(brws, pasname, account, "13磁條比對不符");
+							log.debug("{} {} {} AutoPrnCls : read MSR ERROR [{}] after write: from WRITEMSRWAITCONFIRM", brws, catagory, account,
+									reReadsid);
+							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+							prt.Eject(firstOpenConn);
+							Sleep(2 * 1000);
+							resetPassBook();
+						}
+					}
+				}
 			}
 			//20200718
 			lastCheck(before);
 			log.debug("after {}=>{}=====check prtcliFSM", before, this.curState);
 			break;
 
+/*20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant*/
+        case READANDCHECKMSR:
+			log.debug("{} {} {} :AutoPrnCls : process READANDCHECKMSR", brws, catagory, account);
+			reReadcusid = null;
+			if (null != (reReadcusid = prt.MS_Read(!firstOpenConn, brws))) {
+				if (reReadcusid.length == 1) {
+					amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
+					atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
+					InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
+					log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from READANDCHECKMSR", brws, catagory, account);
+					amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
+					InsertAMStatus(brws, pasname, account, "13磁條比對不符");
+					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+					prt.Eject(firstOpenConn);
+					Sleep(2 * 1000);
+					resetPassBook();
+				} else {
+					amlog.info("[{}][{}][{}]:12存摺磁條讀取成功(1)！", brws, pasname, account);
+					for (int i = 0; i < reReadcusid.length; i++)
+						reReadcusid[i] = reReadcusid[i] == (byte) '<' ? (byte) '-' : reReadcusid[i];
+					String reReadsid = new String(reReadcusid);
+					atlog.info("[{}]:AutoPrnCls : MS_Read() -- c_Msr(1)=[{}]", brws, reReadsid);
+					amlog.info("[{}][{}][{}]:13寫入資料：{}", brws, pasname, account, tx_area.get("c_Msr"));
+					amlog.info("[{}][{}][{}]:13讀取資料：{}", brws, pasname, account, reReadsid);
+					if (tx_area.get("c_Msr").equals(reReadsid)) {
+						amlog.info("[{}][{}][{}]:12存摺磁條比對正確(1)！", brws, pasname, account);
+						this.curState = SNDANDRCVDELTLM;
+						amlog.info("[{}][{}][{}]:13磁條比對成功", brws, pasname, account);
+						amlog.info("[{}][{}][{}]:72存摺資料補登成功！", brws, pasname, account);
+						log.debug("{} {} {} AutoPrnCls : --re-read and check Account: from READANDCHECKMSR", brws, catagory, account);
+					} else {
+						amlog.info("[{}][{}][{}]:12存摺磁條比對失敗(1)！{} {}", brws, pasname, account, tx_area.get("c_Msr"), reReadsid);
+						atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
+						InsertAMStatus(brws, pasname, account, "12存摺磁條比對失敗(1)！");
+						amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
+						InsertAMStatus(brws, pasname, account, "13磁條比對不符");
+						log.debug("{} {} {} AutoPrnCls : read MSR ERROR [{}] after write: from READANDCHECKMSR", brws, catagory, account, reReadsid);
+						SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+						prt.Eject(firstOpenConn);
+						Sleep(2 * 1000);
+						resetPassBook();
+					}
+				}
+			}
+			lastCheck(before);
+			log.debug("after {}=>{}=====check prtcliFSM", before, this.curState);
+			break;
+			/**/
 		case SNDANDRCVDELTLM:
 			//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 			log.debug("{} {} {} :AutoPrnCls : process SNDANDRCVDELTLM isTITA_TOTA_START={} alreadySendTelegram={}", brws,
@@ -4320,6 +4461,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					log.debug("{} {} {} AutoPrnCls : --reset printer after receive telegram error", brws, catagory,
 							account);
 				}
+				//20211028 MatsudairaSyuMe
+				prt.Eject(firstOpenConn);
+				Sleep(2 * 1000);
+				resetPassBook();
+                //----
 //			close();
 //			this.curState = SESSIONBREAK;
 			}
@@ -4472,7 +4618,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				amtbcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 			String t = sdf.format(new java.util.Date());
-			String fldam = String.format(amstatusptrn, t, brws, act, passname, desc);
+			//20211028 MatsudairaSyuMe change field position
+			String fldam = String.format(amstatusptrn, t, brws, passname, act, desc);
 			String[] rsno = amtbcon.INSSELChoiceKey(PrnSvr.devamtbname, PrnSvr.devamtbfields, fldam, PrnSvr.devamtbsearkey, "-1", false, false);
 			if (rsno != null) {
 				for (int i = 0; i < rsno.length; i++)
