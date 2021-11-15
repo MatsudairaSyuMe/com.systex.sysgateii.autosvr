@@ -373,14 +373,20 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		*/
 		//20201115
 //		amlog = PrnSvr.amlog;
+		//20211115 MatsudairasyuMe auto rolling start by Date
 		//20201214
-		this.amlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AM" + this.brws.substring(3) + byDate, "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
+//		this.amlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AM" + this.brws.substring(3) + byDate, "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
+		this.amlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AM" + this.brws.substring(3), "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
 		//----
 		//20201214
-		this.aslog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AS" + this.brws.substring(3) + byDate, "info", "TIME     [0000]:%d{yyyy.MM.dd HH:mm:ss:SSS} %msg%n");
+		//20211115 MatsudairasyuMe auto rolling start by Date
+//		this.aslog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AS" + this.brws.substring(3) + byDate, "info", "TIME     [0000]:%d{yyyy.MM.dd HH:mm:ss:SSS} %msg%n");
+		this.aslog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AS" + this.brws.substring(3), "info", "TIME     [0000]:%d{yyyy.MM.dd HH:mm:ss:SSS} %msg%n");
 //		atlog = PrnSvr.atlog;
 		//20201214
-		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3) + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
+		//20211115 MatsudairasyuMe auto rolling start by Date
+//		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3) + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
+		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3), "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
 		atlog.info("=============[Start]=============");
 		atlog.info("------MainThreadId={}------", pid);
 		atlog.info("------Call MaintainLog OK------");

@@ -158,14 +158,22 @@ public class LogUtil {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
 		String fpn = "";
+		//20211115 MatsudairasyuMe auto rolling start by Date
+		/*
 		if (pathname != null && pathname.trim().length() > 0)
 			fpn = pathname + File.separator + logName + ".log";
 		else
 			fpn = "." + File.separator + logName + ".log";
+			*/
+		if (pathname != null && pathname.trim().length() > 0)
+			fpn = pathname + File.separator + logName + "%d{yyyyMMdd}.%i.log.zip";
+		else
+			fpn = "." + File.separator + logName + "%d{yyyyMMdd}.%i.log.zip";
 
 		RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<ILoggingEvent>();
 		rfAppender.setContext(loggerContext);
-		rfAppender.setFile(OptionHelper.substVars(fpn, loggerContext));
+		//20211115 MatsudairasyuMe Test rolling start by Date
+		//rfAppender.setFile(OptionHelper.substVars(fpn, loggerContext));
 		rfAppender.setAppend(true);
 		rfAppender.setPrudent(false);
 
@@ -174,11 +182,13 @@ public class LogUtil {
 		encoder.setPattern(ptrn);
 		
 		TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
-		if (pathname != null && pathname.trim().length() > 0)
+		//20211115 MatsudairasyuMe Test rolling start by Date
+/*		if (pathname != null && pathname.trim().length() > 0)
 			fpn = pathname + File.separator + "archive" + File.separator + logName + ".%d{yyyy-MM-dd}.%i.log.zip";
 		else
 			fpn = "." + File.separator + "archive" + File.separator + logName + ".%d{yyyy-MM-dd}.%i.log.zip";
-		rollingPolicy.setMaxHistory(3);
+			*/
+		rollingPolicy.setMaxHistory(30);
 		rollingPolicy.setFileNamePattern(OptionHelper.substVars(fpn, loggerContext));
 		rollingPolicy.setCleanHistoryOnStart(true);
 		rollingPolicy.setContext(loggerContext);
