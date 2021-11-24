@@ -795,5 +795,11 @@ public class CS2812Impl implements Printer {
 			e1.printStackTrace();
 		}
 	}
-
+	//20211124 MatsudairaSyuMe
+	public static final int MS_Read_Check_Start             = 49;
+	public static final int MS_Read_Check                   = 50;
+	public byte[] MS_CheckAndRead(boolean start, String brws) {
+		byte[] data = null;
+		return data;
+	}
 }

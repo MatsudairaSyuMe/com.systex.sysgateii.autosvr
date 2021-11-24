@@ -2582,5 +2582,118 @@ public class CS5240Impl implements Printer {
 	public AtomicBoolean getIsShouldShutDown() {
 		return isShouldShutDown;
 	}
+	//20211124 MatsudairaSyuMe
+	public static final int MS_Read_Check_Start             = 49;
+	public static final int MS_Read_Check                   = 50;
+	public byte[] MS_CheckAndRead(boolean start, String brws) {
+		byte[] data = null;
+		if (start)
+			this.curState = MS_Read_Check_Start;
+		log.debug("MS_CheckAndRead curState={} curChkState={}", this.curState, this.curChkState);
+
+		if (this.curState == MS_Read_Check_Start || this.curState == MS_Read_Check) {
+			if (this.curState == MS_Read_Check_Start) {
+				this.curState = MS_Read_Check;
+				this.curChkState = CheckStatus_START;
+			}
+			data = CheckStatus();
+			log.debug("MS_CheckAndRead 1 ===<><>{} chkChkState {}", this.curState, this.curChkState);
+			if (!CheckError(data)) {
+				return null;
+			} else
+				this.curState = MS_Read_START;
+		}
+		log.debug("MS_CheckAndRead 2 curState={} curChkState={}", this.curState, this.curChkState);
+		if (this.curState == MS_Read_START) {
+			this.curState = MS_Read;
+			log.debug("MS_CheckAndRead 3 curState={} curChkState={}", this.curState, this.curChkState);
+			amlog.info("[{}][{}][{}]:01讀取存摺磁條中...", brws, "        ", "            ");
+			if (Send_hData(S5240_PMS_READ) != 0)
+				return (data);
+		}
+		if (this.curState == MS_Read) {
+			this.curState = MS_ReadRecvData;
+			Sleep(500);
+			this.iCnt = 0;
+			this.curmsdata = null;
+			data = Rcv_Data();
+		} else if (this.curState == MS_ReadRecvData) {
+			Sleep(200);
+			this.iCnt++;
+			data = Rcv_Data();
+			if (data == null && iCnt > 40) {
+				amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-2)", brws, "        ", "            ");
+				pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-2)");
+				this.curState = ResetPrinterInit_START;
+				ResetPrinterInit();
+				pc.close();
+			} else if (data != null && !new String(data).equals("DIS")) {
+				if (data[1] == (byte)'s') {
+					if (data[2] == (byte)(0x7f & 0xff)) {
+						iCnt = 0;
+						amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR)", brws, "        ", "            ");
+						pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR)");
+						this.curState = MS_Read_2;
+						this.curChkState = CheckStatusRecvData;
+						this.iCnt = 0;
+						return this.curmsdata;
+					} else if (data.length >= 38) {
+						int lastidx = data.length - 1;
+						for (; lastidx > 1; lastidx--)
+							if (data[lastidx] == (byte) 0x1c)
+								break;
+						byte[] tmpb = new byte[lastidx - 2];
+						System.arraycopy(data, 2, tmpb, 0, tmpb.length);
+						this.curmsdata = tmpb;
+						System.gc();
+					} else {
+						iCnt = 0;
+						amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-1格式錯誤)", brws, "        ", "            ");
+						pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-1格式錯誤)");
+						byte[] nr = new byte[1];
+						nr[0] = (byte)'X';
+						this.curmsdata = nr;
+						return this.curmsdata;
+					}
+				} else if (data.length > 2 && ((data[0] == ESQ) && (data[1] == (byte)'r') && (data[2] == (byte)'P'))) {
+//					Send_hData(S5240_PSTAT);
+					this.curmsdata = null;
+					return null;
+				//----
+				} else {
+					iCnt = 0;
+					amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-1)", brws, "        ", "            ");
+					pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-1)");
+					this.curState = ResetPrinterInit_START;
+					ResetPrinterInit();
+					pc.close();
+					this.curmsdata = null;
+					return null;
+				}
+				this.curState = MS_Read_START_2;
+				log.debug("MS_CheckAndRead 4 ===<><>{} chkChkState {} curmsdata={}", this.curState, this.curChkState, this.curmsdata);
+			}
+		}
+		if (this.curState == MS_Read_START_2 || this.curState == MS_Read_2) {
+			if (this.curState == MS_Read_START_2) {
+				this.curState = MS_Read_2;
+				this.curChkState = CheckStatus_START;
+			}
+		
+			data = CheckStatus();
+			log.debug("MS_CheckAndRead 5 ===<><>{} chkChkState {}", this.curState, this.curChkState);
+			if (!CheckError(data)) {
+				return null;
+			} else {
+				this.curState = MS_Read_FINISH;
+				log.debug("MS_CheckAndRead 6 ===<><>{} chkChkState {}", this.curState, this.curChkState);
+				atlog.info("ms_read data=[{}]",new String(this.curmsdata));
+				return this.curmsdata;
+			}
+		}
+
+		log.debug("{} {} {} {} MS_CheckAndRead final data.length={}", iCnt, brws, "", "", (data == null? 0: data.length));
+		return curmsdata;
+	}
 
 }

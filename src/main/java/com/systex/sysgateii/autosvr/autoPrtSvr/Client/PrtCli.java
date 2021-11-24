@@ -4073,7 +4073,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//amlog.info("[{}][{}][{}]:07存摺磁條寫入成功！", brws, pasname, account);//20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant
 				log.debug("07存摺磁條寫入成功！ 1");
 				reReadcusid = null;
-				if (null != (reReadcusid = prt.MS_Read(firstOpenConn, brws))) {
+				if (null != (reReadcusid = prt.MS_CheckAndRead(firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead 
 					if (reReadcusid.length == 1) {
 						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
 						InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
@@ -4134,7 +4134,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.curState = READANDCHECKMSR;
 				log.debug("07存摺磁條寫入成功！ 2");
 				reReadcusid = null;
-				if (null != (reReadcusid = prt.MS_Read(firstOpenConn, brws))) {
+				if (null != (reReadcusid = prt.MS_CheckAndRead(firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead
 					if (reReadcusid.length == 1) {
 						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
 						atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
@@ -4184,7 +4184,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
         case READANDCHECKMSR:
 			log.debug("{} {} {} :AutoPrnCls : process READANDCHECKMSR", brws, catagory, account);
 			reReadcusid = null;
-			if (null != (reReadcusid = prt.MS_Read(!firstOpenConn, brws))) {
+			if (null != (reReadcusid = prt.MS_CheckAndRead(!firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead
 				if (reReadcusid.length == 1) {
 					amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
 					atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);

@@ -274,4 +274,7 @@ public interface Printer {
 
 	public AtomicBoolean getIsShouldShutDown();
 
+	//20211124 MAtsudairaSyuMe
+	public byte[] MS_CheckAndRead(boolean b, String brws);
+
 }
