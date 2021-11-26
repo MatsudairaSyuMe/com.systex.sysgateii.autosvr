@@ -927,7 +927,15 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug("unload idle state handler");
 				clientChannel.pipeline().remove(idleStateHandlerName);
 			}
-
+			//20211126 MatsudairaSyuMe check system date end
+			if (!new SimpleDateFormat("yyyyMMdd").format(new Date()).trim().equals(this.getByDate())) {
+				//20211126 date changed update am log
+				if (this.amlog != null)
+					amlog.info("[{}][{}][{}]:                            ", brws, "        ", "            ");
+				this.setByDate(new SimpleDateFormat("yyyyMMdd").format(new Date()).trim());
+				log.info("system date changed");
+			}
+			//----
 			IdleStateEvent e = (IdleStateEvent) evt;
 			if (e.state() == IdleState.READER_IDLE) {
 				log.debug(clientId + " READER_IDLE");
@@ -3219,7 +3227,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							// 20200504
 							this.curState = EJECTAFTERPAGEERROR;
 							log.error("ERROR!!! received data from host timeout {}", responseTimeout);
-							amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]接電文逾時{}", brws, pasname, this.account, rpage, responseTimeout);
+							//20211126 MatsudairaSyuMe change AMlog timeout message
+//							amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]接電文逾時{}", brws, pasname, this.account, rpage, responseTimeout);
+							amlog.info("[{}][{}][{}]05中心存摺補登資料接收電文逾時{}", brws, pasname, this.account, responseTimeout);
 							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
 							// ----
 							if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
