@@ -1833,6 +1833,10 @@ public class CS4625Impl implements Printer {
 					//20201119
 					pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSW)");
 					//----
+					//20211203 MatsudairaSyuMe
+					amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
+					pc.InsertAMStatus(brws, pasname, account, "71存摺磁條寫入失敗！");
+					//----
 					this.curState = ResetPrinterInit_START;
 					ResetPrinterInit();
 					pc.close();
@@ -1851,6 +1855,10 @@ public class CS4625Impl implements Printer {
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3(MSW)[{}]", brws, pasname, account, new String(data));
 						//20201119
 						pc.InsertAMStatus(brws, pasname, account, "95硬體錯誤代碼3(MSW)"+new String(data));
+						//----
+						//20211203 MatsudairaSyuMe
+						amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
+						pc.InsertAMStatus(brws, pasname, account, "71存摺磁條寫入失敗！");
 						//----
 						Send_hData(S4625_PERRCODE_REQ);
 						if (Send_hData(S4625_PSTAT) == 0)
@@ -1873,6 +1881,10 @@ public class CS4625Impl implements Printer {
 						 * 
 						 * Send_hData(S4625_PRESET); Send_hData(S4625_PCLEAR); goto S4265_MSRW_Retry; }
 						 */
+						//20211203 MatsudairaSyuMe
+						amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
+						pc.InsertAMStatus(brws, pasname, account, "71存摺磁條寫入失敗！");
+						//----
 						this.curState = ResetPrinterInit_START;
 						ResetPrinterInit();
 						return false;
@@ -1880,6 +1892,10 @@ public class CS4625Impl implements Printer {
 						amlog.info("[{}][{}][{}]:94補摺機指令錯誤！(MSW)", brws, pasname, account);		
 						//20201119
 						pc.InsertAMStatus(brws, pasname, account, "94補摺機指令錯誤！(MSW)");
+						//----
+						//20211203 MatsudairaSyuMe
+						amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
+						pc.InsertAMStatus(brws, pasname, account, "71存摺磁條寫入失敗！");
 						//----
 						this.curState = ResetPrinterInit_START;
 						//20210414 MatsudairaSyuMe
@@ -1902,6 +1918,10 @@ public class CS4625Impl implements Printer {
 					amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-2)", brws, pasname, account);		
 					//20201119
 					pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSR-2)");
+					//----
+					//20211203 MatsudairaSyuMe
+					amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
+					pc.InsertAMStatus(brws, pasname, account, "71存摺磁條寫入失敗！");
 					//----
 					this.curState = ResetPrinterInit_START;
 					ResetPrinterInit();
