@@ -4701,13 +4701,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private void PeriodDayEndSchedule() {
 		this.timer = new Timer();
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.HOUR_OF_DAY, 23);
-		calendar.set(Calendar.MINUTE, 59);
-		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 1);
 		Date firstTime = calendar.getTime();
 		log.info("設定執行 Date 為：{} , Period：86400秒", firstTime);
-		timer.scheduleAtFixedRate(new DateTask(), firstTime, 86400);
-//		timer.scheduleAtFixedRate(new DateTask(), 10000, 10000);
+//		timer.schedule(new DateTask(), firstTime, 86400 *1000);
+		timer.scheduleAtFixedRate(new DateTask(), firstTime, 86400 *1000);
 //        timer.cancel();
 	}
 
