@@ -3227,9 +3227,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							// 20200504
 							this.curState = EJECTAFTERPAGEERROR;
 							log.error("ERROR!!! received data from host timeout {}", responseTimeout);
-							//20211126 MatsudairaSyuMe change AMlog timeout message
+							//20211126 MatsudairaSyuMe change AMlog timeout message 20211209 add colon word
 //							amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]接電文逾時{}", brws, pasname, this.account, rpage, responseTimeout);
-							amlog.info("[{}][{}][{}]05中心存摺補登資料接收電文逾時{}", brws, pasname, this.account, responseTimeout);
+							amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時{}", brws, pasname, this.account, responseTimeout);
 							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
 							// ----
 							if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
