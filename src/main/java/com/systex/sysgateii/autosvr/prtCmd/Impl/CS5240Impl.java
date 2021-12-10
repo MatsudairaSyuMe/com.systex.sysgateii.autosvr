@@ -2614,7 +2614,7 @@ public class CS5240Impl implements Printer {
 		if (this.curState == MS_Read_Check_Start || this.curState == MS_Read_Check) {
 			if (this.curState == MS_Read_Check_Start) {
 				this.curState = MS_Read_Check;
-				this.curChkState = CheckStatus_START;
+				this.curChkState = CheckStatus_START;PurgeBuffer(); //20211210 MatsudairasyuMe purge buffer before start to check status
 			}
 			data = CheckStatus();
 			log.debug("MS_CheckAndRead 1 ===<><>{} chkChkState {}", this.curState, this.curChkState);
