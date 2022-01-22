@@ -3952,9 +3952,15 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								//20210108
 								//20210116 MatsudairaSyume this.dispatcher.releaseConn();
 								//----
-								log.error("ERROR!!! received data from host timeout {}", responseTimeout);
-								amlog.info("[{}][{}][{}]:62存摺刪除資料補登失敗！[{}]接電文逾時{}", brws, pasname, this.account,
+								//20220121 MAtsudairaSyuMe
+								if ((now - startTime) > responseTimeout) {
+								    log.error("ERROR!!! received data from host timeout {}", responseTimeout);
+								    amlog.info("[{}][{}][{}]:62存摺刪除補登資料失敗！[{}]接電文逾時", brws, pasname, this.account,
 										responseTimeout);
+								} else {
+								    log.error("ERROR!!! received data from host error");
+								    amlog.info("[{}][{}][{}]:62存摺刪除補登資料失敗！", brws, pasname, this.account);									
+								}
 								SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
 								// ----
 								if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
