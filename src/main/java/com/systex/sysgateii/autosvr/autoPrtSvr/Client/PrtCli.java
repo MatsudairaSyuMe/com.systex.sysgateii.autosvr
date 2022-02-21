@@ -3565,8 +3565,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								log.error("update state table {} error:{}", PrnSvr.statustbname, e.getMessage());
 							}
 							this.lastCheckTime = System.currentTimeMillis();
-						}
-						log.debug("{} {} {} AutoPrnCls : Parsing() -- Detect Error!", brws, catagory, account);
+						}//20220221 change "Deteect Error" to "Detect No Passbook Insert"
+						log.debug("{} {} {} AutoPrnCls : Parsing() -- Detect No Passbook Insert!", brws, catagory, account);
 					}
 		//20200611 for turn page processing
 /*				}

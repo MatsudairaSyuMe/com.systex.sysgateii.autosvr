@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +32,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+//20220221 MatsudairaSyuMe drop non-service telegram
 import io.netty.util.CharsetUtil;
 
 /**
@@ -188,10 +190,17 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						// change from if to while
 						while (clientMessageBuf.readableBytes() > 47) {
 							//20211209 MatsudairaSyuMe take off all the data from  clientMessageBuf and convert to TOTA telegram
-							log.debug("clientMessageBuf.readableBytes={} inner while loop!!!",clientMessageBuf.readableBytes());
+							//20220221 mark up log.debug("clientMessageBuf.readableBytes={} inner while loop!!!",clientMessageBuf.readableBytes());
+							byte[] lenbary = new byte[3];
+							clientMessageBuf.getBytes(clientMessageBuf.readerIndex() + 3, lenbary);
+							log.debug("clientMessageBuf.readableBytes={} size={} inner while loop!!!",clientMessageBuf.readableBytes(), dataUtil.fromByteArray(lenbary));
+							if (clientMessageBuf.readableBytes() < dataUtil.fromByteArray(lenbary)) {
+								log.debug("clientMessageBuf.readableBytes={} lower to telegram field size={} wait incomming data",clientMessageBuf.readableBytes(), dataUtil.fromByteArray(lenbary));
+								break;
+							}
 							byte[] trnidbary = new byte[4];
 							clientMessageBuf.getBytes(clientMessageBuf.readerIndex() + 38, trnidbary);
-							if (new String(trnidbary, CharsetUtil.UTF_8).equals(FASACTIVES004ID)) {
+/* 20220221 mark up		if (new String(trnidbary, CharsetUtil.UTF_8).equals(FASACTIVES004ID)) {
 								log.debug("receive broadcast {} telegram", FASACTIVES004ID);
 								while (clientMessageBuf.readableBytes() >= 12) {
 									byte[] lenbary = new byte[3];
@@ -236,8 +245,15 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 								
 							}
 							//20210116 MatsudairaSyuMe
-							else {
-								byte[] resultmsg = cnvResultTelegram();
+							else { */ //20220221 mark up
+							byte[] resultmsg = cnvResultTelegram();
+							//20220221 MatsudairSyuMe drop non-service telegram
+							String checkTRN = new String(trnidbary, StandardCharsets.UTF_8);
+							if (trnidbary[0] == (byte)'S')
+							{
+								log.warn("receive trnid=[{}] non-service telegram drop it !!!", checkTRN);
+							} else {
+							//---- 20220221
 								String telegramKey = dataUtil.getTelegramKey(resultmsg);
 								if (Constants.incomingTelegramMap.containsKey(telegramKey)) {
 									if (Constants.incomingTelegramMap.replace(telegramKey, resultmsg) == null)
@@ -424,7 +440,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						System.arraycopy(rtn, 0, faslogary, 0, rtn.length);
 						for (int _tmpidx = 0; _tmpidx < rtn.length; _tmpidx++)
 							faslogary[_tmpidx] = (rtn[_tmpidx] == (byte) 0x0 ? (byte) ' ' : rtn[_tmpidx]);
-						faslog.debug(
+						faslog.info( //20220221 change debug to info
 								String.format(fasRecvPtrn, telmbyteary.length, charcnv.BIG5bytesUTF8str(faslogary)));
 						rtn = remove03(rtn);
 						log.debug("get rtn len= {}", rtn.length);
