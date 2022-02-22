@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+//20220221 MatsudairaSyuMe drop non-service telegram
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +33,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-//20220221 MatsudairaSyuMe drop non-service telegram
 import io.netty.util.CharsetUtil;
 
 /**
@@ -249,7 +249,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 							byte[] resultmsg = cnvResultTelegram();
 							//20220221 MatsudairSyuMe drop non-service telegram
 							String checkTRN = new String(trnidbary, StandardCharsets.UTF_8);
-							if (trnidbary[0] == (byte)'S')
+							if ((trnidbary[0] == (byte)'S') || (trnidbary[0] == (byte)'T'))
 							{
 								log.warn("receive trnid=[{}] non-service telegram drop it !!!", checkTRN);
 							} else {
