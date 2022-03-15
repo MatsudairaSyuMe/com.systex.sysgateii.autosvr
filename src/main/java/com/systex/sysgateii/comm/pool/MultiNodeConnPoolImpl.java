@@ -231,6 +231,14 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 						nodeConns.remove(conn);
 					}
 				}
+				//20220315 MatsudairasyuMe also remove availeConns Map
+				synchronized (availableConns) {
+					final Queue<Channel> nodeConns = availableConns.get(nodeAddr);
+					if (nodeConns != null) {
+						nodeConns.remove(conn);
+					}
+				}
+				//----
 			} finally {
 				closeLock.unlock();
 				LOG.debug("===>disconnect addr={}", nodeAddr);
@@ -373,7 +381,7 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 		return conn;
 	}
 
-	private void doConnect(final String nodeAddr, final long _wait) {
+/*	private void doConnect(final String nodeAddr, final long _wait) {
 		try {
 			Channel conn = null;
 			final Bootstrap bootstrap = bootstraps.get(nodeAddr);
@@ -422,6 +430,37 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 		} catch (Exception ex) {
 			scheduleConnect(nodeAddr);
 		}
+	}*/
+	//20220315 MatsudairaSyuMe
+	private void reConnect(final String node, final long _wait) {
+		bootstraps.get(node).connect().addListener((ChannelFutureListener) future -> {
+		    Channel conn = future.channel();
+		    conn.closeFuture().addListener(new CloseChannelListener(node, conn));
+		    conn.attr(ATTR_KEY_NODE).set(node);
+//		    LOG.info("reConnect 1 availableConns.size=[{}] [{}]",availableConns.size(), availableConns);
+//		    LOG.info("reConnect 1 allConns.size=[{}] [{}]",allConns.size(), allConns);
+		    availableConns.computeIfAbsent(node, na -> new ConcurrentLinkedQueue<>()).add(conn);
+		    allConns.computeIfAbsent(node, na2 -> new ConcurrentLinkedQueue<>()).add(conn);
+		    synchronized (connCounts) {
+			    connCounts.get(node).incrementAndGet();
+		    }
+		    if (connAttemptsLimit > 0) {
+			    // reset the connection failures counter if connected successfully
+			    failedConnAttemptCounts.get(node).set(0);
+		    }
+		    LOG.info("reConnect lambda New connection to " + node + " created {}", connAttemptsLimit);
+		    if (conn.isActive()) {
+			    final Queue<Channel> connQueue = availableConns.get(node);
+			    if (connQueue != null) {
+				    connQueue.add(conn);
+				    LOG.info("reConnect add connQueue");
+			    }
+//			    LOG.info("reConnect 2 availableConns.size=[{}] [{}]",availableConns.size(), availableConns);
+//			    LOG.info("reConnect 2 allConns.size=[{}] [{}]",allConns.size(), allConns);
+		    } else {
+			    conn.close();
+		    }
+	    });
 	}
 
 	private void scheduleConnect(final String nodeAddr) {
@@ -429,7 +468,7 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 			timer_.schedule(new TimerTask() {
 				@Override
 				public void run() {
-					doConnect(nodeAddr, reconnectInterval);
+					reConnect(nodeAddr, reconnectInterval); //20220315 change doConnect to reConnect
 				}
 			}, reconnectInterval);
 		}
