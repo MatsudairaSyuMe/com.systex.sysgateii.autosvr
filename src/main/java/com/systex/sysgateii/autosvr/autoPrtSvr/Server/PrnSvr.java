@@ -1,12 +1,11 @@
 package com.systex.sysgateii.autosvr.autoPrtSvr.Server;
 
-import java.io.File;
-
 /**
  * 
  * Created by MatsudairaSyume 2019/11/5
  */
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetSocketAddress;
@@ -43,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.systex.sysgateii.autosvr.Server;
 import com.systex.sysgateii.autosvr.autoPrtSvr.Client.PrtCli;
 import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.conf.DynamicProps;
@@ -52,9 +50,7 @@ import com.systex.sysgateii.autosvr.listener.EventType;
 import com.systex.sysgateii.autosvr.listener.MessageListener;
 import com.systex.sysgateii.autosvr.util.Big5FontImg;
 import com.systex.sysgateii.autosvr.util.DateTimeUtil;
-import com.systex.sysgateii.autosvr.util.LogUtil;
 import com.systex.sysgateii.autosvr.util.StrUtil;
-import com.systex.sysgateii.autosvr.util.ipAddrPars;
 
 public class PrnSvr implements MessageListener<byte[]> {
 	private static Logger log = LoggerFactory.getLogger(PrnSvr.class);
@@ -130,17 +126,13 @@ public class PrnSvr implements MessageListener<byte[]> {
 	//20201006
 	static DynamicProps dcf = null;
 	//----
+	//20220429  MatsudairaSyuMe
+	private static int reqTime = 250; //miniseconds
+	private static int chgidleTime = 60; //seconds
+	//----
 
 	public PrnSvr() {
 		log.info("[0000]:=============[Start]=============");
-//		MDC.put("WSNO", "0000");
-//		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-//		String byDate = sdf.format(new Date());
-
-		//20201115 mark amlog,atlog
-//		amlog = LogUtil.getDailyLogger(PrnSvr.logPath, verbrno + "_AM" + byDate, "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
-//		atlog = LogUtil.getDailyLogger(PrnSvr.logPath, verbrno + "_AT" + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{30} %M|%L]:%msg%n");
-//		atlog.info("=============[Start]=============");
 	}
 
 	@Override
@@ -148,60 +140,28 @@ public class PrnSvr implements MessageListener<byte[]> {
 		// TODO Auto-generated method stub
 		log.debug("msg received");
 	}
-//20201006 mark
-/*	public void run() {
-
-		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
-		String jvmName = bean.getName();
-		String pid = jvmName.split("@")[0];
-		MDC.put("WSNO", "0000");
-		log.info("[0000]:------MainThreadId={}------", pid);
-		atlog.info("------MainThreadId={}------", pid);
-		try {
-			Thread thread;
-			PrtCli conn;
-			log.info("[0000]:------Call MaintainLog OK------");
-			atlog.info("------Call MaintainLog OK------");
-
-			// Load Uniconv.dll
-//			log.info("[0000]:AutoPrnCls : rateprtservice.xml is not well formed! PrnSrv");
-//			atlog.info(":AutoPrnCls : rateprtservice.xml is not well formed! PrnSrv");
-
-			if (list != null && list.size() > 0)
-			{
-				for (int i = 0; i < list.size(); i++) {
-					cfgMap = list.get(i);
-					conn = new PrtCli(cfgMap, fasDespacther, new Timer());
-					thread = new Thread(conn);
-					thread.start();
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
-		}
-	}*/
-	//----
-
 	public void stop()
 	{
 		log.debug("Enter stop");
 	}
 
 	//20200901
-	public static void createServer(DynamicProps cfg, FASSvr setfassvr) {
-		createServer(cfg);
-		fasDespacther = setfassvr;
+	//20210627
+//	public static void createServer(DynamicProps cfg, FASSvr setfassvr)
+	public static void createServer(DynamicProps cfg) {
+		//20210627 change orignail createServer to loadConfig
+//		createServer(cfg);
+		loadConfig(cfg);
+		//20210627 mark to use MDP
+//		fasDespacther = setfassvr;
 		log.info("[0000]:------Call MaintainLog OK------");
 		//20201115 mark atlog
-//		atlog.info("------Call MaintainLog OK------");
 		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
 		String jvmName = bean.getName();
 		String pid = jvmName.split("@")[0];
 		MDC.put("WSNO", "0000");
 		log.info("[0000]:------MainThreadId={}------", pid);
 		//20201115mark atlog
-//		atlog.info("------MainThreadId={}------", pid);
 		try {
 			Thread thread;
 			PrtCli conn;
@@ -209,17 +169,12 @@ public class PrnSvr implements MessageListener<byte[]> {
 			getMe().nodeList.clear();
 			if (list != null && list.size() > 0) {
 				for (int i = 0; i < list.size(); i++) {
-					//20201006
-					/*
-					cfgMap = list.get(i);
-					conn = new PrtCli(cfgMap, fasDespacther, new Timer());
-					thread = new Thread(conn);
-					threadList.add(thread);
-					*/
 					synchronized (getMe()) {
 						//20201006
 						cfgMap = list.get(i);
-						conn = new PrtCli(cfgMap, fasDespacther, new Timer());
+						//20210628 use MDP
+//						conn = new PrtCli(cfgMap, fasDespacther, new Timer());
+						conn = new PrtCli(cfgMap, new Timer());
 						thread = new Thread(conn);
 						getMe().threadMap.put(conn.getId(), thread);
 						//----
@@ -277,14 +232,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 //											log.debug("cmd object node=[{}] curState=[{}] cmd getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurState(), getMe().nodeList.get(cmdary[0]).getCurMode());
 											//----
 											if (cmdary.length > 1) {
-//												if (!getMe().nodeList.containsKey(cmdary[0])) {
-//													log.debug("!!! cmd object node=[{}] not found in nodeList !!!", cmdary[0]);
-//													continue;
-//												}
-												//20201006
-//												log.debug("cmd object node=[{}] curState=[{}] cmd getCurMode=[{}]",
-//														getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurState(), getMe().nodeList.get(cmdary[0]).getCurMode());
-												//----
 												//20201026
 												int idx = 0;
 												String sts = "0";
@@ -325,8 +272,8 @@ public class PrnSvr implements MessageListener<byte[]> {
 													cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 													if (getMe().nodeList != null && getMe().nodeList.size() > 0) {
 														if (getMe().nodeList.containsKey(cmdary[0])) {
-														//20210204, 20210714 MatsudairaSyuMe Log Forging
-														//final String logStr = String.format("!!! cmd object node=[%s] already in nodeList please STOP this node before START !!!", cmdary[0]);
+															//20210204, 20210714 MatsudairaSyuMe Log Forging
+															//final String logStr = String.format("!!! cmd object node=[%s] already in nodeList please STOP this node before START !!!", cmdary[0]);
 															//if (Constants.FilterNewlinePattern.matcher(logStr).find())
 															log.error("!!! cmd object node already in nodeList please STOP this node before START !!! check dashboard");
 															//else
@@ -341,7 +288,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 													}
 													String fldvals = String.format(hisfldvalssptrn, PrnSvr.svrid, cmdary[2], cmdary[0],cmdary[1],cmdary[3],sts,cmdary[4]);
 													//20201028 check sno if command already insert to cmdhis
-//													sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistb, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CURSTUS", "1,1,'9838901','START','2020-10-21 09:46:38.368000','0'", PrnSvr.evcmdhistbsearkey, "-1", false, true);
 													String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
 //													log.debug("chksno=[{}]",chksno);
 													if (chksno != null && chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {
@@ -469,7 +415,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 													if (!restartAlreadyStop && createNode)
 														restartAlreadyStop = true;
 													//----
-													//20201028 add cmdhis
+												//20201028 add cmdhis
 													if (!restartAlreadyStop && !createNode && getMe().nodeList.get(cmdary[0]).getCurState() != -1) {
 														getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.RESTART, sno[0]);
 														log.debug("cmd object node=[{}] stop session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
@@ -555,7 +501,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 					t.interrupt();
 					t.join(1 * 1000);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					log.error("!!! error for stop thread for [{}] !!!: [{}]", nid, e.toString());
 				}
@@ -574,14 +519,13 @@ public class PrnSvr implements MessageListener<byte[]> {
 			if (getMe().nodeList.containsKey(nid)) {
 				// 20210714 MatsudairaSyuMe Log Forging
 				//final String chknid = StrUtil.convertValidLog(nid);
-				log.error("!!! cmd object node already in nodeList please STOP this node before START !!!");//, chknid
+				log.error("!!! cmd object node already in nodeList please STOP this node before START !!!"); //chknid
 				return ret;
 			} else
 				log.debug("!!! cmd object node=[{}] not in nodeList will be created", nid);
 		}
 		//20201021 mark
 		log.debug("start current threadMap size=[{}] nodeList size=[{}]", getMe().threadMap.size(), getMe().nodeList.size());
-//		log.debug("start current nodeList size=[{}]", getMe().nodeList.size());
 		//----
 
 		if (dcf != null)
@@ -595,7 +539,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 				log.debug("check brws cmd [{}] lastcfglist [{}]", nid, newcfgMap.get("brws"));
 				if (nid.trim().equals(newcfgMap.get("brws"))) {
 					log.debug("prepare to create node brws [{}]", newcfgMap.get("brws"));
-					PrtCli conn = new PrtCli(newcfgMap, fasDespacther, new Timer());
+					//20210628 use MDP
+//					PrtCli conn = new PrtCli(newcfgMap, fasDespacther, new Timer());
+					PrtCli conn = new PrtCli(newcfgMap, new Timer());
 					Thread thread = new Thread(conn);
 					getMe().threadMap.put(conn.getId(), thread);
 					getMe().nodeList.put(conn.getId(), conn);
@@ -609,7 +555,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 			log.debug("create node return 0");
 		//20201021 mark
 		log.debug("stop current threadMap size=[{}] size=[{}]", getMe().threadMap.size(), getMe().nodeList.size());
-//		log.debug("stop current nodeList size=[{}]", getMe().nodeList.size());
 		//----
 
 		return ret;
@@ -617,11 +562,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 	//----
 	public static void startServer() {
 		log.debug("Enter startServer");
-		/*20200901
-		if (server != null) {
-			server.start();
-		}
-		*/
 		getMe().start();
 		//----
 	}
@@ -633,16 +573,14 @@ public class PrnSvr implements MessageListener<byte[]> {
 		return me;
 	}
 	//----
-	
-	public static void createServer(DynamicProps cfg) {
-		log.debug("Enter createServer");
+	//20210627 change orignail createServer to loadConfig
+	public static void loadConfig(DynamicProps cfg) {
+		//20210627 change orignail createServer to loadConfig
+		log.debug("Enter loadConfig");
 		//20201006
 		dcf = cfg;
 		//----
 		cfgMap = null;
-		//20201116 cancel verbrno
-		//verbrno = cfg.getConHashMap().get("svrsubport.verhbrno");
-		//----
 		list = cfg.getCfgPrtMapList();
 		logPath = cfg.getConHashMap().get("system.logpath");
 		String tout = cfg.getConHashMap().get("svrsubport.recvtimeout");
@@ -679,6 +617,20 @@ public class PrnSvr implements MessageListener<byte[]> {
 		devamtbsearkey = cfg.getConHashMap().get("system.devamtb[@mkey]");
 		devamtbfields = cfg.getConHashMap().get("system.devamtb[@fields]");
 		//----
+		
+		//20220429 MatsudairaSyuMe
+		String teststr = cfg.getConHashMap().get("reqtime").trim();
+		if(StrUtil.isEmpty(teststr))
+			setReqTime(Integer.parseInt("50"));
+		else
+			setReqTime(Integer.parseInt(teststr)); //202204 30 change from (Integer.parseInt(teststr) / 2) to Integer.parseInt(teststr)
+		teststr = "";
+		teststr = cfg.getConHashMap().get("chgidletime").trim();
+		if(StrUtil.isEmpty(teststr))
+			setChgidleTime(Integer.parseInt("60"));
+		else
+			setChgidleTime(Integer.parseInt(teststr));
+		//----
 
 		//20201106
 		dmtbname = cfg.getConHashMap().get("system.dmtb[@name]");
@@ -689,7 +641,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 		if (dburl != null && dburl.trim().length() > 0) {
 			log.debug("will use db url:[{}] user name:[{}] update status table [{}] main key [{}] fields [{}]", dburl, dbuser, statustbname, statustbmkey, statustbfields);
 			//20201115
-//			log.debug("check tbsdy from table [{}] main key [{}]=[{}] fields [{}]", svrtbsdytbname, svrtbsdytbmkey, svrid, svrtbsdytbfields);
 			log.debug("check tbsdy from table [{}] main key [{}]=[{}] fields [{}]", svrtbsdytbname, svrtbsdytbmkey, bkno, svrtbsdytbfields);
 		}
 		log.debug("receive timeout is ={} mili-seconds", setResponseTimeout);
@@ -698,8 +649,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		String byDate = sdf.format(new Date());
 		//20201115
-//		amlog = LogUtil.getDailyLogger(PrnSvr.logPath, verbrno + "AM" + byDate, "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
-//		atlog = LogUtil.getDailyLogger(PrnSvr.logPath, verbrno + "AT" + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
 		//----
 		try {
 			p_fun_flag.set(false);
@@ -707,7 +656,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 //			big5funt = new Big5FontImg("FontTable_low.bin", "FontData_All.bin");
 			big5funt = new Big5FontImg(File.separator + "biscon" + File.separator + "tns" + File.separator + "FontTable_low.bin", File.separator + "biscon" + File.separator + "tns" + File.separator +  "FontData_All.bin");
 			//----
-			p_fun_flag.set(true);
+				p_fun_flag.set(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -718,16 +667,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 		server = getMe();
 		//----
 	}
-
-	//20201006 mark
-/*	public static void startServer(FASSvr setfassvr) {
-		log.debug("Enter startServer");
-		if (server != null) {
-			fasDespacther = setfassvr;
-			server.run();
-		}
-	}*/
-	//----
 
 	public static void stopServer() {
 		log.debug("Enter stopServer");
@@ -743,5 +682,23 @@ public class PrnSvr implements MessageListener<byte[]> {
 			e.printStackTrace();
 		}
 	}
+
+	//20220429 MatsudaioraSyuMe
+	public static int getReqTime() {
+		return PrnSvr.reqTime;
+	}
+
+	public static void setReqTime(int reqTime) {
+		PrnSvr.reqTime = reqTime;
+	}
+
+	public static int getChgidleTime() {
+		return chgidleTime;
+	}
+
+	public static void setChgidleTime(int chgidleTime) {
+		PrnSvr.chgidleTime = chgidleTime;
+	}
+	//-----
 
 }

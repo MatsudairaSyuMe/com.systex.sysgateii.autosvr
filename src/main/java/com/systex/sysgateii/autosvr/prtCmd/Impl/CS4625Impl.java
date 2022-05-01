@@ -398,7 +398,7 @@ public class CS4625Impl implements Printer {
 				}
 			}
 //20200330			Sleep(100);
-			Sleep(50);
+			Sleep(30); //20220429 MatsudairaSyuMe change from 50 to 33
 		} while (++retry < 10);
 		if (getIsShouldShutDown().get())
 			return "DIS".getBytes();
@@ -466,7 +466,7 @@ public class CS4625Impl implements Printer {
 				}
 			}
 //20200330			Sleep(100);
-			Sleep(50);
+			//20220430 MatsudairaSyuMe
 		} while (++retry < 10);
 		if (getIsShouldShutDown().get())
 			return "DIS".getBytes();
@@ -2574,7 +2574,7 @@ public class CS4625Impl implements Printer {
 	public AtomicBoolean getIsShouldShutDown() {
 		return isShouldShutDown;
 	}
-	
+
 	//20211124 MatsudairaSyuMe
 	public static final int MS_Read_Check_Start             = 49;
 	public static final int MS_Read_Check                   = 50;
@@ -2587,7 +2587,7 @@ public class CS4625Impl implements Printer {
 		if (this.curState == MS_Read_Check_Start || this.curState == MS_Read_Check) {
 			if (this.curState == MS_Read_Check_Start) {
 				this.curState = MS_Read_Check;
-				this.curChkState = CheckStatus_START;PurgeBuffer(); //20211210 MatsudairaSyuMe purge buffer before start to check status
+				this.curChkState = CheckStatus_START;PurgeBuffer(); //20211210 MatsudairasyuMe purge buffer before start to check status
 			}
 			data = CheckStatus();
 			log.debug("MS_CheckAndRead 1 ===<><>{} chkChkState {}", this.curState, this.curChkState);
@@ -2687,4 +2687,5 @@ public class CS4625Impl implements Printer {
 		log.debug("{} {} {} {} MS_CheckAndRead final data.length={}", iCnt, brws, "", "", (data == null? 0: data.length));
 		return curmsdata;
 	}
+
 }

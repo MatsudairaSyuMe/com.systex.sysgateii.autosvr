@@ -24,6 +24,7 @@ import com.systex.sysgateii.autosvr.listener.MessageListener;
 import com.systex.sysgateii.autosvr.ratesvr.Server.ServerProducer;
 import com.systex.sysgateii.autosvr.util.CharsetCnv;
 import com.systex.sysgateii.autosvr.util.dataUtil;
+import com.systex.sysgateii.comm.mdp.mdbroker;
 import com.systex.sysgateii.comm.pool.fas.FASSocketChannel;
 
 import io.netty.buffer.ByteBuf;
@@ -42,7 +43,6 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	private static Logger log = LoggerFactory.getLogger(FASSvr.class);
 	private Logger faslog = LoggerFactory.getLogger("faslog");
 	static FASSvr server;
-
 	static String[] NODES = { "" };
 	private FASSocketChannel ec2 = null;
 	private static final int FAIL_EVERY_CONN_ATTEMPT = 10;
@@ -63,7 +63,6 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	int tsIdleTimeout;
 	String bindAddr;
 	ConcurrentHashMap<String, String> map;
-
 	public FASSvr(ConcurrentHashMap<String, String> map) {
 		log.info("FASSvr start");
 		bufferSize = Constants.DEF_CHANNEL_BUFFER_SIZE;
@@ -85,56 +84,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 		long pid = Long.valueOf(jvmName.split("@")[0]);
 		log.info("FASSvr MainThreadId={}", pid);
 		try {
-			//----20200422 test
-			bindAddr = map.get("system.ip");
-			int port = Integer.parseInt(map.get("system.port"));
-			log.info("port=" + port);
-			String tmps = map.get("boards.board.ip");
-			log.info("boards.board.ip=" + tmps);
-			if (tmps.startsWith("["))
-				tmps = tmps.substring(1);
-			if (tmps.endsWith("]"))
-				tmps = tmps.substring(0, tmps.length() - 1);
-			String[] localary = tmps.split(",");
-			ServerProducer producer = new ServerProducer(map.get("system.svrid").trim(), bindAddr, port, bufferSize,
-			tsKeepAlive, tsIdleTimeout);
-			List<String> wsnos = new ArrayList<String>();
-			wsnos.add(addLeftZeroForNum(98, 4));
-			for (String cs : localary) {
-				producer.getIpList().add(cs.trim());
-				String[] p = cs.trim().split("\\.");
-				wsnos.add(addLeftZeroForNum(Integer.valueOf(p[3]), 4));
-			}
-			List<String> brnos = new ArrayList<String>();
-			tmps = map.get("boards.board.brno");
-			if (tmps.startsWith("["))
-				tmps = tmps.substring(1);
-			if (tmps.endsWith("]"))
-				tmps = tmps.substring(0, tmps.length() - 1);
-			localary = tmps.split(",");
-			for (String cs : localary)
-				brnos.add(cs.trim());
-			//20200215
-			producer.getBrnoList().addAll(brnos);
-			for (int j = 0; j < brnos.size(); j++) {
-				if (producer.getBrnoaddrGrp().containsKey(brnos.get(j)))
-					producer.getBrnoaddrGrp().get(brnos.get(j)).add(producer.getIpList().get((j)));
-				else {
-					List<String> subbrnoList = new ArrayList<String>();
-					subbrnoList.add(producer.getIpList().get((j)));
-					producer.getBrnoaddrGrp().put(brnos.get(j), subbrnoList);
-				}
-			}
-			//----
-			//20200608
-			if (!map.get("system.port").isEmpty() && !map.get("system.port").trim().equals("0")) {
-				Thread thread = new Thread(producer);
-				thread.start();
-			}
-			//----
-			this.ec2 = new FASSocketChannel(NODES, producer, brnos, wsnos);
-			//----
-//			this.ec2 = new FASSocketChannel(NODES);
+			this.ec2 = new FASSocketChannel(NODES);
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.error(e.getMessage());
@@ -257,13 +207,12 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 							header1.getBytes().length + dataUtil.to3ByteArray(sendlen).length
 									+ header2.getBytes().length + telmsg.length,
 							charcnv.BIG5bytesUTF8str(telmsg)) + " isCurrConnNull=[" + isCurrConnNull() + "]");
-					faslog.debug(
+					faslog.info(//20220409 change to info
 							String.format(fasSendPtrn,
 									header1.getBytes().length + dataUtil.to3ByteArray(sendlen).length
 											+ header2.getBytes().length + telmsg.length,
 									charcnv.BIG5bytesUTF8str(telmsg)));
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				// ----
@@ -347,7 +296,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 							System.arraycopy(rtn, 0, faslogary, 0, rtn.length);
 							for (int _tmpidx = 0; _tmpidx < rtn.length; _tmpidx++)
 								faslogary[_tmpidx] = (rtn[_tmpidx] == (byte)0x0 ? (byte)' ': rtn[_tmpidx]);
-							faslog.debug(String.format(fasRecvPtrn, telmbyteary.length, charcnv.BIG5bytesUTF8str(faslogary)));
+							faslog.info(String.format(fasRecvPtrn, telmbyteary.length, charcnv.BIG5bytesUTF8str(faslogary))); //20220409 change to info
 //							faslog.debug(String.format(fasRecvPtrn, telmbyteary.length, charcnv.BIG5bytesUTF8str(rtn)));
 							// ----
 							rtn = remove03(rtn);

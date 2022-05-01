@@ -54,6 +54,7 @@ import com.systex.sysgateii.autosvr.util.LogUtil;
 import com.systex.sysgateii.autosvr.util.StrUtil;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 import com.systex.sysgateii.autosvr.util.ipAddrPars;
+import com.systex.sysgateii.comm.mdp.mdcliapi2;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -78,7 +79,9 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
-
+//20210627 MatsudairaSyuMe add Majordomo Protocol processing
+import org.zeromq.ZMsg;
+//----
 @Sharable // 因為通道只有一組 handler instance 只有一個，所以可以 share
 public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListener {
 	private static Logger log = LoggerFactory.getLogger(PrtCli.class);
@@ -244,6 +247,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//20211028 MatsudairaSyuMe MSR re-read check buffer
 	private byte[] reReadcusid = null;
 	//----
+	//20210627 mark
 	private FASSvr dispatcher;
 	private boolean alreadySendTelegram = false;
 	//20210122
@@ -310,6 +314,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private final long connectTimeOut = 3l;
 	private final TimeUnit connectTimeUnit = TimeUnit.SECONDS;
 	//----
+	//20210627 MatsudairaSyuMe add Majordomo Protocol processing
+	private mdcliapi2 clientSession = null;
+	//----
+	//20220429  MatsudairaSyuMe
+	private boolean startIdleMode = false;
+	private long lastRequestTime = 0l;
+	//----
 	public List<ActorStatusListener> getActorStatusListeners() {
 		return actorStatusListeners;
 	}
@@ -318,8 +329,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.actorStatusListeners = actorStatusListeners;
 	}
 
-	//----
-	public PrtCli(ConcurrentHashMap<String, Object> map, FASSvr dispatcher, Timer timer) {
+	//20210627 change to use MDP take off dispatcher
+//	public PrtCli(ConcurrentHashMap<String, Object> map, FASSvr dispatcher, Timer timer)
+	public PrtCli(ConcurrentHashMap<String, Object> map, Timer timer)
+	{
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		this.setByDate(sdf.format(new Date()));
 
@@ -332,7 +345,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.iRetry = 1;
 		this.curState = SESSIONBREAK;
 		this.iFirst = 0;
-		this.dispatcher = dispatcher;
+		//20210627 MatsudairaSyuMe add Majordomo Protocol processing
+		this.clientSession = new mdcliapi2("tcp://localhost:5555", true);
+		//----
 		this.descm = new DscptMappingTable();
 		//20200716 add for message table
 		this.m_Msg = new MessageMappingTable();
@@ -343,13 +358,15 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		responseTimeout = PrnSvr.setResponseTimeout;
 		/*
 		//20210324 MatsudairaSyume initialize sequence no. from 0 at first time build
-		try {
-			// 20210628 MatsudairaSyuMe check for digit character
-	        String chkbrws = this.brws.trim();
-			if (!Constants.SingleWordPattern.matcher(chkbrws).matches()) {
-				chkbrws = "12345678";
-				log.error("warning !!! brws name is not digit type can not create seqno file please check dashboard!");
-			}
+        try {
+            // 20210626 MatsudairaSyuMe check for digit character
+	        final String regularExpression = "([\\w\\:\\\\w ./-]+\\w+(\\.)?\\w+)";
+            String chkbrws = this.brws.trim();
+            Pattern pattern = Pattern.compile(regularExpression);
+            if (!pattern.matcher(chkbrws).matches()) {
+                chkbrws = "12345678";
+                log.error("warning !!! brws name is not digit type can not create seqno file please check dashboard!");
+            }
 			this.seqNoFile = new File("SEQNO", "SEQNO_" + chkbrws);
 			//----
 			// 20210217 MatsydairaSyuMe
@@ -362,7 +379,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.seqNoFile.createNewFile();
 				FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
 			}
-		} catch (IOException e) {
+        } catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			// 20210204,20210428 MatsudairaSyuMe Log Forging
@@ -378,13 +395,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //		this.amlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AM" + this.brws.substring(3) + byDate, "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
 		this.amlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AM" + this.brws.substring(3), "info", "[%d{yyyy/MM/dd HH:mm:ss:SSS}]%msg%n");
 		//----
-		//20201214
 		//20211115 MatsudairasyuMe auto rolling start by Date
+		//20201214
 //		this.aslog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AS" + this.brws.substring(3) + byDate, "info", "TIME     [0000]:%d{yyyy.MM.dd HH:mm:ss:SSS} %msg%n");
 		this.aslog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AS" + this.brws.substring(3), "info", "TIME     [0000]:%d{yyyy.MM.dd HH:mm:ss:SSS} %msg%n");
 //		atlog = PrnSvr.atlog;
-		//20201214
 		//20211115 MatsudairasyuMe auto rolling start by Date
+		//20201214
 //		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3) + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
 		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3), "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
 		atlog.info("=============[Start]=============");
@@ -412,7 +429,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		// 20210714 MatsudairaSyuMe Log Forging
 		//String s1 = StrUtil.convertValidLog(this.brws.substring(0, 3));
 		//String s2 = StrUtil.convertValidLog(this.brws.substring(3));
-		log.info("------MainThreadId={}------", pid);//s1, s2
+		log.info("=============[Start]=============", pid);
 		this.statusfields = PrnSvr.statustbfields;
 		
 		ipAddrPars nodePars = new ipAddrPars();
@@ -473,12 +490,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			log.error("error!!! create or open seqno file SEQNO_ error");
 		}
 		//----20210324
-
 //		log.info("rmt addr {} port {} local addr {} port {}",this.rmtaddr.getAddress().getHostAddress(), this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort());
 //20200910 change to used new UPSERT
 //		String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //				this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
-		//20210827 MatsudairaSyuMe set dev state to Constants.STSNOTUSED on init
+		//20210827 MatsudairaSyuMe set to current mode to on init Constants.STSNOTUSED
 		String updValue = String.format(updValueptrn,this.remoteHostAddr,//20210427 MatsudairaSyuMe Often Misused: Authentication
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSNOTUSED);
 		//----
@@ -486,7 +502,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
-			//20210827 MatsudairaSyuMe set dev state to Constants.STSNOTUSED on init
+			//20210827 MatsudairaSyuMe set to current mode to on init Constants.STSNOTUSED
 			log.debug("total {} records update  status [{}]", row, Constants.STSNOTUSED);
 			//----
 			jsel2ins.CloseConnect();
@@ -529,7 +545,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					cnvStr = new String(msg);
 			}
 			try {//20210803 MAtsydairaSyuMe change to use ESAPI for Log Forging
-				aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, StrUtil.convertValidLog(cnvStr)));
+				if (((startIdleMode == true) && ((System.currentTimeMillis() - this.lastCheckTime) >= (PrnSvr.getChgidleTime() * 1000))) || ((startIdleMode == false)))
+					aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, StrUtil.convertValidLog(cnvStr)));
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error("aslog data format error");
@@ -578,7 +595,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						@Override
 						public void initChannel(SocketChannel ch) throws Exception {
 							ch.pipeline().addLast("log", new LoggingHandler(PrtCli.class, LogLevel.INFO));
-							ch.pipeline().addLast(new IdleStateHandler(200, 0, 0, TimeUnit.MILLISECONDS));
+							ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), 0, 0, TimeUnit.MILLISECONDS)); //20220430 MatsudairaSyuMe 200 change to use getReadIdleTime()
+							ch.pipeline().addLast(new IdleStateHandler(100, 0, 0, TimeUnit.MILLISECONDS));  //20220425 MatsudairaSyuMe 200 changed to used getReadIdleTime()
 							ch.pipeline().addLast(getHandler("PrtCli"));
 						}
 					});
@@ -733,7 +751,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			@Override
 			public void initChannel(SocketChannel ch) throws Exception {
 				ch.pipeline().addLast("log", new LoggingHandler(PrtCli.class, LogLevel.INFO));
-				ch.pipeline().addLast(new IdleStateHandler(200, 0, 0, TimeUnit.MILLISECONDS));
+				ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), 0, 0, TimeUnit.MILLISECONDS)); //20220430 MatsudairaSyuMe 200 change to use getReadIdleTime()
 				ch.pipeline().addLast(getHandler("PrtCli"));
 			}
 		});
@@ -830,7 +848,15 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					byte[] asary = new byte[buf.readableBytes()];
 					ByteBuf dup = buf.duplicate();
 					dup.readBytes(asary);
-					aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary)));
+					//20220429 MatsuairaSyuMe mark up log
+					if (startIdleMode == true) {
+						if ((System.currentTimeMillis() - this.lastCheckTime) > (PrnSvr.getChgidleTime() * 1000)) {
+							aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary)));
+							this.lastCheckTime = System.currentTimeMillis();
+						}
+					} else
+						aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary)));
+					//----
 					if (clientMessageBuf.readerIndex() > (clientMessageBuf.capacity() / 2)) {
 						clientMessageBuf.discardReadBytes();
 						log.debug("adjustment clientMessageBuf readerindex ={}" + clientMessageBuf.readableBytes());
@@ -881,15 +907,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//20200910 change to use new UPSERT
 //		String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //				this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
-		//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device state set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
+		//20210826 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED or Constants.STSUSEDINACT
 		String updValue = String.format(updValueptrn,this.remoteHostAddr, //20210427 MatsudairaSyuMe Often Misused: Authentication
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, (getCurMode() == EventType.SHUTDOWN || getCurMode() == EventType.RESTART) ? Constants.STSNOTUSED : Constants.STSUSEDINACT );
+		//----
 		try {
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
-			//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device state set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
+			//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
 			log.debug("total {} records update  status [{}]", row, (getCurMode() == EventType.SHUTDOWN || getCurMode() == EventType.RESTART) ? Constants.STSNOTUSED : Constants.STSUSEDINACT );
+			//----
 			jsel2ins.CloseConnect();
 			jsel2ins = null;
 		} catch (Exception e) {
@@ -927,7 +955,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug("unload idle state handler");
 				clientChannel.pipeline().remove(idleStateHandlerName);
 			}
-//			//20211126 MatsudairaSyuMe check system date end
+			//20211126 MatsudairaSyuMe check system date end
 //			if (!new SimpleDateFormat("yyyyMMdd").format(new Date()).trim().equals(this.getByDate())) {
 //				//20211126 date changed update am log
 //				if (this.amlog != null)
@@ -935,10 +963,16 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //				this.setByDate(new SimpleDateFormat("yyyyMMdd").format(new Date()).trim());
 //				log.info("system date changed");
 //			}
-//			//----
+			//----
 			IdleStateEvent e = (IdleStateEvent) evt;
 			if (e.state() == IdleState.READER_IDLE) {
 				log.debug(clientId + " READER_IDLE");
+				//20220429 MatsudairaSyuMe ====
+				if ((this.curState == CAPTUREPASSBOOK) && (this.iFirst == 0) && (PrnSvr.getChgidleTime() > 0)) {
+					if (((System.currentTimeMillis() - this.lastCheckTime) >= (PrnSvr.getChgidleTime() * 1000)) && (startIdleMode == false))
+						startIdleMode = true;
+				} else
+					startIdleMode = false;
 				prtcliFSM(!firstOpenConn);
 
 			} else if (e.state() == IdleState.WRITER_IDLE) {
@@ -1429,7 +1463,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug("pbpr_date=[{}] pbpr_wsno=[{}] pbpr_dscpt=[{}] pbpr_crdb=[{}] pbpr_balance=[{}] pr_data=[{}] pbpr_crdbT=[{}]", pbpr_date, pbpr_wsno, pbpr_dscpt, pbpr_crdb, pbpr_balance, pr_data, pbpr_crdbT);
 				log.debug("pr_datalog=[{}]", pr_datalog);
 				//20200826
-				//20210204,20210428 MatsudairaSyuMe Log Forging
 				// 20210723 MatsudairaSyuMe Log Forging, 20210802
 				//String chkpr_datalog = "";
 				try {
@@ -2882,7 +2915,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					try {
 						this.setSeqNo = Integer
 								.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 1;
-						//20210630 MatsudairaSyuMe make sure seqno Exceed the maximum
+						//20210630 MatsudairaSyuMe make sure seqno Exceed the maximum 
 						if (this.setSeqNo >= 99999)
 							this.setSeqNo = 0;
 						FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
@@ -2983,11 +3016,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			} else if (this.curState == SENDTLM || this.curState == RECVTLM) {
 				//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 				if (this.curState == SENDTLM  && !this.isTITA_TOTA_START() && !alreadySendTelegram) {
+					//20210628 change to use MDP
 					//----
 					//not yet send telegram send firstly
-					alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
+					//alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
+					alreadySendTelegram = true;
+					ZMsg request = new ZMsg();
+					request.append(resultmsg);
+					clientSession.send("fas", request);
 					//20210112 add by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
-					if (alreadySendTelegram == false && this.dispatcher.isCurrConnNull()) {
+//					if (alreadySendTelegram == false && this.dispatcher.isCurrConnNull())
+					//20210628 change to use MDP take off this.dispatcher.isCurrConnNull()
+					if (alreadySendTelegram == false)
+					{
 						log.debug("can not get connect from pool !!!!!!!!!!!!!!!!!");
 						this.curState = EJECTAFTERPAGEERROR;
 					} else {
@@ -3008,7 +3049,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//----
 					//20210116 MatshdairaSyuMe
 //					this.rtelem = dispatcher.getResultTelegram();
-					this.rtelem = dispatcher.getResultTelegram(this.telegramKey);
+					//20210628 change to use MDP
+					//this.rtelem = dispatcher.getResultTelegram(this.telegramKey);
+					ZMsg reply = null;
+					reply = clientSession.recv();
+					if (reply != null) {
+						this.rtelem = reply.pop().getData();
+						reply.destroy();
+					}
 					if (this.rtelem != null) {
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 						this.setTITA_TOTA_START(false);
@@ -3107,8 +3155,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 									this.alreadySendTelegram = false;
 									this.setTITA_TOTA_START(false);
 									resultmsg = DataINQ(TXP.SENDTHOST, TXP.C0099TYPE, this.dCount);
+									//20210628 change to use MDP
 									//not yet send telegram send firstly
-									alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
+									//alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
+									alreadySendTelegram = true;
+									ZMsg request = new ZMsg();
+									request.append(resultmsg);
+									clientSession.send("fas", request);
 									//20210112 add by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 									if (alreadySendTelegram)
 										this.setTITA_TOTA_START(true);
@@ -3230,6 +3283,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							//20211126 MatsudairaSyuMe change AMlog timeout message 20211209 add colon word
 //							amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]接電文逾時{}", brws, pasname, this.account, rpage, responseTimeout);
 							amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時{}", brws, pasname, this.account, responseTimeout);
+							//----
 							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
 							// ----
 							if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
@@ -3366,7 +3420,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					if (getCurMode() == EventType.SHUTDOWN) {
 						String updValue = String.format(updValueptrn, this.rmtaddr.getAddress().getHostAddress(),
 							this.rmtaddr.getPort(), this.localaddr.getAddress().getHostAddress(),
-							//20210826 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED or Constants.STSUSEDINACT
+							//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
 							this.localaddr.getPort(), this.typeid, Constants.STSNOTUSED);
 						//----
 						if (jsel2ins == null)
@@ -3420,6 +3474,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.curSockNm = "";
 				this.clientMessageBuf.clear();
 				this.clientChannel = null;
+				//20210628 use MDP
+				if (clientSession != null)
+					clientSession.destroy();
+				//----
 				close();
 				// 20201006
 				if (this.lastState != SESSIONBREAK) {
@@ -3433,7 +3491,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					aslog = null;
 					atlog = null;
 					timer.cancel();  //20211203 MatsudairasyuMe
-					Thread.currentThread().interrupt(); timer.cancel();
+					Thread.currentThread().interrupt();
 				}
 				this.curState = SESSIONBREAK;
 				return;
@@ -3495,10 +3553,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				} else {
 					amlog.info("[{}][{}][{}]:****************************", brws, "        ", "            ");
 					amlog.info("[{}][{}][{}]:00請插入存摺...", brws, pasname, "            ");
+					//20220429 MatsudairaSyuMe
+					this.startIdleMode = false;
+					//--
 					log.debug("DetectPaper [{}][{}][{}]:00請插入存摺...", brws, pasname, "            ");
 				}
 				//----
 				this.lastCheckTime = System.currentTimeMillis();
+				//20220429 MatsudairaSyuMe use fix Request command Time
+				this.lastRequestTime = this.lastCheckTime;
+				//----
+				/* 20200427 mark up for  performance
 //20200910 change to use UPSERT
 //				String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //						this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
@@ -3516,6 +3581,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					e.printStackTrace();
 					log.error("update state table {} error:{}", PrnSvr.statustbname, e.getMessage());
 				}
+				20200427  */
 //20200925				prt.DetectPaper(firstOpenConn, 0);
 				prt.DetectPaper(firstOpenConn, responseTimeout);
 			}
@@ -3536,6 +3602,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//----
 				} else {*/
 
+			//20220429 MatsudairaSyuMe use fix Request command Time
+			long cur = System.currentTimeMillis();
+			log.debug("check CAPTUREPASSBOOK {}=>{} {}", cur, (cur - this.lastRequestTime), (PrnSvr.getReqTime() * 2));
+////20220430if ((cur - this.lastRequestTime) >= (PrnSvr.getReqTime())) {
+				this.lastRequestTime = cur;
+			//
 
 //20200925			if (prt.DetectPaper!firstOpenConn, 0))
 					if (prt.DetectPaper(!firstOpenConn, responseTimeout))
@@ -3544,9 +3616,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("{} {} {} AutoPrnCls : --start Show Signal", brws, catagory, account);
 //20200821 test						SetSignal(firstOpenConn, !firstOpenConn, "0000000000", "0010000000");
 						SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0010000000");
-						//----
+						//20220429 MatsudairaSyuMe
+						this.startIdleMode = false;
+							//----
 					} else {
-						if ((System.currentTimeMillis() - this.lastCheckTime) > 10 * 1000) {
+					//	if ((System.currentTimeMillis() - this.lastCheckTime) > 10 * 1000) {
+							/* 20220429  MatsudairaSyuMe Maru up for  performance
 //20200910 change to use new UPSERT
 //							String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //									this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
@@ -3564,16 +3639,23 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								e.printStackTrace();
 								log.error("update state table {} error:{}", PrnSvr.statustbname, e.getMessage());
 							}
-							this.lastCheckTime = System.currentTimeMillis();
-						}//20220221 change "Deteect Error" to "Detect No Passbook Insert"
-						log.debug("{} {} {} AutoPrnCls : Parsing() -- Detect No Passbook Insert!", brws, catagory, account);
+							*/
+					//		this.lastCheckTime = System.currentTimeMillis();
+					//	}//20220221 change "Deteect Error" to "Detect No Passbook Insert"
+							log.debug("{} {} {} {} {} AutoPrnCls : Parsing() -- Detect No Passbook Insert!", brws, catagory, account, startIdleMode, this.lastCheckTime);
 					}
+
 		//20200611 for turn page processing
 /*				}
 			}*/
+					//20220429 MatsudairaSyuMe use fix Request command Time		
+////20220430} else
+////20220430	log.debug("current - lastRequestTime={} =====check prtcliFSM", before, this.curState, (cur - this.lastRequestTime));
+			//----
 			//20200718
 			lastCheck(before);
-			log.debug("after {}=>{}=====check prtcliFSM", before, this.curState);
+			//20200427 test
+			log.debug("after {}=>{} {} =====check prtcliFSM", before, this.curState, this.lastCheckTime);
 			break;
 
 		case GETPASSBOOKSHOWSIG:
@@ -4089,7 +4171,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//amlog.info("[{}][{}][{}]:07存摺磁條寫入成功！", brws, pasname, account);//20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant
 				log.debug("07存摺磁條寫入成功！ 1");
 				reReadcusid = null;
-				if (null != (reReadcusid = prt.MS_CheckAndRead(firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead 
+				if (null != (reReadcusid = prt.MS_CheckAndRead(firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead
 					if (reReadcusid.length == 1) {
 						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
 						InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
@@ -4195,7 +4277,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			lastCheck(before);
 			log.debug("after {}=>{}=====check prtcliFSM", before, this.curState);
 			break;
-
 /*20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant*/
         case READANDCHECKMSR:
 			log.debug("{} {} {} :AutoPrnCls : process READANDCHECKMSR", brws, catagory, account);
@@ -4701,7 +4782,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	public String getLocalHostAddr() {
 		return this.localHostAddr;
 	}
-
 	// 20211203 MatsudairaSyuMe
 	private Timer timer = null;
 	private void PeriodDayEndSchedule() {

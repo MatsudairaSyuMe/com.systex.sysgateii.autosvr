@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZThread;
 
 import com.systex.sysgateii.autosvr.Monster.Conductor;
 import com.systex.sysgateii.autosvr.autoPrtSvr.Server.FASSvr;
@@ -23,6 +24,8 @@ import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.conf.DynamicProps;
 import com.systex.sysgateii.autosvr.dao.GwDao;
 import com.systex.sysgateii.autosvr.util.StrUtil;
+import com.systex.sysgateii.comm.mdp.mdbroker;
+import com.systex.sysgateii.comm.mdp.mdworker2;
 
 import ch.qos.logback.classic.util.ContextInitializer;
 
@@ -53,9 +56,11 @@ public class Server {
 	//----
 	//20201119 conduct mode
 	private static AtomicBoolean isConductor = new AtomicBoolean(false);
+	//----
 	//202010909 conduct restore mode
 	private static AtomicBoolean isConductorRestore = new AtomicBoolean(false);
 	//----
+
 	public static void main(String[] args) {
 		System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, "." + File.separator + "logback.xml");
 		//20210419 MatsudairaSyuMe mark
@@ -63,6 +68,7 @@ public class Server {
 		//System.setProperty("log.name", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
 		//----
 		//log = LoggerFactory.getLogger(Server.class);
+		 mdbroker broker = null;
 		try {
 			//20201116 check if using given svrid
 			if (args.length > 0) {
@@ -141,21 +147,47 @@ public class Server {
 				//20201119 add conductor mode control
 				if (!isConductor.get()) {
 					//worker mode start the working module
+//					FASSvr.createServer(dcf.getConHashMap());
+//					FASSvr.startServer();
+					//20210628 mark for using MDP
+//					PrnSvr.createServer(dcf, FASSvr.getFASSvr());
+					PrnSvr.createServer(dcf);
+					PrnSvr.startServer();
+
+				} else {
+					//20210628 use MDB
+					//conductor mode start the monitor module
 					FASSvr.createServer(dcf.getConHashMap());
 					FASSvr.startServer();
-
-					// 20200901
-//			PrnSvr.createServer(dcf);
-//			PrnSvr.startServer(FASSvr.getFASSvr());
-					PrnSvr.createServer(dcf, FASSvr.getFASSvr());
-					PrnSvr.startServer();
-				} else {
-					//conductor mode start the monitor module
+					//20210628 use MDP
+					broker = new mdbroker(true);
+					broker.bind("tcp://*:5555");
+					Thread brokerThread = new Thread(broker);
+					brokerThread.start();
+					String tout = dcf.getConHashMap().get("svrsubport.recvtimeout");
+					int setResponseTimeout = 300000;
+					if (tout != null && tout.trim().length() > 0)
+						setResponseTimeout = Integer.parseInt(tout);
+					// config workno not set use default workno = 4
+					int workno = 4;
+					String workstr = "";
+					try {
+						log.info("workno=[{}]",dcf.getConHashMap().get("workno").trim());
+						workstr = dcf.getConHashMap().get("workno").trim();
+					} catch (Exception e) {
+						log.error("error while get 'workno' from local config file");
+					}
+					if (workstr != null && workstr.length() > 0)
+						workno = Integer.parseInt(workstr);
+					for (int startwk = 0; startwk < workno; startwk++)
+						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://*:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false));
+					//----
+					//ZThread.start(new mdworker2("tcp://*:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false));
 					Conductor.createServer(dcf.getConHashMap(), svrip);
 					Conductor.startServer();
-					//20210204, 0210427 20210625 MatsudairaSyuMe Log Forging change remove final
+					//20210204, 0210427 MatsudairaSyuMe Log Forging change remove final
 					String logStr = String.format("sysgateii server after start conductor svrip=[%s]", svrip);
-			//		if (Constants.FilterNewlinePattern.matcher(logStr).find())
+					//if (Constants.FilterNewlinePattern.matcher(logStr).find())
 					logStr = "sysgateii server after start conductor";
 					log.info(logStr);
 				}
@@ -180,7 +212,7 @@ public class Server {
 				//AUID,BRNO,IP,CURSTUS,PID,CREATOR,MODIFIER,LASTUPDATE
 //				auid = dcf.getAuid();
 //				svrip = dcf.getSvrip();
-				//20201116 change to use given svrid, 20210204 MatsudairaSyuMe
+				// 20210702 MatsudairaSyuMe Log Forging
 				// 20210714 MatsudairaSyuMe Log Forging
 				//String logStr = String.format("sysgateii server start complete! auid=[%s] svrip=[%s]", auid, svrip);
 				log.info("sysgateii server start complete!");//log.info(StrUtil.convertValidLog(logStr));
@@ -230,7 +262,7 @@ public class Server {
 				// 20201119 add conduction functoon
 				setIsShouldShutDown(true);
 				if (!isConductor.get()) {
-					PrnSvr.stopServer();
+//					PrnSvr.stopServer();
 //            	WebServer.stopServer();
 					// 20200926
 					try {
@@ -319,7 +351,6 @@ public class Server {
 	public static void setIsConductor(boolean isConductor) {
 		Server.isConductor.set(isConductor);
 	}
-
 	//20210909 MatsudairaSyuMe for ConductorResstorMode
 	/**
 	 * @return the isConductorRestore

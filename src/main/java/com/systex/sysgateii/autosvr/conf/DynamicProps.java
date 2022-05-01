@@ -91,6 +91,13 @@ public class DynamicProps {
 										//20201115
 										|| entry.getKey().equals("bkno")
 										//----
+										//20210629
+										|| entry.getKey().equals("workno")
+										//----
+										//20220427
+										|| entry.getKey().equals("reqtime")
+										|| entry.getKey().equals("chgidletime")
+										//----
 										//----
 										|| entry.getKey().equals("system.logpath")
 										//20200815
@@ -496,6 +503,13 @@ public class DynamicProps {
 						//----
 						//20201115
 						|| entry.getKey().equals("bkno")
+						//----
+						//20210629
+						|| entry.getKey().equals("workno")
+						//----
+						//20220427
+                        || entry.getKey().equals("reqtime")
+                        || entry.getKey().equals("chgidletime")
 						//----
 						|| entry.getKey().equals("system.logpath")
 						//20200815
