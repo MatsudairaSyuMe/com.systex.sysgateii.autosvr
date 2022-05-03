@@ -1,68 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-<bkno>004</bkno>
+<bkno>'004'</bkno>
+<workno>4</workno>
 <center>y</center>
+<reqtime>500</reqtime>
+<chgidletime>60</chgidletime>
 <!--<center></center>-->
  <boards>
-- 	<board>
-			<brno>984</brno>
+  	<board>
+			<brno>983</brno>
 			<id>1</id>
-			<ip>10.24.1.98</ip>
+			<ip>10.1.24.98</ip>
 			<port>1024</port>
-			<enable>1</enable>
-			<status>0</status>
+			<enable>0</enable>
+			<status>1</status>
 			<start description="掛牌啟用時間(時分)">0800</start>
 			<stop description="掛牌結束時間(時分)">1700</stop>
 		</board>
- 		<board>
-			<brno>983</brno>
-			<id>2</id>
-			<ip>127.0.0.1</ip>
-			<port>1024</port>
-			<enable>1</enable>
-			<status>0</status>
-			<start>0800</start>
-			<stop>1700</stop>
-		</board>
-		<board>
-			<brno>983</brno>
-			<id>3</id>
-			<ip>127.0.0.1</ip>
-			<port>1024</port>
-			<enable>1</enable>
-			<status>0</status>
-			<start>0800</start>
-			<stop>1700</stop>
-		</board>
-		<board>
-			<brno>984</brno>
-			<id>4</id>
-			<ip>10.24.1.230</ip>
-			<port>1024</port>
-			<enable>1</enable>
-			<status>0</status>
-			<start>0800</start>
-			<stop>1700</stop>
-		</board>
 	</boards>
-	<validDevice>
-<!--         <dev type="AUTO46" brws="9838902" ip="10.24.1.230:4001=10.24.1.230:3301" autoturnpage="false"/>-->
-           <dev type="AUTO46" brws="9838901" ip="localhost:4001=localhost:3301" autoturnpage="false"/>
-          <dev type="AUTO46" brws="9838902" ip="localhost:4002=localhost:3301" autoturnpage="false"/>
-<!--         <dev type="AUTO52" brws="9838902" ip="10.24.1.230:4001=10.24.1.230:3301" autoturnpage="false"/>-->
-<!--         <dev type="AUTO46" brws="9838902" ip="10.24.1.96:4001=10.24.1.230:3301" autoturnpage="false"/>-->
-<!--          <dev type="AUTO52" brws="9838901" ip="10.24.1.230:4002=10.24.1.230:3301" autoturnpage="false"/>-->
-<!--          <dev type="AUTO52" brws="9838902" ip="10.24.1.96:4001=10.24.1.230:3301" autoturnpage="false"/>-->
- <!--        <dev type="AUTO46" brws="9838902" ip="10.24.1.95:4001=10.24.1.230:3301" autoturnpage="false"/>-->
- <!--    <dev type="AUTO52" brws="9838903" ip="10.24.1.94:4001=10.24.1.230:3301" autoturnpage="false"/>-->
-	</validDevice>
 	<system>
-		<svrid>1</svrid>
+		<svrid>100</svrid>
 		<ip>127.0.0.1</ip>
 		<port>0</port>
 <!--		<logpath>/gwlog/autosvr</logpath>-->
 		<logpath>/home/scotthong/tmp</logpath>
-		<db url="jdbc:db2://172.16.71.141:50000/BISDB" user="BIS_USER" pass="bisuser"/>
+		<!--<db url="jdbc:db2://192.168.56.101:50000/BISDB" user="BIS_USER" pass="bisuser"/>-->
+		<db url="jdbc:db2://127.0.0.1:50000/BISDB" user="bisuser" pass="bisuser"/>
 		<!-- 20201116 -->
 		<!--svrprmtb name="BISAP.TB_AUSVRPRM" mkey="SVRID" fields="AUID,BRNO,IP,PORT,DEVTPE,RECVTIMEOUT,LOGPATH"/-->
 		<svrprmtb name="BISAP.TB_AUSVRPRM" mkey="SVRID" fields="AUID,IP,PORT,DEVTPE,RECVTIMEOUT,LOGPATH"/>
@@ -78,9 +41,9 @@
 		<!--svrtbsdytb name="BISAP.TB_AUSVRPRM" mkey="SVRID" fields="TBSDY"/-->
 		<svrtbsdytb name="BISAP.TB_AUGEN" mkey="BKNO" fields="TBSDY"/>
 		<!-- -->
-		<!--  20201026 devcmdtb fields add AUID and CMDCREATETIME-->
+		<!--  20201026devcmdtb fields add AUID and CMDCREATETIME 20201119 add EMPNO-->
 		<devcmdtb name="BISAP.TB_AUDEVCMD" mkey="SVRID,BRWS" fields="SVRID,BRWS,CMD,AUID,CMDCREATETIME,EMPNO"/>
-		<!-- 20201026 add for command history processing and am error log -->
+		<!-- 20201026 add for command history processing and am error log, 20201119 add EMPNO -->
 		<devcmdhistb name="BISAP.TB_AUDEVCMDHIS" mkey="SNO" fields="SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,DEVIP,DEVPORT,SVRIP,SVRPORT,CURSTUS,RESULTSTUS,EMPNO"/>
 		<devamtb name="BISAP.TB_AUAMLOG" mkey="SNO" fields="RECTIME,BRWS,TYPE,ACTNO,ERRDESC"/>
 		<!-- 20201106 -->
@@ -93,14 +56,7 @@
 		<!-- -->
 	</system>
 	<svrsubport>
-<!-- 	<svrip>10.24.1.230:15000=10.24.1.230:15102,10.24.1.230:15000=10.24.1.230:15103</svrip>-->
-<!--		<svrip>10.24.1.230:15000=10.24.1.230:15102,10.24.1.230:15000=10.24.1.230:15103</svrip>-->
-		<svrip>localhost:15000=localhost:15102, localhost:15000=localhost:15103</svrip>
-<!--		<svrport>15000</svrport>-->
-<!--		<localip>10.24.1.230</localip>-->
-<!--		<localport>15010</localport>-->
-		<recvtimeout>15000</recvtimeout>
-		<!--<verhbrno>984</verhbrno> -->
-<!--		<verhwsno>80</verhwsno>-->
+		<svrip></svrip>
+		<recvtimeout></recvtimeout>
 	</svrsubport>
 </configuration>
