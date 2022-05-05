@@ -463,6 +463,7 @@ public class CS5240Impl implements Printer {
 			}
 //20200320		   Sleep(100);
 			//20220429 MatsudairaSyuMe mark up
+			Sleep(30); //20220505 MatsudairaSyuMe
 		} while (++retry < 10);
 		if (getIsShouldShutDown().get())
 			return "DIS".getBytes();
