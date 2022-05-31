@@ -429,7 +429,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		// 20210714 MatsudairaSyuMe Log Forging
 		//String s1 = StrUtil.convertValidLog(this.brws.substring(0, 3));
 		//String s2 = StrUtil.convertValidLog(this.brws.substring(3));
-		log.info("=============[Start]=============", pid);
+		log.info("PrtCli=======[Start]=============");  //20220525 MatsudairaSyuMe mark pid
 		this.statusfields = PrnSvr.statustbfields;
 		
 		ipAddrPars nodePars = new ipAddrPars();
@@ -450,7 +450,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//20210427 MatsudairaSyuMe
 			this.remoteHostAddr = nodePars.getCurrentRemoteHostAddress();
 			this.localHostAddr = nodePars.getCurrentLocalHostAddress();
-			//----
+			/*** 20220525 MatsudaiarSyuMe mark for not delete status data
 			if (PrnSvr.dburl != null && PrnSvr.dburl.trim().length() > 0) {
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 				//20201119 add for make reset the status table
@@ -463,7 +463,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//20210112 MatsudairaSyume
 			jsel2ins.CloseConnect();
 			jsel2ins = null;
-			//----
+			*/ //----
 		} catch (Exception e) {
 			log.error("Address format error!!! {}", e.getMessage());
 		}
@@ -501,12 +501,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		try {
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
+			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 change this.brws to "'" + this.brws + "'"
 			//20210827 MatsudairaSyuMe set to current mode to on init Constants.STSNOTUSED
 			log.debug("total {} records update  status [{}]", row, Constants.STSNOTUSED);
 			//----
-			jsel2ins.CloseConnect();
-			jsel2ins = null;
+//20220525			jsel2ins.CloseConnect();
+//			jsel2ins = null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -803,11 +803,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
 		if (jsel2ins == null)
 			jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-		int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
+		int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
 //----
 		log.debug("total {} records update status [{}]", row, Constants.STSUSEDACT);
-		jsel2ins.CloseConnect();
-		jsel2ins =  null;
+//20220525		jsel2ins.CloseConnect();
+//		jsel2ins =  null;
 		prtcliFSM(!firstOpenConn);
 	}
 
@@ -827,10 +827,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
 		if (jsel2ins == null)
 			jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-		int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
+		int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid); //20220525 MatsudairasyuMe change this.brws to "'" + this.brws + "'"
 		log.debug("total {} records update  status [{}]", row, Constants.STSUSEDINACT);
-		jsel2ins.CloseConnect();
-		jsel2ins = null;
+//20220525		jsel2ins.CloseConnect();
+//		jsel2ins = null;
 		this.curSockNm = "";
 		this.clientMessageBuf.clear();
 		prtcliFSM(firstOpenConn);
@@ -914,12 +914,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		try {
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, this.brws + "," + PrnSvr.svrid);
+			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid); //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
 			//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
 			log.debug("total {} records update  status [{}]", row, (getCurMode() == EventType.SHUTDOWN || getCurMode() == EventType.RESTART) ? Constants.STSNOTUSED : Constants.STSUSEDINACT );
 			//----
-			jsel2ins.CloseConnect();
-			jsel2ins = null;
+//20220525			jsel2ins.CloseConnect();
+//			jsel2ins = null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -3104,8 +3104,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 									int row = jsel2ins.UPSERT(PrnSvr.svrtbsdytbname, PrnSvr.svrtbsdytbfields, updTBSDY, PrnSvr.svrtbsdytbmkey, PrnSvr.bkno);
 									//----
 									log.debug("total {} records update [{}]", row, updTBSDY);
-									jsel2ins.CloseConnect();
-									jsel2ins = null;
+//20220525									jsel2ins.CloseConnect();
+//									jsel2ins = null;
 								} else
 									log.error("!!!!! totatext len={} too short !!!", totatext.length);
 								this.curState = SNDANDRCVTLM;
@@ -3426,7 +3426,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						if (jsel2ins == null)
 							jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 						int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey,
-							this.brws + "," + PrnSvr.svrid);
+							"'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
 						//20210826 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED or Constants.STSUSEDINACT
 						log.debug("total {} records update status [{}]", row, Constants.STSNOTUSED);
 						//----
@@ -4596,13 +4596,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			e.printStackTrace();
 			log.error("update state table {} error:{}", PrnSvr.svrtbsdytbname, e.getMessage());
 		} finally {
-			try {
+/*20220525			try {
 			jsel2ins.CloseConnect();
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error("close connect to table {} error:{}", PrnSvr.svrtbsdytbname, e.getMessage());
 			}
 			jsel2ins = null;
+			*/
 		}
 		return;
 	}
@@ -4638,8 +4639,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				int row = jsel2ins.UPDT(PrnSvr.cmdtbname, "CMD, CMDRESULT,CMDRESULTTIME", "'','START','" + t + "'",
 						"SVRID,BRWS", PrnSvr.svrid + ",'" + this.brws + "'");
 				log.debug("total {} records update status [{}]", row, this.curMode);
-				jsel2ins.CloseConnect();
-				jsel2ins = null;
+//20220525				jsel2ins.CloseConnect();
+//				jsel2ins = null;
 				//----
 				//20201026
 				cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
