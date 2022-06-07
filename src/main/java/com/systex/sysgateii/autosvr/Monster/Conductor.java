@@ -151,11 +151,17 @@ public class Conductor implements Runnable {
 			selfld = cmdtbfields;
 			selkey = cmdtbsearkey;
 		}
-
+		//20220607 MAtsudairaSyuME
+		try {
+			if (jdawcon == null)
+				jdawcon = new GwDao(dburl, dbuser, dbpass, false);
+			if (cmdhiscon == null)
+				cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+			//----
 		while (true) {
 			log.info("monitorThread");
 			try {
-				jdawcon = new GwDao(dburl, dbuser, dbpass, false);
+				//20220607 MatsydairaSyuMe jdawcon = new GwDao(dburl, dbuser, dbpass, false);
 				log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, cmdtbsearkey);
 				String[] cmd = jdawcon.SELMFLD(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
 				if(cmd != null && cmd.length > 0)
@@ -177,8 +183,10 @@ public class Conductor implements Runnable {
 										//20210204 MatsudairaSyuMe
 										final String logStr = String.format("brws=[%s] cmd[%s] not execute will be marked fail in cmdhis",((cmdary == null) || (cmdary[0] == null)) ? "" : cmdary[0], ((cmdary == null) || (cmdary.length < 2) || (cmdary[1] == null)) ? "" : cmdary[1]);
 										log.debug(logStr);
+										/*20220607 MatsudairaSyuMe
 										if (cmdhiscon == null)
 											cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+										*/
 										String[] chksno = cmdhiscon.SELMFLD(svrcmdhistbname, "SNO", "SVRID,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[2]+ "'", false);
 
 										SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -189,8 +197,10 @@ public class Conductor implements Runnable {
 											chksno[0] = "-1";
 										}
 										sno = cmdhiscon.INSSELChoiceKey(svrcmdhistbname, svrcmdhistbfields, failfldvals, svrcmdhistbsearkey, chksno[0], false, false);
+										/*20220607 MAtsudairaSyuMe
 										cmdhiscon.CloseConnect();
 										cmdhiscon = null;
+										*/
 										sno = null;
 									}
 									jdawcon.DELETETB(cmdtbname, "SVRID",cmdary[0]);
@@ -202,7 +212,9 @@ public class Conductor implements Runnable {
 								String curcmd = cmdary[1].trim().toUpperCase();
 								//svrcmdhis
 								if (curcmd != null && curcmd.length() > 0) {
+									/*20220607 MatsudairaSyuMe
 									cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+									*/
 									if (Conductor.svridnodeMap != null && Conductor.svridnodeMap.size() > 0) {
 										if (Conductor.svridnodeMap.containsKey(cmdary[0])) {
 											//20210204,20210427 MatsudairaSyuMe Log Forging remove final
@@ -258,21 +270,25 @@ public class Conductor implements Runnable {
 											} else
 												log.error("sno null");
 									}
+									/*20220607 MatsudairaSyuMe
 									//----
 									//20210302 MatsudairaSyuMe
 									cmdhiscon.CloseConnect();
 									cmdhiscon = null;
 									//----
+									 */
 								}
 								//----
 								//log.debug("table sno=[{}] createNode=[{}] restartAlreadyStop=[{}]", (sno == null ? 0: sno[0]), createNode, restartAlreadyStop);
 								//20210204 MatsudairaSyume
 								final String logStr = String.format("table sno=[%s] createNode=[%s] restartAlreadyStop=[%s]", (sno == null ? 0: sno[0]), createNode, restartAlreadyStop);
 								log.debug(logStr);
+								/*20220607 MatsudairaSyuMe
 								//20210302 MatsudairaSyuMe
 								if (cmdhiscon == null)
 									cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
 								//----
+								 */
 								//20210413 MatsudairaSyuMe prevent Null Dereference
 								if (sno == null) {
 									sno = new String[1];
@@ -406,10 +422,12 @@ public class Conductor implements Runnable {
 									log.debug("!!! cmd object node=[{}] cmd [{}] ignore", cmdary[0], cmdary[1]);
 									break;
 								}
+								/* 20220607 MatsudairaSyuMe
 								//20210302 MatsudairaSyuMe
 								if (cmdhiscon != null)
 									cmdhiscon.CloseConnect();
 								cmdhiscon = null;
+								*/
 								//----
 							} else {
 								//20210204 MatsidairaSyuMe
@@ -428,19 +446,38 @@ public class Conductor implements Runnable {
 						log.warn("select raw command data error drop it");//, StrUtil.convertValidLog(s)
 					}
 				}
+				/* 20220607 MatsudairaSyuMe
 				//20210302----
 				jdawcon.CloseConnect();
 				jdawcon = null;
 				if (cmdhiscon != null)
 					cmdhiscon.CloseConnect();
 				cmdhiscon = null;
+				*/
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error("parse command error:{}",e.getMessage());
 			}
 			sleep(3);
 		}
-
+		//20220607 MatsudairaSyuMe
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("jdawcon error:{}",e.getMessage());
+		} finally {
+			if (jdawcon != null) {
+				try {
+					jdawcon.CloseConnect();
+				} catch (Exception any) {}
+					jdawcon = null;
+			}
+			if (cmdhiscon != null)
+				try {
+					cmdhiscon.CloseConnect();
+				} catch (Exception any ) {}
+			cmdhiscon = null;
+		}
+		//----
 	}
 	
 	public void stop(int waitTime) {
