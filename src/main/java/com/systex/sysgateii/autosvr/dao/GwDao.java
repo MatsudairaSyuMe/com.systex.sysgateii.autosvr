@@ -1158,12 +1158,18 @@ public class GwDao {
 	*/
 	public void CloseConnect() throws Exception {
 		try {
-			if (selconn != null)
+			if (selconn != null) { //20220607 MatsudairaSyuMe
 				selconn.close();
+			    selconn = null;
+			}
 		} catch (SQLException se) {
 			se.printStackTrace();
 			log.error("CloseConnect():{}", se.getMessage());
-		} // end finally try
+		} // end finally try 20220607
+		finally {
+			selconn = null;
+		}
+		//----
 	}
 
 	private Connection getDB2Connection(String url, String username, String password) throws Exception {

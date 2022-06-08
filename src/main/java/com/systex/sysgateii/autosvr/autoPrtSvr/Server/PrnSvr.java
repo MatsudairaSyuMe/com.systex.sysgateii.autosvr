@@ -107,9 +107,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 	static List<Thread> threadList = Collections.synchronizedList(new ArrayList<Thread>());
 	Map<String, PrtCli> nodeList = Collections.synchronizedMap(new LinkedHashMap<String, PrtCli>());
 	Thread monitorThread;
-	GwDao jdawcon = null;
+	//20220607 MatsudairaSyuMe jdawcon, cmdhiscon set to local parameter
+	private GwDao jdawcon = null;
 	//20201226
-	GwDao cmdhiscon = null;
+	private GwDao cmdhiscon = null;
 	//----
 	public static String cmdtbname = "";
 	public static String cmdtbsearkey = "";
@@ -205,6 +206,13 @@ public class PrnSvr implements MessageListener<byte[]> {
 			monitorThread = new Thread(new Runnable() {
 				@Override
 				public void run() {
+					// 20220607 MatsudairaSyuMe
+					try {
+						if (jdawcon == null)
+							jdawcon = new GwDao(dburl, dbuser, dbpass, false);
+						if (cmdhiscon == null)
+							cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+					// ----
 					while (true) {
 						log.info("monitorThread");
 						if (PrnSvr.dburl != null && PrnSvr.dburl.trim().length() > 0) {
@@ -219,7 +227,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 								selkey = PrnSvr.cmdtbsearkey;
 							}
 							try {
-								jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+								// 20220607 MatsydairaSyuMe jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 								log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, PrnSvr.cmdtbsearkey);
 								String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
 								if(cmd != null && cmd.length > 0)
@@ -243,8 +251,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 													log.debug("brws=[{}] keep in cmd table longer then 3 minutes will be cleared",cmdary[0]);
 													if (cmdary[1].trim().length() > 0) {
 														log.debug("brws=[{}] cmd[{}] not execute will be marked fail in cmdhis",cmdary[0], cmdary[1]);
+														/*20220607 MatsudairaSyuMe
 														if (cmdhiscon == null)
 															cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+														*/
 														//20201119
 														String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
 														SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -256,8 +266,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 															chksno[0] = "-1";
 														}
 														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO", failfldvals, PrnSvr.devcmdhistbsearkey, chksno[0], false, false);
+														/*20220607 MatsudairaSyuMe
 														cmdhiscon.CloseConnect();
 														cmdhiscon = null;
+														*/
 														sno = null;
 													}
 													jdawcon.DELETETB(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'");
@@ -269,7 +281,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 												String curcmd = cmdary[1].trim().toUpperCase();
 												//20201026 for cmdhis
 												if (curcmd != null && curcmd.length() > 0) {
+													/*20220607 MatsudairaSyuMe
 													cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+													*/
 													if (getMe().nodeList != null && getMe().nodeList.size() > 0) {
 														if (getMe().nodeList.containsKey(cmdary[0])) {
 															//20210204, 20210714 MatsudairaSyuMe Log Forging
@@ -462,6 +476,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 											log.error("!!!current row cmd error"); //chks
 										}
 									}
+								/*20220607 MatsudairaSyuMe
 								jdawcon.CloseConnect();
 								jdawcon = null;
 								//20201026
@@ -469,6 +484,8 @@ public class PrnSvr implements MessageListener<byte[]> {
 									cmdhiscon.CloseConnect();
 								cmdhiscon = null;
 								//----
+								 * 
+								 */
 							} catch (Exception e) {
 								e.printStackTrace();
 								log.info("monitorThread read database error [{}]", e.toString());
@@ -476,6 +493,29 @@ public class PrnSvr implements MessageListener<byte[]> {
 						}
 						sleep(3);
 					} // while
+					// 20220607 MatsudairaSyuMe
+					} catch (Exception e) {
+						e.printStackTrace();
+						log.error("jdawcon error:{}", e.getMessage());
+					} finally {
+						if (jdawcon != null) {
+							try {
+								jdawcon.CloseConnect();
+							} catch (Exception any) {
+								any.printStackTrace();
+								log.error("jdawcon close error ignore");
+							}
+							jdawcon = null;
+						}
+						if (cmdhiscon != null)
+							try {
+								cmdhiscon.CloseConnect();
+							} catch (Exception any) {
+								any.printStackTrace();
+								log.error("cmdhiscon close error ignore");
+							}
+						cmdhiscon = null;
+					}
 				}
 			});// monitorThread
 			monitorThread.start();
