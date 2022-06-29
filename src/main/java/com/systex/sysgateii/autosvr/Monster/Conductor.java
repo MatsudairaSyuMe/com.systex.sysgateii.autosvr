@@ -154,8 +154,14 @@ public class Conductor implements Runnable {
 		}
 		// 20220607 MatsudairaSyuMe
 		try {
-			if (jdawcon == null)
+			if (jdawcon == null) {
 				jdawcon = new GwDao(dburl, dbuser, dbpass, false);
+				//20220613 MatsudairaSyuMe
+				//log.info("initial select svrcmdtbl [{}]", jdawcon.SELMFLD_R(cmdtbname, selfld, selkey, "?", true));
+				jdawcon.SELMFLD_R(cmdtbname, selfld, selkey, "?", true);
+				log.info("initial delete SVRID svrcmdtbl [{}]", jdawcon.DELETETB_R(cmdtbname, "SVRID", "?", true));
+				//----
+			}
 			if (cmdhiscon == null)
 				cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
 		// ----
@@ -164,7 +170,11 @@ public class Conductor implements Runnable {
 				try {
 					// 20220607 MatsydairaSyuMe jdawcon = new GwDao(dburl, dbuser, dbpass, false);
 					log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, cmdtbsearkey);
-					String[] cmd = jdawcon.SELMFLD(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
+					//20220613 MatsudairasyuMe Change to use reused prepared statement
+					//String[] cmd = jdawcon.SELMFLD(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
+//					log.debug("current connect [{}]",jdawcon.getConn().isValid(1));
+					String[] cmd = jdawcon.SELMFLD_R(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
+					//----
 					if (cmd != null && cmd.length > 0)
 						for (String s : cmd) {
 							// 20210302 MatsudairaSyuMe check row command not null
@@ -215,7 +225,7 @@ public class Conductor implements Runnable {
 												 */
 												sno = null;
 											}
-											jdawcon.DELETETB(cmdtbname, "SVRID", cmdary[0]);
+											jdawcon.DELETETB_R(cmdtbname, "SVRID", cmdary[0], false);  //20220613 change to use reused statement
 											continue;
 										}
 										// ----

@@ -39,6 +39,8 @@ public class DscptMappingTable {
 		byte[] flddm = null;
 		byte[] dm = null;
 		try {
+			//20220613 MatsudairaSyuMe
+			if (conn == null || conn.isClosed())
 			conn = DriverManager.getConnection(DB_URL, USER, PASS);
 			log.debug("Connected database successfully...");
 			// STEP 2: Register JDBC driver
@@ -72,13 +74,22 @@ public class DscptMappingTable {
 				m_Dscpt2.put(id.trim(), dm);
 				total++;
 			}
-			if (conn != null)
-				conn.close();
+			//20220613 MatsudairaSyuMe mark up extra code  if (conn != null) add rs.close() and stmt.close()
+			rs.close();
+			stmt.close();
+			//----
+			conn.close();
+			//20220613 MatsudairaSyuMe
+			rs = null;
+			stmt = null;
+			conn = null;
+			//----
 			log.debug("total " + total + " records");
 			log.debug("total m_Dscpt2 " + m_Dscpt2.size() + " records");
 		} catch (Exception e) {
 			e.getStackTrace();
 			log.error("ERROR!! " + e.getMessage());
+			/*20220613 MatsudairaSyuMe mark up extra code
 			try {
 				if (conn != null)
 					conn.close();
@@ -86,7 +97,18 @@ public class DscptMappingTable {
 				e.getStackTrace();
 				log.error("connect close ERROR!! " + e2.getMessage());
 			}
+			*/
 		}
+		//20220613 MatsudairaSyuMe
+		finally {
+			try { if (rs != null) rs.close(); } catch (Exception e) {e.getStackTrace(); log.error("result set close ERROR!! ");}
+			try { if (stmt != null) stmt.close(); } catch (Exception e) {e.getStackTrace(); log.error("stmt close ERROR!! ");}
+			try { if (conn != null) conn.close(); } catch (Exception e) {e.getStackTrace(); log.error("jdbc connect close ERROR!! ");}
+			rs = null;
+			stmt = null;
+			conn = null;
+		}
+		//----
 	}
 	public DscptMappingTable (String filename) {
 		BufferedReader reader;

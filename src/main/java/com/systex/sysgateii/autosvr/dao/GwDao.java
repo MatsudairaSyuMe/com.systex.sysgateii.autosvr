@@ -46,7 +46,7 @@ public class GwDao {
 	public GwDao() throws Exception {
 		super();
 		log.debug("using url:{} user:{} pass:{} start to connect to Database", this.selurl, this.seluser, this.selpass);
-		selconn = getDB2Connection(selurl, seluser, selpass);
+		this.selconn = getDB2Connection(selurl, seluser, selpass); //20220609 private
 		log.debug("Connected to database successfully...");
 	}
 
@@ -56,7 +56,7 @@ public class GwDao {
 		this.seluser = seluser;
 		this.selpass = selpass;
 //		log.debug("Connecting to a selected database...");
-		selconn = getDB2Connection(selurl, seluser, selpass);
+		this.selconn = getDB2Connection(selurl, seluser, selpass); //20220609 private
 //		log.debug("Connected selected database successfully...");
 		this.verbose = v;
 	}
@@ -1158,6 +1158,32 @@ public class GwDao {
 	*/
 	public void CloseConnect() throws Exception {
 		try {
+			//20220613 MatsudairaSyuMe
+			if (this.reusedpreparedStatement != null) {
+				this.reusedpreparedStatement.close();
+				this.reusedpreparedStatement = null;
+			}
+			if (this.reusedDeletepreparedStatement != null) {
+				this.reusedDeletepreparedStatement.close();
+				this.reusedDeletepreparedStatement = null;
+			}
+			if (this.reusedDevStspreparedStatement != null) {
+				this.reusedDevStspreparedStatement.close();
+				this.reusedDevStspreparedStatement = null;
+			}
+			if (this.reusedDevInspreparedStatement != null) {
+				this.reusedDevInspreparedStatement.close();
+				this.reusedDevInspreparedStatement = null;
+			}
+			if (this.reusedDevUpdpreparedStatement != null) {
+				this.reusedDevUpdpreparedStatement.close();
+				this.reusedDevUpdpreparedStatement = null;
+			}
+			if (this.reusedTBSDYpreparedStatement != null) {
+				this.reusedTBSDYpreparedStatement.close();
+				this.reusedTBSDYpreparedStatement = null;
+			}
+			//----
 			if (selconn != null) { //20220607 MatsudairaSyuMe
 				selconn.close();
 			    selconn = null;
@@ -1167,7 +1193,21 @@ public class GwDao {
 			log.error("CloseConnect():{}", se.getMessage());
 		} // end finally try 20220607
 		finally {
-			selconn = null;
+			//20220613 MatsudairaSyuMe
+			try {if(this.reusedpreparedStatement != null) this.reusedpreparedStatement.close();} catch(Exception e) {};
+			this.reusedpreparedStatement = null;
+			try {if(this.reusedDeletepreparedStatement != null) this.reusedDeletepreparedStatement.close();} catch(Exception e) {};
+			this.reusedDeletepreparedStatement = null;
+			try {if(this.reusedDevStspreparedStatement != null) this.reusedDevStspreparedStatement.close();} catch(Exception e) {};
+			this.reusedDevStspreparedStatement = null;
+			try {if(this.reusedDevInspreparedStatement != null) this.reusedDevInspreparedStatement.close();} catch(Exception e) {};
+			this.reusedDevInspreparedStatement = null;
+			try {if(this.reusedDevUpdpreparedStatement != null) this.reusedDevUpdpreparedStatement.close();} catch(Exception e) {};
+			this.reusedDevUpdpreparedStatement = null;
+			try {if(this.reusedTBSDYpreparedStatement != null) this.reusedTBSDYpreparedStatement.close();} catch(Exception e) {};
+			this.reusedTBSDYpreparedStatement = null;
+			try {if(this.selconn != null) this.selconn.close();} catch(Exception e) {};
+			this.selconn = null;
 		}
 		//----
 	}
@@ -1258,4 +1298,408 @@ public class GwDao {
 	public void setSfn(String sfn) {
 		this.sfn = sfn;
 	}
+	//20220613 MatsudairaSyuMe create reused PreparedStatement
+	private PreparedStatement reusedDevStspreparedStatement = null;
+	private String preparedDevSelSqlStr = "";
+	private PreparedStatement reusedDevInspreparedStatement = null;
+	private String preparedDevInsSqlStr = "";
+	private PreparedStatement reusedDevUpdpreparedStatement = null;
+	private String preparedDevUpdSqlStr = "";
+
+	public int UPSERT_R(String fromTblName, String field, String updval, String keyname, String selkeyval, boolean initType)
+			throws Exception {
+		if (fromTblName == null || fromTblName.trim().length() == 0 || field == null || field.trim().length() == 0
+				|| keyname == null || keyname.trim().length() == 0)
+			throw new Exception("given table name or field or keyname error =>" + fromTblName);
+		log.debug(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		String keyset = "";
+		int row = 0;
+		boolean updateMode = false;
+		String[] keynameary = keyname.split(",");
+		String[] keyvalueary = selkeyval.split(",");
+		String[] updvalary = updval.split(",");
+		if (keynameary.length != keyvalueary.length)
+			throw new Exception("given fields keyname can't correspond to keyvfield =>keynames [" + keyname + "] selkeyval [" + selkeyval + "]");
+		else {
+			for (int i = 0; i < keynameary.length; i++)
+				keyset = keyset + keynameary[i] + " = " + keyvalueary[i] + (i == (keynameary.length - 1) ? "" : " and ");
+		}
+		try {
+			if (initType) {
+				String initkeyset = "";
+				for (int i = 0; i < keynameary.length; i++)
+					initkeyset = initkeyset + keynameary[i] + " = " + "?" + (i == (keynameary.length - 1) ? "" : " and ");
+				String initkeyval = "";
+				for (int i = 0; i < keynameary.length; i++)
+					initkeyval = initkeyval + "?" + ((i == (keynameary.length - 1)) ? "" : ",");
+				String initupdval = "";
+				for (int i = 0; i < updvalary.length; i++)
+					initupdval = initupdval + "?" + ((i == (updvalary.length - 1)) ? "" : ",");
+				this.preparedDevSelSqlStr = "SELECT " + keyname + "," + field + " FROM " + fromTblName + " where " + initkeyset;
+				this.preparedDevInsSqlStr = "INSERT INTO " + fromTblName + " (" + keyname + "," + field + ") VALUES (" + initkeyval + "," +  initupdval + ")";
+				this.preparedDevUpdSqlStr = "UPDATE " + fromTblName + " SET (" + field  + ") = (" + initupdval + ") WHERE "
+						+ keyset;
+			}
+			String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevSelSqlStr);
+			log.debug("UPSERT_R selstr [{}]-->[{}]", this.preparedDevSelSqlStr, wowstr);
+			log.debug("UPSERT_R update value [{}]", updval);
+			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevInsSqlStr);
+			log.debug("UPSERT_R insstr [{}]-->[{}]", this.preparedDevInsSqlStr, wowstr);
+			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevUpdSqlStr);
+			log.debug("UPSERT_R updstr [{}]-->[{}]", this.preparedDevUpdSqlStr, wowstr);
+
+			if (initType) {
+				try {
+					if (this.reusedDevStspreparedStatement != null)
+						this.reusedDevStspreparedStatement.close();
+					this.reusedDevStspreparedStatement = null;
+					if (this.reusedDevInspreparedStatement != null)
+						this.reusedDevInspreparedStatement.close();
+					this.reusedDevInspreparedStatement = null;
+					if (this.reusedDevUpdpreparedStatement != null)
+						this.reusedDevUpdpreparedStatement.close();
+					this.reusedDevUpdpreparedStatement = null;
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("ERROR !! this.reusedDevStspreparedStatement.close() or this.reusedDevInspreparedStatement.close() or this.reusedDevUpdpreparedStatement.close();:{}", e.getMessage());
+				} finally {
+					if (this.reusedDevStspreparedStatement != null) {
+						try {this.reusedDevStspreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedDevStspreparedStatement close anyaway");}
+						this.reusedDevStspreparedStatement = null;  //close any away
+					}
+					if (this.reusedDevInspreparedStatement != null) {
+						try {this.reusedDevInspreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedDevStspreparedStatement close anyaway");}
+						this.reusedDevInspreparedStatement = null;  //close any away
+					}
+					if (this.reusedDevUpdpreparedStatement != null) {
+						try {this.reusedDevUpdpreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedDevStspreparedStatement close anyaway");}
+						this.reusedDevUpdpreparedStatement = null;  //close any away
+					}
+				}
+				wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevSelSqlStr);
+				this.reusedDevStspreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+				wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevInsSqlStr);
+				this.reusedDevInspreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+				wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevUpdSqlStr);
+				this.reusedDevUpdpreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+			} else {
+				int startidx = 1;
+				for (String s: keyvalueary) {
+					s = s.trim();
+					if (s.startsWith("'") && s.endsWith("'")) {
+						s = s.replaceAll("^\'|\'$", "");
+						this.reusedDevStspreparedStatement.setString(startidx, s);
+					} else
+						this.reusedDevStspreparedStatement.setInt(startidx, Integer.valueOf(s));
+					startidx +=1;
+				}
+				ResultSet tblrs = this.reusedDevStspreparedStatement.executeQuery();
+				int idx = 0;
+				if (tblrs != null) {
+					while (tblrs.next()) {
+						idx++;
+					}
+					tblrs.close();
+				}
+				this.reusedDevStspreparedStatement.clearParameters();
+				if (idx > 0) {
+					log.debug("update mode");
+					updateMode = true;
+				} else {
+					log.debug("insert mode");
+					updateMode = false;					
+				}
+				if (updateMode) {
+					startidx = 1;
+					for (String s: updvalary) {
+						s = s.trim();
+						if (s.startsWith("'") && s.endsWith("'")) {
+							s = s.replaceAll("^\'|\'$", "");
+							this.reusedDevUpdpreparedStatement.setString(startidx, s);
+						} else
+							this.reusedDevUpdpreparedStatement.setInt(startidx, Integer.valueOf(s));
+						startidx +=1;
+					}
+					for (String s: keyvalueary) {
+						s = s.trim();
+						if (s.startsWith("'") && s.endsWith("'")) {
+							s = s.replaceAll("^\'|\'$", "");
+							this.reusedDevInspreparedStatement.setString(startidx, s);
+						} else
+							this.reusedDevInspreparedStatement.setInt(startidx, Integer.valueOf(s));
+						startidx +=1;
+					}
+					row = this.reusedDevUpdpreparedStatement.executeUpdate();
+					log.debug("record exist using update:{} result=[{}]", this.preparedDevUpdSqlStr, row);
+					this.reusedDevUpdpreparedStatement.clearParameters();
+				} else {
+					startidx = 1;
+					for (String s: keyvalueary) {
+						s = s.trim();
+						if (s.startsWith("'") && s.endsWith("'")) {
+							s = s.replaceAll("^\'|\'$", "");
+							this.reusedDevInspreparedStatement.setString(startidx, s);
+						} else
+							this.reusedDevInspreparedStatement.setInt(startidx, Integer.valueOf(s));
+						startidx +=1;
+					}
+					for (String s: updvalary) {
+						s = s.trim();
+						if (s.startsWith("'") && s.endsWith("'")) {
+							s = s.replaceAll("^\'|\'$", "");
+							this.reusedDevInspreparedStatement.setString(startidx, s);
+						} else
+							this.reusedDevInspreparedStatement.setInt(startidx, Integer.valueOf(s));
+						startidx +=1;
+					}
+					row = this.reusedDevInspreparedStatement.executeUpdate();
+					log.debug("record not exist using insert:{} result=[{}]", this.preparedDevInsSqlStr, row);
+					this.reusedDevInspreparedStatement.clearParameters();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("error UPSERT_R: {}", e.toString());
+		}
+		if (!initType)
+			log.debug("return UPSERT_R length=[{}]", row);
+		return row;
+	}
+	private PreparedStatement reusedpreparedStatement = null;
+	private String preparedSqlStr = "";
+	public String[] SELMFLD_R(String fromTblName, String fieldsn, String keyname, String keyvalue, boolean initType)
+			throws Exception {
+		String[] rtnVal = {};
+		if (fromTblName == null || fromTblName.trim().length() == 0 || fieldsn == null || fieldsn.trim().length() == 0
+				|| keyname == null || keyname.trim().length() == 0)
+			return rtnVal;
+		try {
+			log.debug("fieldsn=[{}] keyname = keyvalue : [{}]",  fieldsn, keyname + "=" + keyvalue);
+			String[] fieldset = null;
+			if (fieldsn.indexOf(',') > -1)
+				fieldset = fieldsn.split(",");
+			else {
+				fieldset = new String[1];
+				fieldset[0] = fieldsn;
+			}
+			String keyset = "";
+			String[] keynameary = keyname.split(",");
+			String[] keyvalueary = keyvalue.split(",");
+			if (keynameary.length != keyvalueary.length)
+				throw new Exception("given fields keyname can't correspond to keyvfield =>keynames [" + keyname + "] keyvalues [" + keyvalue + "]");
+			else {
+				for (int i = 0; i < keynameary.length; i++)
+					keyset = keyset + keynameary[i] + " = " + keyvalueary[i] + (i == (keynameary.length - 1) ? "" : " and ");
+			}
+
+			if ((keyname.indexOf(',') > -1) && (keyvalue.indexOf(',') > -1)
+					&& (keynameary.length != keyvalueary.length))
+				return rtnVal;
+
+			if (initType)
+				this.preparedSqlStr = "SELECT " + fieldsn + " FROM " + fromTblName + " where " + keyset;
+			String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedSqlStr);
+			log.debug("SELMFLD selstr [{}]-->[{}]", this.preparedSqlStr, wowstr);
+			if (initType) {
+				try {
+					if (this.reusedpreparedStatement != null)
+						this.reusedpreparedStatement.close();
+					this.reusedpreparedStatement = null;
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("ERROR !! this.reusedpreparedStatement.close():{}", e.getMessage());
+				} finally {
+					if (this.reusedpreparedStatement != null) {
+						try {this.reusedpreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedpreparedStatement close anyaway");}
+						this.reusedpreparedStatement = null;  //close any away
+					}
+				}
+				this.reusedpreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+			} else {
+				int startidx = 1;
+				for (String s: keyvalueary) {
+					s = s.trim();
+					if (s.startsWith("'") && s.endsWith("'")) {
+						s = s.replaceAll("^\'|\'$", "");
+						this.reusedpreparedStatement.setString(startidx, s);
+					} else
+						this.reusedpreparedStatement.setInt(startidx, Integer.valueOf(s));
+					startidx +=1;
+				}
+				ResultSet tblrs = this.reusedpreparedStatement.executeQuery();
+
+				if (tblrs != null) {
+					int idx = 0;
+					while (tblrs.next()) {
+						if (idx <= 0)
+							rtnVal = new String[1];
+						else {
+							String[] tmpv = rtnVal;
+							rtnVal = new String[idx + 1];
+							int j = 0;
+							for (String s: tmpv) {
+								rtnVal[j] = s;
+								j++;
+							}
+						}
+						for (int i = 0; i < fieldset.length; i++) {
+							if (i == 0)
+								rtnVal[idx] = tblrs.getString(fieldset[i]);
+							else
+								rtnVal[idx] = rtnVal[idx] + "," + tblrs.getString(fieldset[i]);
+						}
+						idx++;
+					}
+					tblrs.close();
+				}
+				this.reusedpreparedStatement.clearParameters();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("error : {}", e.toString());
+		}
+		if (!initType)
+			log.debug("return SELMFLD_R length=[{}]", rtnVal.length);
+		return rtnVal;
+	}
+	private PreparedStatement reusedTBSDYpreparedStatement = null;
+	private String preparedTBSDYSqlStr = "";
+	public String SELTBSDY_R(String fromTblName, String fieldn, String keyname, String keyvalue, boolean initType)
+			throws Exception {
+		String rtnVal = "";
+		if (fromTblName == null || fromTblName.trim().length() == 0 || fieldn == null || fieldn.trim().length() == 0
+				|| keyname == null || keyname.trim().length() == 0)
+			return rtnVal;
+		try {
+			log.debug("keyname = keyvalue=[{}]",  keyname + "=" + keyvalue);
+			String keyset = "";
+			String[] keynameary = keyname.split(",");
+			String[] keyvalueary = keyvalue.split(",");
+			if (keynameary.length != keyvalueary.length)
+				throw new Exception("given fields keyname can't correspond to keyvfield =>keynames [" + keyname + "] keyvalues [" + keyvalue + "]");
+			else {
+				for (int i = 0; i < keynameary.length; i++)
+					keyset = keyset + keynameary[i] + " = " + keyvalueary[i] + (i == (keynameary.length - 1) ? "" : " and ");
+			}
+
+			if ((keyname.indexOf(',') > -1) && (keyvalue.indexOf(',') > -1)
+					&& (keynameary.length != keyvalueary.length))
+				return rtnVal;
+			if (initType)
+				this.preparedTBSDYSqlStr = "SELECT " + fieldn + " FROM " + fromTblName + " where " + keyset;
+			String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedTBSDYSqlStr);
+			log.debug("SELTBSDY_R selstr [{}]-->[{}]",this.preparedTBSDYSqlStr, wowstr);
+			if (initType) {
+				try {
+					if (this.reusedTBSDYpreparedStatement != null)
+						this.reusedTBSDYpreparedStatement.close();
+					this.reusedTBSDYpreparedStatement = null;
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("ERROR !! this.reusedTBSDYpreparedStatement.close():{}", e.getMessage());
+				} finally {
+					if (this.reusedTBSDYpreparedStatement != null) {
+						try {this.reusedTBSDYpreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedTBSDYpreparedStatement close anyaway");}
+						this.reusedTBSDYpreparedStatement = null;  //close any away
+					}
+				}
+				this.reusedTBSDYpreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+			} else {
+				int startidx = 1;
+				for (String s: keyvalueary) {
+					s = s.trim();
+					if (s.startsWith("'") && s.endsWith("'")) {
+						s = s.replaceAll("^\'|\'$", "");
+						this.reusedTBSDYpreparedStatement.setString(startidx, s);
+					} else
+						this.reusedTBSDYpreparedStatement.setInt(startidx, Integer.valueOf(s));
+					startidx +=1;
+				}
+				ResultSet tblrs = this.reusedTBSDYpreparedStatement.executeQuery();
+				int idx = 0;
+				while (tblrs.next()) {
+					if (idx == 0)
+						rtnVal = tblrs.getString(fieldn);
+					else
+						rtnVal = rtnVal + "," + tblrs.getString(fieldn);
+					idx++;
+				}
+				tblrs.close();
+				this.reusedTBSDYpreparedStatement.clearParameters();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("error SELTBSDY_R : {}", e.toString());
+		}
+		log.debug("return SELTBSDY_R=[{}]", rtnVal);
+		return rtnVal;
+	}
+	private PreparedStatement reusedDeletepreparedStatement = null;
+	private String preparedDeleteSqlStr = "";
+	public boolean DELETETB_R(String fromTblName, String keyname, String selkeyval, boolean initType)
+			throws Exception {
+		if (fromTblName == null || fromTblName.trim().length() == 0 || keyname == null || keyname.trim().length() == 0)
+			throw new Exception("given table name or field or keyname error =>" + fromTblName);
+		log.debug(String.format("delete table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		String[] keynameary = keyname.split(",");
+		String[] keyvalueary = selkeyval.split(",");
+		String deletesql = "DELETE FROM " + fromTblName + " WHERE ";
+
+		if (keyname.indexOf(',') > -1 && selkeyval.indexOf(',') > -1) {
+			keynameary = keyname.split(",");
+			keyvalueary = selkeyval.split(",");
+			if (keynameary.length != keyvalueary.length)
+				throw new Exception("given fields keyname can't correspond to keyvfield =>keynames [" + keyname + "] selkayvals [" + selkeyval + "]");
+			else {
+				for (int i = 0; i < keynameary.length; i++)
+					deletesql = deletesql + keynameary[i] + " = " + keyvalueary[i] + (i == (keynameary.length - 1) ? "" : " and ");
+			}
+		} else
+			deletesql = deletesql + keyname + " = " + selkeyval;
+		if (initType)
+			this.preparedDeleteSqlStr = deletesql;
+		String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDeleteSqlStr);
+		log.debug("DELETETB_R deletesql=[{}]-->[{}] ", this.preparedDeleteSqlStr, wowstr);
+		//----
+		if (initType) {
+			try {
+				if (this.reusedDeletepreparedStatement != null)
+					this.reusedDeletepreparedStatement.close();
+				this.reusedDeletepreparedStatement = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("ERROR !! this.reusedDeletepreparedStatement.close():{}", e.getMessage());
+			} finally {
+				if (this.reusedDeletepreparedStatement != null) {
+					try {this.reusedDeletepreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedDeletepreparedStatement close anyaway");}
+					this.reusedDeletepreparedStatement = null;  //close any away
+				}
+			}
+			this.reusedDeletepreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+			return true;
+		} else {
+			int startidx = 1;
+			for (String s: keyvalueary) {
+				s = s.trim();
+				if (s.startsWith("'") && s.endsWith("'")) {
+					s = s.replaceAll("^\'|\'$", "");
+					this.reusedDeletepreparedStatement.setString(startidx, s);
+					log.debug("DELETETB_R deletesql idx[{}] setString [{}] ", startidx, s);
+				} else {
+					this.reusedDeletepreparedStatement.setInt(startidx, Integer.valueOf(s));
+					log.debug("DELETETB_R deletesql idx[{}] setInt [{}] ", startidx, Integer.valueOf(s));
+				}
+				startidx +=1;
+			}
+			boolean rtn = this.reusedDeletepreparedStatement.execute();
+			this.reusedpreparedStatement.clearParameters();
+			return rtn;
+		}
+	}
+	public Connection getConn() {
+		return this.selconn;
+	}
+
+	//----
 }

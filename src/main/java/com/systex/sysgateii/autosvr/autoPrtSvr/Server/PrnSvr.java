@@ -208,8 +208,24 @@ public class PrnSvr implements MessageListener<byte[]> {
 				public void run() {
 					// 20220607 MatsudairaSyuMe
 					try {
-						if (jdawcon == null)
+						if (jdawcon == null) {
 							jdawcon = new GwDao(dburl, dbuser, dbpass, false);
+							//20220613 MatsudairaSyuMe
+							String selfld = "";
+							String selkey = "";
+							String[] sno = null;
+							if (PrnSvr.cmdtbfields.indexOf(',') > -1) {
+								selfld = PrnSvr.cmdtbfields.substring(PrnSvr.cmdtbfields.indexOf(',') + 1);
+								selkey = PrnSvr.cmdtbfields.substring(0, PrnSvr.cmdtbfields.indexOf(','));
+							} else {
+								selfld = PrnSvr.cmdtbfields;
+								selkey = PrnSvr.cmdtbsearkey;
+							}
+//							log.info("initial select devcmdtbl [{}]", jdawcon.SELMFLD_R(PrnSvr.cmdtbname, selfld, selkey, "?", true));
+							jdawcon.SELMFLD_R(PrnSvr.cmdtbname, selfld, selkey, "?", true);
+							log.info("initial delete SVRID devcmdtbl [{}]", jdawcon.DELETETB_R(PrnSvr.cmdtbname, "SVRID,BRWS", "?,?", true));
+							//----
+						}
 						if (cmdhiscon == null)
 							cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
 					// ----
@@ -229,7 +245,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 							try {
 								// 20220607 MatsydairaSyuMe jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 								log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, PrnSvr.cmdtbsearkey);
-								String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
+								//20220613 MatsudairasyuMe Change to use reused prepared statement
+								//String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
+								String[] cmd = jdawcon.SELMFLD_R(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
 								if(cmd != null && cmd.length > 0)
 									for (String s: cmd) {
 										s = s.trim();
@@ -272,7 +290,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 														*/
 														sno = null;
 													}
-													jdawcon.DELETETB(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'");
+													jdawcon.DELETETB_R(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'", false);  //20220613 change to use reused statement
 													continue;
 												}
 												//----
