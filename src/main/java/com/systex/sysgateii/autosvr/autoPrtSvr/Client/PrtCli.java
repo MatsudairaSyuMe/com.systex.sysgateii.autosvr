@@ -1351,6 +1351,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						dsptb = desc.getBytes();
 				}
 				dsptbsnd = dsptb;
+				//20220630 MatsudairaSyuMe dsptblen
+				int dsptblen = dsptbsnd.length;
 //				pbpr_dscpt = new String(FilterChi(pbpr_dscpt.getBytes()));
 				//20100503 by Han 支出摘要第12位或若為中文碼時，轉為空白
 				//20100503 by Han 存入摘要第17位或若為中文碼時，轉為空白
@@ -1383,10 +1385,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					pbpr_crdb = String.format("%12s", new String(dsptb, "BIG5"));
 //					pbpr_crdblog = String.format("%12s", new String(dsptb));
 					pbpr_crdblog = String.format("%12s", new String(dsptb, "BIG5"));
+					dsptblen = 12;  //20220630 MatsudairaSyuMe dsptblen
 				} else {
 					pbpr_crdb = String.format("%17s", new String(dsptb, "BIG5"));
 //					pbpr_crdblog = String.format("%17s", new String(dsptb));
 					pbpr_crdblog = String.format("%17s", new String(dsptb, "BIG5"));
+					dsptblen = 17;  //20220630 MatsudairaSyuMe dsptblen
 				}
 				//處理支出收入金額
 				double dTxamt = 0.0;
@@ -1408,11 +1412,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					*/
 					//20210419 MatsudairaSyume reduce one space
 					//pbpr_crdb = pbpr_crdb + String.format("%18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "        ");
-					pbpr_crdb = pbpr_crdb + String.format("%18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "       ");
-					
-					pbpr_crdbT = String.format("%18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "       ");
-					
-					pbpr_crdblog = pbpr_crdblog + String.format("%18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "       ");
+					pbpr_crdb = pbpr_crdb + String.format("          %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "       ");//20220630 MatsudairaSyuMe dsptbsnd left shift two column
+					//20220630 MatsudairaSyuMe dsptbsnd left shift two column
+					pbpr_crdbT = String.format("          %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "       ");
+					//20220630 MatsudairaSyuMe dsptbsnd left shift two column
+					pbpr_crdblog = pbpr_crdblog + String.format("          %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT) + "       ");
 					//----
 					//----
 				} else {
@@ -1434,18 +1438,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					*/
 					//20210419 MatsudairaSyume reduce one space
 					//pbpr_crdb = pbpr_crdb + String.format("                 %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));
-					pbpr_crdb = pbpr_crdb + String.format("                %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));
+					pbpr_crdb = pbpr_crdb + String.format("                 %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));//20220630 MatsudairaSyuMe dsptbsnd left shift one column
 
-					pbpr_crdbT = String.format("                %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));
+					pbpr_crdbT = String.format("                 %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));//20220630 MatsudairaSyuMe dsptbsnd left shift one column
 
-					pbpr_crdblog = pbpr_crdblog + String.format("                %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));
+					pbpr_crdblog = pbpr_crdblog + String.format("                 %18s", dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT));//20220630 MatsudairaSyuMe dsptbsnd left shift one column
 					//----
 				}
 				pr_datalog = pr_data;
 				//20210419 MatsudairaSyume reduce one space change from %35s to %34s
-				pbpr_crdb = String.format("%34s", pbpr_crdb);
+				pbpr_crdb = String.format("%35s", pbpr_crdb); //20220630 MatsudairaSyuMe dsptbsnd left shift two column
 				//20210419 MatsudairaSyume reduce one space change from %35s to %34s
-				pbpr_crdbT = String.format("%34s", pbpr_crdbT);
+				pbpr_crdbT = String.format("%35s", pbpr_crdbT);//20220630 MatsudairaSyuMe dsptbsnd left shift two column
 
 				log.debug("pbpr_crdb len={} pbpr_crdbT [{}] len={}", pbpr_crdb.length(), pbpr_crdbT, pbpr_crdbT.length());
 
@@ -1453,7 +1457,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 				pr_data = pr_data + pbpr_crdb;
 				//20210419 MatsudairaSyume reduce one space change from %35s to %34s
-				pr_datalog = pr_datalog + String.format("%34s", pbpr_crdblog);
+				pr_datalog = pr_datalog + String.format("%35s", pbpr_crdblog);
 				//處理結存
 				String sbalbuff = "";
 				sbalbuff = new String(p0080DataFormat.getTotaTextValueSrc("spbbal", pb_arr.get(i)));
@@ -1531,7 +1535,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				byte[] sndbary = new byte[pr_dataprev.getBytes().length + pbpr_crdbT.getBytes().length];
 				System.arraycopy(pr_dataprev.getBytes(), 0, sndbary, 0, pr_dataprev.getBytes().length);
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
-				System.arraycopy(dsptbsnd, 0, sndbary, pr_dataprev.getBytes().length, dsptbsnd.length);  //20220629 MatsudairaSyuMe dsptbsnd left shift one column
+				System.arraycopy(dsptbsnd, 0, sndbary, pr_dataprev.getBytes().length, dsptblen);  //20220630 MatsudairaSyuMe use dsptblen
 				
 //				prt.Prt_Text(pr_data.getBytes());
 				//20200915
@@ -1995,7 +1999,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				byte[] sndbary = new byte[pr_dataprev.getBytes().length + pbpr_crdbT.getBytes().length];
 				System.arraycopy(pr_dataprev.getBytes(), 0, sndbary, 0, pr_dataprev.getBytes().length);
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
-				System.arraycopy(dsptb, 0, sndbary, pr_dataprev.getBytes().length, dsptb.length);  //20220629 MatsudairaSyuMe dsptbsnd left shift one column
+				System.arraycopy(dsptb, 0, sndbary, pr_dataprev.getBytes().length, dsptb.length);  //20220630 MatsudairaSyuMe dsptbsnd left shift one column
 				//20200915
 				if (skipbytes != null && skipbytes.length > 0) 
 					prt.Prt_Text(skipbytes, sndbary);
