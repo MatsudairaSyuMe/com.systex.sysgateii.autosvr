@@ -1338,7 +1338,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//處理摘要
 				byte dtype[] = p0080DataFormat.getTotaTextValueSrc("dsptype", pb_arr.get(i));
 				byte[] dsptb = null;
-				byte[] dsptbsnd = null;
+				byte[] dsptbsnd = new byte[24];  //20220701 MatsudairaSyuMe
 				if (dtype[0] == (byte)'9') {
 					dsptb = p0080DataFormat.getTotaTextValueSrc("dsptext", pb_arr.get(i));
 					dsptb = FilterBig5(dsptb);
@@ -1350,7 +1350,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					else
 						dsptb = desc.getBytes();
 				}
-				dsptbsnd = dsptb;
+				//20220701 MatsudairaSyuMe
+				//dsptbsnd = dsptb;
+				Arrays.fill(dsptbsnd, (byte)' ');
+				System.arraycopy(dsptb, 0, dsptbsnd, 0, dsptb.length);
+				//---- 20220701
 				//20220630 MatsudairaSyuMe dsptblen
 				int dsptblen = dsptbsnd.length;
 //				pbpr_dscpt = new String(FilterChi(pbpr_dscpt.getBytes()));
@@ -1536,7 +1540,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				System.arraycopy(pr_dataprev.getBytes(), 0, sndbary, 0, pr_dataprev.getBytes().length);
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
 				System.arraycopy(dsptbsnd, 0, sndbary, pr_dataprev.getBytes().length, dsptblen);  //20220630 MatsudairaSyuMe use dsptblen
-				
 //				prt.Prt_Text(pr_data.getBytes());
 				//20200915
 				if (skipbytes != null && skipbytes.length > 0) 
