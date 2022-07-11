@@ -2063,6 +2063,7 @@ public class CS4625Impl implements Printer {
 		switch (data[2]) {
 		case (byte) '2':
 		case (byte) '4':
+			/* 20220711 MatsudairaSyuMe mark for 'ESC r427'
 			//20200401
 			if (this.curState == Eject || this.curState == SetSignal_4) {
 				this.curChkState = CheckStatus_START;
@@ -2073,6 +2074,7 @@ public class CS4625Impl implements Printer {
 			}
 		
 		//----
+		*/
 		case (byte) 'P':
 		case (byte) 'A':
 		case (byte) 0xd0:

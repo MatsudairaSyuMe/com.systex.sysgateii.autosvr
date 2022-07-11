@@ -485,6 +485,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				this.seqNoFile.createNewFile();
 				FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
+				this.setSeqNo = 0;  //202207089 MatsudairasyuMe
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -2943,6 +2944,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								Charset.defaultCharset());
 					} catch (Exception e) {
 						log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+						 //20220708 MatsudairaSyuMe
+						FileUtils.writeStringToFile(this.seqNoFile, "0",	Charset.defaultCharset());
+						this.setSeqNo = 0;
+						//----
 					}
 					tital.setValueRtoLfill("txseq", String.format("%d", this.setSeqNo), (byte) '0');
 					tital.setValue("trancd", "CB");

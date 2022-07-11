@@ -2080,9 +2080,10 @@ public class CS5240Impl implements Printer {
 		// 0x80 --> S4265 can not operate
 		// 0xd0 --> S4265 , status not in initial config
 		switch (data[2]) {
-		case (byte) '2':
+//20220711 MatsudairasyuMe		case (byte) '2':
 		case (byte) '4':
 			//20200401
+			/*20220711 MatsudairasyuMe mark for 'ESC r427'
 			if (this.curState == Eject || this.curState == SetSignal_4) {
 				this.curChkState = CheckStatus_START;
 				//20201216
@@ -2094,10 +2095,12 @@ public class CS5240Impl implements Printer {
 				return false;
 			}
 		//----
+		 */
 		case (byte) 'P':
 		case (byte) 'A':
 		case (byte) 0xd0:
 			return true;
+		case (byte) '2':
 		case (byte) '1': // 20060619 paper jam
 			Send_hData(S5240_PERRCODE_REQ);
 			//20201208 add
