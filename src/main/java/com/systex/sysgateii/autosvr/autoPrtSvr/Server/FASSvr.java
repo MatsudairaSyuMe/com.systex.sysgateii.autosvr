@@ -1,6 +1,7 @@
 package com.systex.sysgateii.autosvr.autoPrtSvr.Server;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -30,6 +31,7 @@ import com.systex.sysgateii.comm.pool.fas.FASSocketChannel;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 
 /*
  * FAS socket connect servr
@@ -140,7 +142,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 
 	public boolean sendTelegram(byte[] telmsg) {
 		//20210116 MatsydairaSyuMe
-		synchronized (NODES) {
+		synchronized (this) {  //20220715 change to lock this
 			boolean rtn = false;
 			if (telmsg == null) {
 				log.debug("sendTelegram error send telegam null");
@@ -190,34 +192,40 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 					}
 					FileUtils.writeStringToFile(this.currSeqF, Integer.toString(seqno), Charset.defaultCharset());
 					header2 = String.format("\u0001%03d\u000f\u000f", seqno);
-				} catch (Exception e) {
-					log.warn("WORNING!!! update new seq number string {} error {}", seqno, e.getMessage());
-				}
-
-				ByteBuf req = Unpooled.buffer();
-				req.clear();
-				req.writeBytes(header1.getBytes());
-				req.writeBytes(dataUtil.to3ByteArray(sendlen));
-				req.writeBytes(header2.getBytes());
-				req.writeBytes(telmsg);
-				this.currConn.writeAndFlush(req.retain()).sync();
-				rtn = true;
-				try {
-					log.debug(String.format(fasSendPtrn,
+					//20220715 MatsudairaSyuMe change for get seqno error
+				//} catch (Exception e) {
+				//	log.warn("WORNING!!! update new seq number string {} error {}", seqno, e.getMessage());
+				//}
+					//--
+					ByteBuf req = Unpooled.buffer();
+					req.clear();
+					req.writeBytes(header1.getBytes());
+					req.writeBytes(dataUtil.to3ByteArray(sendlen));
+					req.writeBytes(header2.getBytes());
+					req.writeBytes(telmsg);
+					this.currConn.writeAndFlush(req.retain()).sync();
+					rtn = true;
+					try {
+						log.debug(String.format(fasSendPtrn,
 							header1.getBytes().length + dataUtil.to3ByteArray(sendlen).length
 									+ header2.getBytes().length + telmsg.length,
 							charcnv.BIG5bytesUTF8str(telmsg)) + " isCurrConnNull=[" + isCurrConnNull() + "]");
-					faslog.info(//20220409 change to info
+						faslog.info(//20220409 change to info
 							String.format(fasSendPtrn,
 									header1.getBytes().length + dataUtil.to3ByteArray(sendlen).length
 											+ header2.getBytes().length + telmsg.length,
 									charcnv.BIG5bytesUTF8str(telmsg)));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				// ----
-			} catch (final InterruptedException e) {
-				log.debug("get connect from pool error {}", e.getMessage());
+			//20220715 MatsudairaSyuMe change to error for get seqno error
+				} catch (Exception e) {
+					log.error("ERROR!!! update new seq number string {} error {}", seqno, e.getMessage());
+				}
+			//----
+//20220715 MatsudairaSyuMe			} catch (final InterruptedException e) {
+//20220715 MatsudairaSyuMe				log.debug("get connect from pool error {}", e.getMessage());
 			} catch (final Throwable cause) {
 				log.debug("get connect from pool error {}", cause.getMessage());
 			} finally {
@@ -234,7 +242,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	//20210107
 	public void releaseConn() {
 		//20210116 MatsydairaSyuMe
-		synchronized (NODES) {
+		synchronized (this) {  //20220715 MatsudairaSyuMe change to synchronized this
 			try {
 			//20210112 MatshdairaSyume release connection error handling
 				if (this.ec2.getConnPool() != null && this.currConn != null) {
@@ -375,5 +383,15 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	public boolean isCurrConnNull() {
 		return this.currConn == null;
 	}
-
+	//20220715 make  E001 Telegram
+	public byte[] mkE001(String telegramKey) {
+		String E001 = String.format("%sCB0011    PE0010077                                           ", telegramKey);
+		return E001.getBytes();
+	}
+	//20220715 make  E002 Telegram
+	public byte[] mkE002(String telegramKey) {
+		String E002 = String.format("%sCB0011    PA6510077                                           "	, telegramKey);
+		return E002.getBytes();
+	}
+	//----
 }
