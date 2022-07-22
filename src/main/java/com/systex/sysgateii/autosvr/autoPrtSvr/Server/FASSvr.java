@@ -7,6 +7,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;  //20220719 MatsudairaSyuMe
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -107,6 +108,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 			}
 			//20210116 MatsudairaSyuMe for imcoming TOTA telegram Map
 			Constants.incomingTelegramMap.clear();
+			//20220719 MatsudairaSyuMe for outgoing TITA outgoing time
+			Constants.outgoingTelegramKeyMap.clear();
 			//----
 			log.debug("Enter createServer size={}", NODES.length);
 			server = new FASSvr(_map);
@@ -223,6 +226,16 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				} catch (Exception e) {
 					log.error("ERROR!!! update new seq number string {} error {}", seqno, e.getMessage());
 				}
+				//20220719 MatsudairaSyuMe
+				String telegramKey = dataUtil.getTelegramKey(telmsg);
+				SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+				long curTimel = System.currentTimeMillis();
+				String ot = df.format(System.currentTimeMillis());
+				if (Constants.outgoingTelegramKeyMap.containsKey(telegramKey))
+					log.warn("telegramKey [{}] already exist on outgoingTelegramKeyMap table will update register time", telegramKey);
+				Constants.outgoingTelegramKeyMap.put(telegramKey, curTimel);
+				log.info("telegramKey [{}] send at [{}]", telegramKey, ot);
+				//----
 			//----
 //20220715 MatsudairaSyuMe			} catch (final InterruptedException e) {
 //20220715 MatsudairaSyuMe				log.debug("get connect from pool error {}", e.getMessage());
@@ -262,12 +275,23 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 		synchronized (Constants.incomingTelegramMap) {
 			log.debug("look by telegramKey=[{}] size={}", telegramKey, Constants.incomingTelegramMap.size());
 			byte[] rtn = null;
+			//20220719 MatsudairaSyuMe
+			if (Constants.incomingTelegramMap.containsKey(telegramKey) && Constants.outgoingTelegramKeyMap.containsKey(telegramKey)) {
+				rtn = (byte[]) Constants.incomingTelegramMap.remove(telegramKey);
+				Constants.outgoingTelegramKeyMap.remove(telegramKey);
+				log.debug("get incomming telegram remove [{}] from  outgoingTelegramKeyMap", telegramKey);
+			} else {
+				log.debug("not yet get incomming telegram");
+			}
+			//----
+			/* 20220719 MatsudairaSyuMe mark
 			if (null == (rtn = (byte[]) Constants.incomingTelegramMap.remove(telegramKey))) {
 				log.debug("not yet get incomming telegram");
 			} else {
 				log.debug("get incomming telegram");
 //				releaseConn();
 			}
+			*/
 			return rtn; 
 		}
 	}
@@ -385,12 +409,12 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	}
 	//20220715 make  E001 Telegram
 	public byte[] mkE001(String telegramKey) {
-		String E001 = String.format("%sCB0011    PE0010077                                           ", telegramKey);
+		String E001 = String.format("%sCB0011    PE0010077                                              ", telegramKey);
 		return E001.getBytes();
 	}
 	//20220715 make  E002 Telegram
 	public byte[] mkE002(String telegramKey) {
-		String E002 = String.format("%sCB0011    PA6510077                                           "	, telegramKey);
+		String E002 = String.format("%sCB0011    PA6510077                                              ", telegramKey);
 		return E002.getBytes();
 	}
 	//----
