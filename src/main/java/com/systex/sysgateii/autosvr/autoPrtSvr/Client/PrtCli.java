@@ -468,6 +468,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		} catch (Exception e) {
 			log.error("Address format error!!! {}", e.getMessage());
 		}
+		/* 20220723 MatsudairaSyuMe change to use Constants.teleSeqNoMap
 		//20210630 MatsudairaSyuMe for Path Manipulation, 20210716 Often Misused: Authentication
         //String[] saddr = this.rmtaddr.getAddress().getHostAddress().split("\\.");
 		String result = cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort());;
@@ -491,6 +492,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			e.printStackTrace();
 			log.error("error!!! create or open seqno file SEQNO_ error");
 		}
+		20220723     */
 		//----20210324
 //		log.info("rmt addr {} port {} local addr {} port {}",this.rmtaddr.getAddress().getHostAddress(), this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort());
 //20200910 change to used new UPSERT
@@ -2934,6 +2936,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				try {
 					tital.setValue("brno", this.brws.substring(0, 3));
 					tital.setValue("wsno", this.brws.substring(3));
+					/*20220723 MatsudairaSyuMe change to use Constants.teleSeqNoMap
 					try {
 						this.setSeqNo = Integer
 								.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 1;
@@ -2949,6 +2952,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						this.setSeqNo = 0;
 						//----
 					}
+					20220723 change to use Constants.teleSeqNoMap */
+					//20220723 MatsudairaSyuMe change to use Constants.teleSeqNoMap 
+					this.setSeqNo = Constants.incrementAndGetS(this.brws);
+					//----
 					tital.setValueRtoLfill("txseq", String.format("%d", this.setSeqNo), (byte) '0');
 					tital.setValue("trancd", "CB");
 					tital.setValue("wstype", "0");
