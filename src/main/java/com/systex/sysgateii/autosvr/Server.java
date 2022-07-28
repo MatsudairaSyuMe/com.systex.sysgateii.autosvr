@@ -180,7 +180,8 @@ public class Server {
 					if (workstr != null && workstr.length() > 0)
 						workno = Integer.parseInt(workstr);
 					for (int startwk = 0; startwk < workno; startwk++)
-						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //20220505 change to localhost
+//						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), true)); //20220505 change to localhost, 20220726 change debug verbose on
+						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //2022728 change to localhost, 20220726 change debug verbose off
 					//----
 					//ZThread.start(new mdworker2("tcp://*:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false));
 					Conductor.createServer(dcf.getConHashMap(), svrip);

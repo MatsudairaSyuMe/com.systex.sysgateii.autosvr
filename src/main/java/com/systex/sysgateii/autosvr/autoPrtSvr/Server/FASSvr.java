@@ -231,7 +231,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				}
 				//20220719 MatsudairaSyuMe
 				String telegramKey = dataUtil.getTelegramKey(telmsg);
-				SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+				SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
 				long curTimel = System.currentTimeMillis();
 				String ot = df.format(System.currentTimeMillis());
 				if (Constants.outgoingTelegramKeyMap.containsKey(telegramKey))

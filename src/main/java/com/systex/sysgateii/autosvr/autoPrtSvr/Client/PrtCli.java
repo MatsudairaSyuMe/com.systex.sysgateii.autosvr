@@ -346,7 +346,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.curState = SESSIONBREAK;
 		this.iFirst = 0;
 		//20210627 MatsudairaSyuMe add Majordomo Protocol processing
-		this.clientSession = new mdcliapi2("tcp://localhost:5555", true);
+		this.clientSession = new mdcliapi2("tcp://localhost:5555", false);//20220728 set debug flag to false
 		this.clientSession.setTimeout(PrnSvr.getReqTime());//20220613//, 20220718 MatsudairaSyuMe change from PrnSvr.getReqTime() to setResponseTimeout
 		//----
 		this.descm = new DscptMappingTable();
