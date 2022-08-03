@@ -26,6 +26,7 @@ import com.systex.sysgateii.autosvr.dao.GwDao;
 import com.systex.sysgateii.autosvr.util.StrUtil;
 import com.systex.sysgateii.comm.mdp.mdbroker;
 import com.systex.sysgateii.comm.mdp.mdworker2;
+import com.systex.sysgateii.comm.mdp.spqueue;
 
 import ch.qos.logback.classic.util.ContextInitializer;
 
@@ -68,7 +69,9 @@ public class Server {
 		//System.setProperty("log.name", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
 		//----
 		//log = LoggerFactory.getLogger(Server.class);
-		 mdbroker broker = null;
+		//20220802 MatsudairaSyuMe change to use spqueue
+//		 mdbroker broker = null;
+		 spqueue broker = null;
 		try {
 			//20201116 check if using given svrid
 			if (args.length > 0) {
@@ -160,8 +163,11 @@ public class Server {
 					FASSvr.createServer(dcf.getConHashMap());
 					FASSvr.startServer();
 					//20210628 use MDP
-					broker = new mdbroker(true);
-					broker.bind("tcp://*:5555");
+//					broker = new mdbroker(true);
+//					broker.bind("tcp://*:5555");
+					//20220802 use spqueue
+					broker = new spqueue(true);
+					broker.bind("tcp://localhost:5555", "tcp://localhost:5556");
 					Thread brokerThread = new Thread(broker);
 					brokerThread.start();
 					String tout = dcf.getConHashMap().get("svrsubport.recvtimeout");
@@ -180,8 +186,8 @@ public class Server {
 					if (workstr != null && workstr.length() > 0)
 						workno = Integer.parseInt(workstr);
 					for (int startwk = 0; startwk < workno; startwk++)
-//						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), true)); //20220505 change to localhost, 20220726 change debug verbose on
-						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //2022728 change to localhost, 20220726 change debug verbose off
+						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5556", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), true)); //20220505 change to localhost, 20220726 change debug verbose on
+//						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //2022728 change to localhost, 20220726 change debug verbose off
 					//----
 					//ZThread.start(new mdworker2("tcp://*:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false));
 					Conductor.createServer(dcf.getConHashMap(), svrip);
