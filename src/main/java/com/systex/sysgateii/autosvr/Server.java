@@ -166,7 +166,7 @@ public class Server {
 //					broker = new mdbroker(true);
 //					broker.bind("tcp://*:5555");
 					//20220802 use spqueue
-					broker = new spqueue(true);
+					broker = new spqueue(false); //20220803 turn off debug
 					broker.bind("tcp://localhost:5555", "tcp://localhost:5556");
 					Thread brokerThread = new Thread(broker);
 					brokerThread.start();
@@ -185,8 +185,8 @@ public class Server {
 					}
 					if (workstr != null && workstr.length() > 0)
 						workno = Integer.parseInt(workstr);
-					for (int startwk = 0; startwk < workno; startwk++)
-						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5556", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), true)); //20220505 change to localhost, 20220726 change debug verbose on
+					for (int startwk = 0; startwk < workno; startwk++) //20220804 turn off debug
+						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5556", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //20220505 change to localhost, 20220726 change debug verbose on
 //						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //2022728 change to localhost, 20220726 change debug verbose off
 					//----
 					//ZThread.start(new mdworker2("tcp://*:5555", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false));
