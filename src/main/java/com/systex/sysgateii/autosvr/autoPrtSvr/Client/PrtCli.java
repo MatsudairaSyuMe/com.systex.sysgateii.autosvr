@@ -3054,6 +3054,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//not yet send telegram send firstly
 					//alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
 					alreadySendTelegram = true;
+					this.rtelem = null; //20220804 MatsudairaSyuMe reset the receive buffer
 					ZMsg request = new ZMsg();
 					request.append(resultmsg);
 					clientSession.send("fas", request);
