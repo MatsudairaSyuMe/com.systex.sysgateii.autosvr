@@ -55,7 +55,9 @@ import com.systex.sysgateii.autosvr.util.StrUtil;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 import com.systex.sysgateii.autosvr.util.ipAddrPars;
 import com.systex.sysgateii.comm.mdp.mdcliapi2;
-
+//20220809 MatsudairaSyuMe
+import com.systex.sysgateii.comm.sdk.RouteConnection;
+//----
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -315,8 +317,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private final TimeUnit connectTimeUnit = TimeUnit.SECONDS;
 	//----
 	//20210627 MatsudairaSyuMe add Majordomo Protocol processing
-	private mdcliapi2 clientSession = null;
+//	private mdcliapi2 clientSession = null;
 	//----
+	//20220809 MatsudairaSyuMe add RouteConnect
+	private RouteConnection clientSession = null;
+	//---
 	//20220429  MatsudairaSyuMe
 	private boolean startIdleMode = false;
 	private long lastRequestTime = 0l;
@@ -346,9 +351,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.curState = SESSIONBREAK;
 		this.iFirst = 0;
 		//20210627 MatsudairaSyuMe add Majordomo Protocol processing
-		this.clientSession = new mdcliapi2("tcp://localhost:5555", false);//20220728 set debug flag to false , 20220803 turn off debug
+//		this.clientSession = new mdcliapi2("tcp://localhost:5555", false);//20220728 set debug flag to false , 20220803 turn off debug
 //20220729		this.clientSession.setTimeout(PrnSvr.getReqTime());//20220613//, 20220718 MatsudairaSyuMe change from PrnSvr.getReqTime() to setResponseTimeout
 		//----
+		//20220809 MatsydairaSyuMe use RouteConnection
+		this.clientSession = new RouteConnection("127.0.0.1", 5555, new Timer());
 		this.descm = new DscptMappingTable();
 		//20200716 add for message table
 		this.m_Msg = new MessageMappingTable();
@@ -468,7 +475,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		} catch (Exception e) {
 			log.error("Address format error!!! {}", e.getMessage());
 		}
-		/* 20220723 MatsudairaSyuMe change to use Constants.teleSeqNoMap
 		//20210630 MatsudairaSyuMe for Path Manipulation, 20210716 Often Misused: Authentication
         //String[] saddr = this.rmtaddr.getAddress().getHostAddress().split("\\.");
 		String result = cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort());;
@@ -492,7 +498,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			e.printStackTrace();
 			log.error("error!!! create or open seqno file SEQNO_ error");
 		}
-		20220723     */
 		//----20210324
 //		log.info("rmt addr {} port {} local addr {} port {}",this.rmtaddr.getAddress().getHostAddress(), this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort());
 //20200910 change to used new UPSERT
@@ -2893,17 +2898,20 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		return rtn;
 	}
 
-	/*******************************************************************
-	*	Send_Recv() : Send TX to Host /                *
-	*                Receive Data from Host           *
-	*   function    : 傳送INQ/UPD交易上中心/接收中心資料    *
-	*   parameter 1 : AP type -- 1:PB / 2:FC / 3:GL   *
-	*   parameter 2 : data function -- 1:INQ / 2:DEL  *
-	*   parameter 3 : total NB count                  *
-	*   parameter 4 : original MSR's balance          *
-	*   return_code : = 0 - NORMAL                    *
-	*                 < 0 - ERROR                     *
-	********************************************************************/
+	/************************************************************************
+	*	Send_Recv() : Send TX to Host /                             *
+	*                Receive Data from Host                        *
+	*   function    : 傳送INQ/UPD交易上中心/接收中心資料                  * 
+	*   parameter 1 : AP type -- 1:PB / 2:FC / 3:GL                *
+	*   parameter 2 : data function -- 1:INQ / 2:DEL               *
+	*   parameter 3 : total NB count                               *
+	*   parameter 4 : original MSR's balance                       *
+	*   return_code : = 0 - NORMAL                                 *
+	*                 < 0 - ERROR                                  *
+	*   delete data field error -2                                 *              
+	*  send message length == 0 -1                                 *
+	*  receive TITA/TOTA telegram KEY or message format error -3   *
+	*************************************************************************/
 	private int Send_Recv(int iflg, int ifun, String _con, String mbal)
 	{
 		//20200724
@@ -2936,7 +2944,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				try {
 					tital.setValue("brno", this.brws.substring(0, 3));
 					tital.setValue("wsno", this.brws.substring(3));
-					/*20220723 MatsudairaSyuMe change to use Constants.teleSeqNoMap
 					try {
 						this.setSeqNo = Integer
 								.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 1;
@@ -2952,10 +2959,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						this.setSeqNo = 0;
 						//----
 					}
-					20220723 change to use Constants.teleSeqNoMap */
-					//20220723 MatsudairaSyuMe change to use Constants.teleSeqNoMap 
-					this.setSeqNo = Constants.incrementAndGetS(this.brws);
-					//----
 					tital.setValueRtoLfill("txseq", String.format("%d", this.setSeqNo), (byte) '0');
 					tital.setValue("trancd", "CB");
 					tital.setValue("wstype", "0");
@@ -3053,14 +3056,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//----
 					//not yet send telegram send firstly
 					//alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
-					alreadySendTelegram = true;
-					this.rtelem = null; //20220804 MatsudairaSyuMe reset the receive buffer
-					ZMsg request = new ZMsg();
-					request.append(resultmsg);
-					clientSession.send("fas", request);
+					//20220809 MatsudairaSyuMe
+					//alreadySendTelegram = true;
+//					ZMsg request = new ZMsg();
+//					request.append(resultmsg);
+//					clientSession.send("fas", request);
 					//20210112 add by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 //					if (alreadySendTelegram == false && this.dispatcher.isCurrConnNull())
 					//20210628 change to use MDP take off this.dispatcher.isCurrConnNull()
+					//20220809 change to use RouteConnection
+					this.rtelem = null; //20220809 MatsudairaSyuMe reset the receive buffer
+					alreadySendTelegram = clientSession.send(resultmsg);
 					if (alreadySendTelegram == false)
 					{
 						log.debug("can not get connect from pool !!!!!!!!!!!!!!!!!");
@@ -3086,12 +3092,15 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//20210628 change to use MDP
 					//this.rtelem = dispatcher.getResultTelegram(this.telegramKey);
 					log.debug("{} {} {} AutoPrnCls : clientSession.recv() start", brws, catagory, account);
+					/* 20220809 MatsudairaSyuMe
 					ZMsg reply = null;
 					reply = clientSession.recv();
 					if (reply != null) {
 						this.rtelem = reply.pop().getData();
 						reply.destroy();
 					}
+					*/
+					this.rtelem = clientSession.recv();
 					if (this.rtelem != null) {
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 						this.setTITA_TOTA_START(false);
@@ -3100,6 +3109,51 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								brws, catagory, account, this.isTITA_TOTA_START(), alreadySendTelegram,
 								rtelem.length, new String(this.rtelem));
 						//----
+						//20220818 MatsudairaSyuMe check receive telegram transaction key
+						if (this.rtelem.length > 15) {
+							String recvTelegramKey = new String(Arrays.copyOfRange(rtelem, 0, this.telegramKey.length()));
+							if (!recvTelegramKey.equals(this.telegramKey)) {
+								//received TITA/TOTA transaction sequence no. not equals
+								log.error("TITA/TOTA  transaction sequence no not equal TITA=[{}] TOTA=[{}]", this.telegramKey, recvTelegramKey);
+								amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文傳輸編號錯誤錯誤 TITA[{}] TOTA [{}]", brws, pasname, this.account, this.telegramKey, recvTelegramKey);
+								this.rtelem = null;
+								this.resultmsg = null;
+								SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+								if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
+									log.debug(
+											"{} {} {} AutoPrnCls : --keep cheak barcode after Set Signal after check telegramKey",
+											brws, catagory, account);
+								} else {
+									log.debug(
+											"{} {} {} AutoPrnCls : --keep cheak barcode after Set Signal after check telegramKey",
+											brws, catagory, account);
+								}
+								this.curState = EJECTAFTERPAGEERROR;
+								rtn = -3;
+								break;
+							} else
+								log.info("TITA/TOTA  transaction sequence TITA=[{}] TOTA=[{}] matched !!!", this.telegramKey, recvTelegramKey);
+						} else {
+							//received telegram error
+							log.error("received TOTA message format error");
+							amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文格式錯誤！！", brws, pasname, this.account);
+							this.rtelem = null;
+							this.resultmsg = null;
+							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+							if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
+								log.debug(
+										"{} {} {} AutoPrnCls : --keep cheak barcode after Set Signal after received message format error",
+										brws, catagory, account);
+							} else {
+								log.debug(
+										"{} {} {} AutoPrnCls : --keep cheak barcode after Set Signal after received message format error",
+										brws, catagory, account);
+							}
+							this.curState = EJECTAFTERPAGEERROR;
+							rtn = -3;
+							break;
+						}
+						//---
 						total = new TOTATel();
 						boolean totalrtn = total.copyTotaLabel(Arrays.copyOfRange(rtelem, 0, total.getTotalLabelLen()));
 						log.debug("total.initTotaLabel rtn={} getTotalLabelLen={} {}", totalrtn,
@@ -3193,10 +3247,16 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 									//20210628 change to use MDP
 									//not yet send telegram send firstly
 									//alreadySendTelegram = dispatcher.sendTelegram(resultmsg);
-									alreadySendTelegram = true;
+									//20220809 MatsudairaSyuMe change to use RouteConnection
+									//alreadySendTelegram = true;
+									/* 20220809 MatsudairaSyuMe change to use RouteConnection
 									ZMsg request = new ZMsg();
 									request.append(resultmsg);
 									clientSession.send("fas", request);
+									*/
+									//20220809 MatsudairaSyuMe change to use RouteConnection
+									this.rtelem = null;  //20220809 reset previous receive buffer
+									alreadySendTelegram = clientSession.send(resultmsg);
 									//20210112 add by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 									if (alreadySendTelegram)
 										this.setTITA_TOTA_START(true);
@@ -3513,7 +3573,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.clientChannel = null;
 				//20210628 use MDP
 				if (clientSession != null)
-					clientSession.destroy();
+					//20220809 MatsudairaSyuMe change to use RouteConnection
+//					clientSession.destroy();
+					clientSession.shutdown();
 				//----
 				close();
 				// 20201006
@@ -3975,7 +4037,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			this.passSNDANDRCVTLM = true;  //20200714
 			if ((r = Send_Recv(this.iFig, TXP.INQ, "0", "0")) != 0) {
 				//20200506 modify for receive TOTA ERROR message and can't received TOTA message
-				if (r < 0 && r != -2 && r != -1) {
+				// 20220818 add select for r != -3 format or TITA/TOTA tran. seq. key error
+				if (r < 0 && r != -2 && r != -1 && r != -3) {
 					this.curState = SESSIONBREAK;
 					amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
 				}
@@ -4011,8 +4074,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			r = 0;
 			if (this.Send_Recv_DATAInq) {
 				if ((r = Send_Recv(this.iFig, TXP.INQ, "0", "0")) != 0) {
-					//20200506 modify for receive TOTA ERROR message and can't received TOTA message 20200619 for connect error
-					if ((r < 0 && r != -2 && r != -1)) {
+					//20200506 modify for receive TOTA ERROR message and can't received TOTA message
+					// 20220818 add select for r != -3 format or TITA/TOTA tran. seq. key error
+					if ((r < 0 && r != -2 && r != -1 && r != -3)) {
 						this.curState = SESSIONBREAK;
 						amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
 					}
@@ -4055,9 +4119,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 			} else {
 				if (Send_Recv(this.iFig, TXP.DEL, "", tx_area.get("mbal")) != 0) {
-					if (r < 0) { //20200619 for connect error
+					if (r < 0 && r != -3) { //20200619 for connect error
+						// 20220818 add select for r != -3 format or TITA/TOTA tran. seq. key error
 						this.curState = SESSIONBREAK;
-						amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
+						//20220818 change the amlog description
+//						amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
+						amlog.info("[{}][{}][{}]:61存摺資料刪除失敗！", brws, pasname, account);
 					} else {
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 						if ((r == 0 && this.isTITA_TOTA_START() == false && this.alreadySendTelegram == false)

@@ -1,10 +1,6 @@
 package com.systex.sysgateii.autosvr.comm;
 //20210116 MatsudairaSyume
 import java.util.concurrent.ConcurrentHashMap;
-//20220723 add for serial no
-import java.util.concurrent.atomic.AtomicLong;
-import java.time.LocalDate;
-//----
 import java.util.regex.Pattern;
 //----
 public class Constants {
@@ -93,39 +89,4 @@ public class Constants {
 	//20210628 MatsudairaSyuMe Log Forging
 	public static Pattern SingleWordPattern = Pattern.compile("([\\w\\:\\\\w ./-]+\\w+(\\.)?\\w+)");
 
-	//20220723 elegram serial no
-	public static final ConcurrentHashMap<String, AtomicLong> teleSeqNoMap = new ConcurrentHashMap<String, AtomicLong>();
-
-    public static int incrementAndGetS(String telegramKey) {
-		synchronized (teleSeqNoMap) {
-			if (Constants.teleSeqNoMap.containsKey(telegramKey)) {
-				long r = Constants.teleSeqNoMap.get(telegramKey).getAndIncrement() % 10000;
-				if (r == 0l)
-					Constants.teleSeqNoMap.get(telegramKey).getAndSet(1l);
-			} else {
-				AtomicLong counter = new AtomicLong();
-				counter.getAndSet(1l);
-				Constants.teleSeqNoMap.put(telegramKey, counter);
-			}
-			return (int) Constants.teleSeqNoMap.get(telegramKey).get();
-		}
-    }
-
-    //FAS channel seq hash map
-	public static final ConcurrentHashMap<String, AtomicLong> chlSeqNoMap = new ConcurrentHashMap<String, AtomicLong>();
-
-    public static int incrementChlAndGetS(String chlKey) {
-		synchronized (chlSeqNoMap ) {
-			if (Constants.chlSeqNoMap.containsKey(chlKey)) {
-				long r = Constants.chlSeqNoMap.get(chlKey).getAndIncrement() % 1000;
-				if (r == 0l)
-					Constants.chlSeqNoMap.get(chlKey).getAndSet(1l);
-			} else {
-				AtomicLong counter = new AtomicLong();
-				counter.getAndSet(1l);
-				Constants.chlSeqNoMap.put(chlKey, counter);
-			}
-			return (int) Constants.chlSeqNoMap.get(chlKey).get();
-		}
-    }
 }
