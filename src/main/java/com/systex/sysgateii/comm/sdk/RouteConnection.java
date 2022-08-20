@@ -189,10 +189,10 @@ public class RouteConnection {
 				log.debug("readableBytes={} barray={}", buf.readableBytes(), buf.hasArray());
 				if (buf.isReadable() && !buf.hasArray()) {
 					log.debug("readableBytes={} barray={}", buf.readableBytes(), buf.hasArray());
-					if (clientSessionRecvMessageBuf.readerIndex() > (clientSessionRecvMessageBuf.capacity() / 2)) {
-						clientSessionRecvMessageBuf.discardReadBytes();
-						log.debug("adjustment clientMessageBuf readerindex ={}" + clientSessionRecvMessageBuf.readableBytes());
-					}
+//					if (clientSessionRecvMessageBuf.readerIndex() > (clientSessionRecvMessageBuf.capacity() / 2)) {
+//						clientSessionRecvMessageBuf.discardReadBytes();
+//						log.debug("adjustment clientMessageBuf readerindex ={}" + clientSessionRecvMessageBuf.readableBytes());
+//					}
 					clientSessionRecvMessageBuf.writeBytes(buf);
 					log.debug("clientMessageBuf.readableBytes={}",clientSessionRecvMessageBuf.readableBytes());
 					if (clientSessionRecvMessageBuf.readableBytes() >= 2) {

@@ -2,6 +2,8 @@ package com.systex.sysgateii.autosvr.comm;
 //20210116 MatsudairaSyume
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+
+import com.systex.sysgateii.autosvr.util.TelegramReg;
 //----
 public class Constants {
 	public static String LABEL_KEY_SYNC = "syncCheck";
@@ -73,7 +75,8 @@ public class Constants {
 	//20210116  MatsudairaSyume add for incoming TOTA Telegram
 	public static final ConcurrentHashMap<String, Object> incomingTelegramMap = new ConcurrentHashMap<String, Object>();
 	//20220719 MatsudairaSyuMe register the outgoing time of telegram 
-	public static final ConcurrentHashMap<String, Object> outgoingTelegramKeyMap = new ConcurrentHashMap<String, Object>();
+//	public static final ConcurrentHashMap<String, Object> outgoingTelegramKeyMap = new ConcurrentHashMap<String, Object>();
+	public static final ConcurrentHashMap<String, TelegramReg> outgoingTelegramKeyMap = new ConcurrentHashMap<String, TelegramReg>();
 	//----
 	//20210122 MatsudairaSyume default sync. key
 	public static final String DEFKNOCKING = "9588028820109132570743325311898426347857298773549468758875018579537757772163084478873699447306034466200616411960574122434059469100235892702736860872901247123456";
