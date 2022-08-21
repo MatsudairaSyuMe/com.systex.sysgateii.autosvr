@@ -72,8 +72,8 @@ public class Constants {
 	public static final String STSUSEDINACT = "1";
 	public static final String STSUSEDACT = "2";
 	public static final String STSBACKACT = "3";
-	//20210116  MatsudairaSyume add for incoming TOTA Telegram
-	public static final ConcurrentHashMap<String, Object> incomingTelegramMap = new ConcurrentHashMap<String, Object>();
+	//20210116  MatsudairaSyume add for incoming TOTA Telegram, 20220819 abolish incommingTelegramMap
+	//public static final ConcurrentHashMap<String, Object> incomingTelegramMap = new ConcurrentHashMap<String, Object>();
 	//20220719 MatsudairaSyuMe register the outgoing time of telegram 
 //	public static final ConcurrentHashMap<String, Object> outgoingTelegramKeyMap = new ConcurrentHashMap<String, Object>();
 	public static final ConcurrentHashMap<String, TelegramReg> outgoingTelegramKeyMap = new ConcurrentHashMap<String, TelegramReg>();

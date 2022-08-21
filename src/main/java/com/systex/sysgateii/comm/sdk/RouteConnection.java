@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.systex.sysgateii.autosvr.autoPrtSvr.Client.PrtCli;
 import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.comm.TXP;
+import com.systex.sysgateii.autosvr.util.COMM_STATE;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 
 public class RouteConnection {
@@ -37,7 +38,7 @@ public class RouteConnection {
 	private SocketAddress addr_;
 	private Channel channel_;
 	private Timer timer_;
-	private byte[] rtnmsg = null;;
+	private byte[] rtnmsg = null;
 	private int bufferSize = Integer.parseInt(System.getProperty("bufferSize", Constants.DEF_CHANNEL_BUFFER_SIZE + ""));
 	private ByteBuf clientSessionRecvMessageBuf = null;
 	public RouteConnection(String host, int port, Timer timer) {
@@ -74,14 +75,15 @@ public class RouteConnection {
 		return send(msg.getBytes());
 	}
 
-	public boolean send(byte[] msg) {
+	public boolean send(byte[] msg) {  //20220819 MatsudairaSyuMe send TRANSFER data add COMM_STATE.TRANSF
 		this.rtnmsg = null;
 		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
 			//20220818 MatsudairaSyuMe add 2 bytes length before msg as real send message
-			byte[] sndmsg = new byte [msg.length + 2];  //total send msgary is 2 byte length + msg
-			System.arraycopy(msg, 0, sndmsg, 2, msg.length);
-			sndmsg[0] = (byte) ((msg.length + 2) / 256);
-			sndmsg[1] = (byte) ((msg.length + 2) % 256);
+			byte[] sndmsg = new byte [msg.length + 3];  //total send msgary is 2 byte length + 1 byte COMM_STATE.TRANSF + msg
+			sndmsg[0] = (byte) (sndmsg.length / 256);
+			sndmsg[1] = (byte) (sndmsg.length  % 256);
+			sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
+			System.arraycopy(msg, 0, sndmsg, 3, msg.length);
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(sndmsg);
 			log.debug("send to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg));
 			channel_.writeAndFlush(buf);
@@ -97,8 +99,32 @@ public class RouteConnection {
 			return false;
 		}
 	}
+	public boolean sendCANCEL(byte[] msg) {  //20220819 MatsudairaSyuMe send COMM_STATE.CANCEL command and telegramKey
+		this.rtnmsg = null;
+		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
+			//20220818 MatsudairaSyuMe add 2 bytes length before msg as real send message
+			byte[] sndmsg = new byte [msg.length + 3];  //total send msgary is 2 byte length + 1 byte COMM_STATE.TRANSF + msg
+			sndmsg[0] = (byte) (sndmsg.length / 256);
+			sndmsg[1] = (byte) (sndmsg.length % 256);
+			sndmsg[2] = (byte) COMM_STATE.CANCEL.Getid();
+			System.arraycopy(msg, 0, sndmsg, 3, msg.length);
+			ByteBuf buf = channel_.alloc().buffer().writeBytes(sndmsg);
+			log.debug("send CANCEL command to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg));
+			channel_.writeAndFlush(buf);
+			sndmsg = null;
+			buf = null;
+			//******
+			return true;
+		} else {
+			if (msg == null || msg.length == 0)
+				log.error("send CANCEL command message null or length == 0");
+			else
+				log.error("Can't send CANCEL command message to inactive connection");
+			return false;
+		}
+	}
 	public byte[] recv() {
-		log.debug("try to get return message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
+		log.debug("try to get return TRANSFE message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
 		return this.rtnmsg;
 	}
 
@@ -201,7 +227,28 @@ public class RouteConnection {
 						int rcvmsglen = ((int)(lenbary[0] & 0xff)  * 256 + (int)(lenbary[1] & 0xff));
 						if (rcvmsglen >= 2 && rcvmsglen <= clientSessionRecvMessageBuf.readableBytes()) {
 							log.debug("clientMessageBuf.readableBytes={} rcvmsglen={}",clientSessionRecvMessageBuf.readableBytes(), rcvmsglen);
-							rtnmsg = cnvResultTelegram();
+							//20220819 MatsudairaSyuMe add COMM_STATE
+							//rtnmsg = cnvResultTelegram();
+							byte[] rtnTmpary = cnvResultTelegram();
+							switch (COMM_STATE.ById(rtnTmpary[0])) {
+							case TRANSF: // <==傳送電文
+								rtnmsg = new byte[rtnTmpary.length - 1];
+								System.arraycopy(rtnTmpary, 1, rtnmsg, 0, (rtnTmpary.length - 1));
+								break;
+							case CANCEL: // <==刪除記錄
+								log.info("RouteServerHandler--> RouteConnection 刪除記錄 ignore");
+								break;
+							case CHECK: // <==詢問
+								log.info("RouteServerHandler--> RouteConnection 詢問 ignore");
+								break;
+							case ACK: // <==回覆成功
+								log.info("RouteServerHandler--> RouteConnection 回覆成功 ignore");
+								break;
+							case NAK: // <==回覆失敗
+								log.info("RouteServerHandler--> RouteConnection 回覆失敗 ignore");
+								break;
+							}
+							rtnTmpary = null;
 							//if (rtnmsg != null && rtnmsg.length > 0) {
 							//	handleMessage(new String(rtnmsg));
 							//}

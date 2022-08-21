@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory;
 
 import com.systex.sysgateii.autosvr.autoPrtSvr.Server.FASSvr;
 import com.systex.sysgateii.autosvr.comm.Constants;
+import com.systex.sysgateii.autosvr.util.COMM_STATE;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -68,11 +69,42 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 				log.debug("serverSessionRecvMessageBuf.readableBytes={}",this.serverSessionRecvMessageBuf.readableBytes());
 				if (this.serverSessionRecvMessageBuf.readableBytes() >= 2) {
 					byte[] lenbary = new byte[2];
+					log.debug("this.serverSessionRecvMessageBuf.readerIndex()={}", this.serverSessionRecvMessageBuf.readerIndex());
 					this.serverSessionRecvMessageBuf.getBytes(this.serverSessionRecvMessageBuf.readerIndex(), lenbary);
+					//log.debug("this.serverSessionRecvMessageBuf.readerIndex()={} [{}] [{}]", this.serverSessionRecvMessageBuf.readerIndex(), lenbary[0], lenbary[1]);
 					int rcvmsglen = ((int)(lenbary[0] & 0xff)  * 256 + (int)(lenbary[1] & 0xff));
 					if (rcvmsglen >= 2 && rcvmsglen <= this.serverSessionRecvMessageBuf.readableBytes()) {
-						log.debug("serverSessionRecvMessageBuf.readableBytes={} rcvmsglen={}",this.serverSessionRecvMessageBuf.readableBytes(), rcvmsglen);
-						byte[] req = cnvResultTelegram();
+						//log.debug("serverSessionRecvMessageBuf.readableBytes={} rcvmsglen={}",this.serverSessionRecvMessageBuf.readableBytes(), rcvmsglen);
+						byte[] reqTmpary = cnvResultTelegram();
+						byte[] req = null;
+						switch (COMM_STATE.ById(reqTmpary[0])) {
+						case TRANSF: // <==傳送電文
+							req = new byte[reqTmpary.length - 1];
+							System.arraycopy(reqTmpary, 1, req, 0, (reqTmpary.length - 1));
+							log.info("RouteConnection--> RouteServerHandler 傳送電文  Constants.outgoingTelegramKeyMap.size()=[{}]", Constants.outgoingTelegramKeyMap.size());
+							break;
+						case CANCEL: // <==刪除記錄
+							byte[] reqDataary = new byte[reqTmpary.length - 1];
+							System.arraycopy(reqTmpary, 1, reqDataary, 0, (reqTmpary.length - 1));
+//							log.info("RouteConnection--> RouteServerHandler 刪除記錄  Constants.outgoingTelegramKeyMap.size()=[{}]", Constants.outgoingTelegramKeyMap.size());
+							String canceltelegramKey = dataUtil.getTelegramKey(reqDataary);
+							if (canceltelegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(canceltelegramKey))
+								Constants.outgoingTelegramKeyMap.remove(canceltelegramKey);
+							log.info("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
+							canceltelegramKey = "";
+							reqDataary = null;
+							break;
+						case CHECK: // <==詢問
+							log.info("RouteConnection--> RouteServerHandler 詢問 ignore");
+							break;
+						case ACK: // <==回覆成功
+							log.info("RouteConnection--> RouteServerHandler 回覆成功 ignore");
+							break;
+						case NAK: // <==回覆失敗
+							log.info("RouteConnection--> RouteServerHandler 回覆失敗 ignore");
+							break;
+						}
+						reqTmpary = null;
 						if (req != null && req.length > 0) {
 							//log.info("receive from RouteClient [{}]", new String(req));
 							String telegramKey = "";
@@ -83,7 +115,7 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 //							alreadySendTelegram = dispatcher.sendTelegram(req);
 							alreadySendTelegram = dispatcher.sendTelegram(req, ctx);
 							log.info("get request from RouteClient [{}]: telegramKey=[{}] [{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, body, alreadySendTelegram);
-							int reTry = 0;
+							// 20220819 int reTry = 0;
 							byte[] resultmsg = null;
 							/* 20220810 MatsudairaSyuMe change to send telegram back by FASClientChannelHandler
 							if (alreadySendTelegram)
@@ -105,17 +137,18 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 								log.error("{} FAS connection break!!! send E002 telegramKey=[{}] resultmsg=[{}]", ctx.channel().id(), telegramKey, new String(resultmsg));
 								//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing ctx.writeAndFlush(Unpooled.wrappedBuffer(resultmsg));
 							}*/
-							if (!alreadySendTelegram)
+							if (!alreadySendTelegram) {
 								resultmsg = dispatcher.mkE002(telegramKey);
-							if (resultmsg == null || reTry >= this.totalReTryTime) {
-								log.error("{} getResultTelegram FAS timeout !!!! [{}]", ctx.channel().id(), (resultmsg == null) ? "": new String(resultmsg));
-							} else {
-								//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
+//20220819 abolish		if (resultmsg == null || reTry >= this.totalReTryTime) {
+//20220819 abolish			log.error("{} getResultTelegram FAS timeout !!!! [{}]", ctx.channel().id(), (resultmsg == null) ? "": new String(resultmsg));
+//20220819 abolish		} else {
+								//20220819 MatsudairasyuMe add for receive buffer for 2 byte length processing + 1 byte COMM_STATE.TRANSFE
 								if (resultmsg != null) {
-									byte[] sndmsg = new byte [resultmsg.length + 2];  //total send msgary is 2 byte length + msg
-									System.arraycopy(resultmsg, 0, sndmsg, 2, resultmsg.length);
+									byte[] sndmsg = new byte [resultmsg.length + 3];  //total send msgary is 2 byte length + msg
 									sndmsg[0] = (byte) (sndmsg.length / 256);
 									sndmsg[1] = (byte) (sndmsg.length % 256);
+									sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
+									System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
 									log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
 									ctx.writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
 									if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey))

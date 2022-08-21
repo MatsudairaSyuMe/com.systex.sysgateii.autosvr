@@ -25,6 +25,7 @@ import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.comm.TXP;
 import com.systex.sysgateii.autosvr.listener.ActorStatusListener;
 import com.systex.sysgateii.autosvr.telegram.S004;
+import com.systex.sysgateii.autosvr.util.COMM_STATE;
 import com.systex.sysgateii.autosvr.util.CharsetCnv;
 import com.systex.sysgateii.autosvr.util.TelegramReg;
 import com.systex.sysgateii.autosvr.util.dataUtil;
@@ -159,7 +160,12 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		log.debug("ChannelRead==============");
-		byte [] telmbyteary = null;
+		//20220819 abolish this parameter byte [] telmbyteary = null;
+		//if length of telegramKey > 0  at try final
+		// and Constants.outgoingTelegramKeyMap.containsKey(telegramKey)
+		//  then remove the element from Constants.outgoingTelegramKeyMap by telegramKey
+		//  to make sure no garbage data exist in Constants.outgoingTelegramKeyMap
+		String telegramKey = "";
 		try {
 			if (msg instanceof ByteBuf) {
 				ByteBuf buf = (ByteBuf) msg;
@@ -260,9 +266,10 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						} else {
 						//---- 20220221
 							//20220719 MatsudairaSyuMe check if telegram expired
-							String telegramKey = dataUtil.getTelegramKey(resultmsg);
+							telegramKey = dataUtil.getTelegramKey(resultmsg);
 							if (Constants.outgoingTelegramKeyMap.containsKey(telegramKey)) {
 								//20220819 MAtsudairaSyuMe use new format of outgoingTelegramKeyMap
+								log.debug("new incoming telegram map table size=[{}] send back to RouteConnection", Constants.outgoingTelegramKeyMap.size());
 //								long ot = (long) Constants.outgoingTelegramKeyMap.get(telegramKey);
 								TelegramReg ot = Constants.outgoingTelegramKeyMap.get(telegramKey);
 								if ((System.currentTimeMillis() - ot.getOutTime()) <= PrnSvr.setResponseTimeout) {
@@ -276,28 +283,32 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 										log.debug("new incoming telegram put into map table by telegramKey [{}]", telegramKey);
 									}
 									log.debug("new incoming telegram map table size=[{}]", Constants.incomingTelegramMap.size());*/
-									log.debug("new incoming telegram map table size=[{}] send back to RouteConnection", Constants.incomingTelegramMap.size());
-									byte[] sndmsg = new byte [resultmsg.length + 2];  //total send msgary is 2 byte length + msg
-									System.arraycopy(resultmsg, 0, sndmsg, 2, resultmsg.length);
+									//log.debug("new incoming telegram map table size=[{}] send back to RouteConnection", Constants.incomingTelegramMap.size());
+									byte[] sndmsg = new byte [resultmsg.length + 3];  //total send msgary is 2 byte length + COMM_STATE.TRANSF.Getid() + msg
 									sndmsg[0] = (byte) (sndmsg.length / 256);
 									sndmsg[1] = (byte) (sndmsg.length % 256);
+									sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
+									System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
 									log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
 									ot.getSourceHandlerCtx().writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
-									if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey))
-										Constants.outgoingTelegramKeyMap.remove(telegramKey);
 									sndmsg = null;
 									resultmsg = null;
 								} else {
 									SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
-									String lastTime = df.format(ot);
+//									String lastTime = df.format(ot);
+									String lastTime = df.format(ot.getOutTime());
 									log.error("!!!! receive TOTA-telegramKey=[{}] in outgoingTelegramKeyMap time=[{}] already expired [{}] drop it !!!", telegramKey, lastTime, PrnSvr.setResponseTimeout);
-									Constants.outgoingTelegramKeyMap.remove(telegramKey);
+									//20220819 abolish incomingTelegramMap
+									/*
 									if (Constants.incomingTelegramMap.containsKey(telegramKey)) {
 										Constants.incomingTelegramMap.remove(telegramKey);
 										log.error("!!!! receive TOTA-telegramKey=[{}] also remove from incomingTelegramMap", telegramKey);
-									}
+									}*/
 								}
-							//20220719 MatsudairasyuMe  telegram no register in outgoingTelegramKeyMap drop it
+							   //20220719 MatsudairasyuMe drop telegramkeyReg from outgoingTelegramKeyMap
+								Constants.outgoingTelegramKeyMap.remove(telegramKey);
+								telegramKey = "";
+							   //20220719 MatsudairasyuMe  telegram no register in outgoingTelegramKeyMap drop it
 							} else {
 								log.warn("receive TOTA-telegramKey=[{}] not exist in outgoingTelegramKeyMap telegram drop it !!!", telegramKey);
 							}
@@ -313,6 +324,15 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 			e.printStackTrace();
 			log.error(e.getMessage());
 		}
+		//20220819 add finally processing
+		finally {
+			if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey)) {
+				log.warn("there some exception break the receive program drop the register element for telegramKey=[{}] from outgoingTelegramKeyMap!!!", telegramKey);
+				Constants.outgoingTelegramKeyMap.remove(telegramKey);
+				telegramKey = null;
+			}
+		}
+		//----
 	}
 
 	@Override

@@ -107,8 +107,9 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				NODES[i] = NODES[i].trim();
 				log.debug("Enter createServer {}", NODES[i]);
 			}
-			//20210116 MatsudairaSyuMe for imcoming TOTA telegram Map
-			Constants.incomingTelegramMap.clear();
+			//20210116 MatsudairaSyuMe for incoming TOTA telegram Map
+			//20220819 abolish incomingTelegramMap
+			//Constants.incomingTelegramMap.clear();
 			//20220719 MatsudairaSyuMe for outgoing TITA outgoing time
 			Constants.outgoingTelegramKeyMap.clear();
 			//----
@@ -285,7 +286,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 		}
 //		log.debug("return connect to pool");
 	}
-	//20210116 MatshdairaSyume
+	//20210116 MatshdairaSyume, 20220819 abolish incomingTelegramMap
+	/*
 	public byte[] getResultTelegram(String telegramKey) {
 		synchronized (Constants.incomingTelegramMap) {
 			log.debug("look by telegramKey=[{}] size={}", telegramKey, Constants.incomingTelegramMap.size());
@@ -299,18 +301,18 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				log.debug("not yet get incomming telegram");
 			}
 			//----
-			/* 20220719 MatsudairaSyuMe mark
-			if (null == (rtn = (byte[]) Constants.incomingTelegramMap.remove(telegramKey))) {
-				log.debug("not yet get incomming telegram");
-			} else {
-				log.debug("get incomming telegram");
-//				releaseConn();
-			}
-			*/
+			// 20220719 MatsudairaSyuMe mark
+//			if (null == (rtn = (byte[]) Constants.incomingTelegramMap.remove(telegramKey))) {
+//				log.debug("not yet get incomming telegram");
+//			} else {
+//				log.debug("get incomming telegram");
+////				releaseConn();
+//			}
 			return rtn; 
 		}
 	}
 	//----
+	 */
 	public byte[] getResultTelegram() {
 		byte[] rtn = null;
 		byte[] lenbary = new byte[3];
