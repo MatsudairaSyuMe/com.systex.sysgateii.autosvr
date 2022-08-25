@@ -47,6 +47,8 @@ import io.netty.util.CharsetUtil;
 public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 	private static Logger log = LoggerFactory.getLogger(FASClientChannelHandler.class);
 	private Logger faslog = LoggerFactory.getLogger("faslog");
+	//20220819 add trace log
+	private Logger trace = LoggerFactory.getLogger("trace");
 
 	private static final ByteBuf HEARTBEAT_SEQUENCE = Unpooled
 			.unreleasableBuffer(Unpooled.copiedBuffer("hb_request", CharsetUtil.UTF_8));
@@ -263,6 +265,8 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						if ((trnidbary[0] == (byte)'S') || (trnidbary[0] == (byte)'T'))
 						{
 							log.warn("receive TOTA-MSGID=[{}] non-service telegram drop it !!!", checkTRN);
+							//20220819 MatsudairaSyuMe
+							trace.warn("receive TOTA-MSGID=[{}] non-service telegram drop it !!!", checkTRN);
 						} else {
 						//---- 20220221
 							//20220719 MatsudairaSyuMe check if telegram expired
@@ -298,6 +302,8 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 //									String lastTime = df.format(ot);
 									String lastTime = df.format(ot.getOutTime());
 									log.error("!!!! receive TOTA-telegramKey=[{}] in outgoingTelegramKeyMap time=[{}] already expired [{}] drop it !!!", telegramKey, lastTime, PrnSvr.setResponseTimeout);
+									//20220819 MatsudairaSyuMe
+									trace.error("!!!! receive TOTA-telegramKey=[{}] in outgoingTelegramKeyMap time=[{}] already expired [{}] drop it !!!", telegramKey, lastTime, PrnSvr.setResponseTimeout);
 									//20220819 abolish incomingTelegramMap
 									/*
 									if (Constants.incomingTelegramMap.containsKey(telegramKey)) {
@@ -311,6 +317,8 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 							   //20220719 MatsudairasyuMe  telegram no register in outgoingTelegramKeyMap drop it
 							} else {
 								log.warn("receive TOTA-telegramKey=[{}] not exist in outgoingTelegramKeyMap telegram drop it !!!", telegramKey);
+								//20220819 MatsudairaSyuMe
+								trace.warn("receive TOTA-telegramKey=[{}] not exist in outgoingTelegramKeyMap telegram drop it !!!", telegramKey);
 							}
 							//----
 						}

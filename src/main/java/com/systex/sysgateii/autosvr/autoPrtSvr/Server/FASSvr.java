@@ -46,6 +46,8 @@ import io.netty.channel.ChannelHandlerContext;
 public class FASSvr implements MessageListener<byte[]>, Runnable {
 	private static Logger log = LoggerFactory.getLogger(FASSvr.class);
 	private Logger faslog = LoggerFactory.getLogger("faslog");
+	//20220819 add trace log
+	private Logger trace = LoggerFactory.getLogger("trace");
 	static FASSvr server;
 	static String[] NODES = { "" };
 	private FASSocketChannel ec2 = null;
@@ -154,6 +156,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 			boolean rtn = false;
 			if (telmsg == null) {
 				log.debug("sendTelegram error send telegam null");
+				//20220819 MAtsudairaSyuMe
+				trace.debug("sendTelegram error send telegam null");
 				return rtn;
 			}
 //20210112 MatsudairaSyuMe			int attempt = 0;
@@ -251,6 +255,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 //20220715 MatsudairaSyuMe				log.debug("get connect from pool error {}", e.getMessage());
 			} catch (final Throwable cause) {
 				log.debug("get connect from pool error {}", cause.getMessage());
+				//20220819 MataudairaSyuMe
+				trace.debug("get connect from pool error {}", cause.getMessage());
 			} finally {
 				log.debug("2 end sendTelegram isCurrConnNull=[{}]", isCurrConnNull());
 				releaseConn();
@@ -259,6 +265,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 			if ((rtn  == false) && (telegramKey.trim().length() > 0) && Constants.outgoingTelegramKeyMap.containsKey(telegramKey)) {
 				Constants.outgoingTelegramKeyMap.remove(telegramKey);
 				log.debug("send error!!! remove telegramKey[{}] from outgoingTelegramKeyMap", telegramKey);
+				//20220819 MAtsudairaSyuMe
+				trace.error("send error!!! remove telegramKey[{}] from outgoingTelegramKeyMap", telegramKey);
 			}
 			//----
 			log.debug("3 end sendTelegram isCurrConnNull=[{}]", isCurrConnNull());
@@ -282,6 +290,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 					log.warn("connection poll is [{}] or current connection is [{}]", this.ec2.getConnPool(), this.currConn);
 			} catch (final Throwable cause) {
 				log.debug("free connect from pool error {}", cause.getMessage());
+				//20220819 MatsudiaraSyuMe
+				trace.debug("free connect from pool error {}", cause.getMessage());
 			}
 		}
 //		log.debug("return connect to pool");

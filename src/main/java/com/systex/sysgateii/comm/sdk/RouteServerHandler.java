@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory;
 
 import com.systex.sysgateii.autosvr.autoPrtSvr.Server.FASSvr;
 import com.systex.sysgateii.autosvr.comm.Constants;
+import com.systex.sysgateii.autosvr.comm.TXP;
 import com.systex.sysgateii.autosvr.util.COMM_STATE;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 
@@ -15,6 +16,7 @@ import io.netty.util.CharsetUtil;
 
 public class RouteServerHandler extends ChannelDuplexHandler {
 	private static Logger log = LoggerFactory.getLogger(RouteServerHandler.class);
+	private Logger trace = LoggerFactory.getLogger("trace");
 	private FASSvr dispatcher;
 	private int retryInterval = 2500;
 	private int totalReTryTime;
@@ -91,6 +93,7 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 							if (canceltelegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(canceltelegramKey))
 								Constants.outgoingTelegramKeyMap.remove(canceltelegramKey);
 							log.info("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
+							trace.error("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
 							canceltelegramKey = "";
 							reqDataary = null;
 							break;
@@ -213,6 +216,7 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 				*/
 			} else {
 				log.error("unknow message type");
+				trace.error("unknow message type");
 			}
 		}
 		//ByteBuf req = Unpooled.wrappedBuffer("Welcome to Netty.$_".getBytes(CharsetUtil.UTF_8));

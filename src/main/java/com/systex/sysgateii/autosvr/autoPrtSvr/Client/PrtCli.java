@@ -87,6 +87,8 @@ import org.zeromq.ZMsg;
 @Sharable // 因為通道只有一組 handler instance 只有一個，所以可以 share
 public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListener {
 	private static Logger log = LoggerFactory.getLogger(PrtCli.class);
+	//20220819 add trace log
+	private Logger trace = LoggerFactory.getLogger("trace");
 
 	private Logger aslog = null;
 	//2020115
@@ -3130,6 +3132,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								}
 								this.curState = EJECTAFTERPAGEERROR;
 								rtn = -3;
+								//20220819 MAtsudairaSyuMe cancel the Constants.outgoingTelegramKeyMap on RouteServerHandler
+								clientSession.sendCANCEL(this.telegramKey.getBytes());
+								log.debug("[{}][{}][{}] 中心存摺{}資料接收電文傳輸編號錯誤錯誤 TITA Key=[{}] TOTA Key=[{}] send cancel to RouteServer", brws, pasname, this.account, (ifun == TXP.INQ) ? "補登" : "刪除", this.telegramKey, recvTelegramKey);
+								trace.error("[{}][{}][{}] 中心存摺{}資料接收電文傳輸編號錯誤錯誤 TITA Key=[{}] TOTA Key=[{}] send cancel to RouteServer", brws, pasname, this.account, (ifun == TXP.INQ) ? "補登" : "刪除", this.telegramKey, recvTelegramKey);
+								//----
 								break;
 							} else
 								log.info("TITA/TOTA  transaction sequence TITA=[{}] TOTA=[{}] matched !!!", this.telegramKey, recvTelegramKey);
@@ -3150,6 +3157,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 										brws, catagory, account);
 							}
 							this.curState = EJECTAFTERPAGEERROR;
+							//20220819 MAtsudairaSyuMe cancel the Constants.outgoingTelegramKeyMap on RouteServerHandler
+							clientSession.sendCANCEL(this.telegramKey.getBytes());
+							log.debug("[{}][{}][{}] 中心存摺{}資料接收電文格式錯誤！！ TITA Key=[{}] send cancel to RouteServer", brws, pasname, this.account, (ifun == TXP.INQ) ? "補登" : "刪除", this.telegramKey);
+							trace.error("[{}][{}][{}] 中心存摺{}資料接收電文格式錯誤！！ TITA Key=[{}] send cancel to RouteServer", brws, pasname, this.account, (ifun == TXP.INQ) ? "補登" : "刪除", this.telegramKey);
+							//----
 							rtn = -3;
 							break;
 						}
@@ -3380,6 +3392,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時{}", brws, pasname, this.account, responseTimeout);
 							//20220819 MAtsudairaSyuMe cancel the Constants.outgoingTelegramKeyMap on RouteServerHandler
 							clientSession.sendCANCEL(this.telegramKey.getBytes());
+							//20220819 MAtsudairaSyuMe
+							trace.error("中心存摺{}資料接收電文逾時 {} sendCANCEL {} to RouteServer", (ifun == TXP.INQ) ? "補登" : "刪除", responseTimeout, this.telegramKey);
 							//----
 							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
 							// ----
@@ -4124,7 +4138,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					if (r < 0 && r != -3) { //20200619 for connect error
 						// 20220818 add select for r != -3 format or TITA/TOTA tran. seq. key error
 						this.curState = SESSIONBREAK;
-						//20220818 change the amlog description
 //						amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
 						amlog.info("[{}][{}][{}]:61存摺資料刪除失敗！", brws, pasname, account);
 					} else {
@@ -4140,7 +4153,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								//20210108
 								//20210116 MatsudairaSyume this.dispatcher.releaseConn();
 								//----
-								//20220121 MAtsudairaSyuMe
+								//20220121 MatsudairaSyuMe
 								if ((now - startTime) > responseTimeout) {
 								    log.error("ERROR!!! received data from host timeout {}", responseTimeout);
 								    amlog.info("[{}][{}][{}]:62存摺刪除補登資料失敗！[{}]接電文逾時", brws, pasname, this.account,
