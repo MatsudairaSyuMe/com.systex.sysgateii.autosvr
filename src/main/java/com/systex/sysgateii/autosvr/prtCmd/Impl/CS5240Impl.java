@@ -128,7 +128,7 @@ public class CS5240Impl implements Printer {
 	private byte[] S5240_TURN_PAGE = { ESQ, (byte) 'W', (byte) 'B'};
 	private byte[] S5240_REVS_PAGE = { ESQ, (byte) 'W', (byte) 'C' };
 	private byte[] S5240_DET_PASS = { ESQ, (byte) 'Y', (byte) ESQ, (byte) 'j' };
-	private byte[] S5240_CANCEL = { CANCEL};
+	private byte[] S5240_CANCEL = { ESQ, CANCEL};  //20220828
 	private byte[] inBuff = new byte[128];
 	private byte[] curmsdata;
 	private byte[] curbarcodedata;
@@ -1272,11 +1272,23 @@ public class CS5240Impl implements Printer {
 					//20201119
 					pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-1)");
 					//----
-					this.curState = ResetPrinterInit_START;
+					//20220828 MatsudairaSyuMe
+					/*this.curState = ResetPrinterInit_START;
 					ResetPrinterInit();
 					pc.close();
 					this.curmsdata = null;
 					return null;
+					*/
+					if (data.length > 4 && data[1] == (byte)'r' && data[2] == (byte)'6' && data[3] == (byte)'2' && data[4] == (byte)'3') {
+						Send_hData(S5240_CANCEL);
+						amlog.info("[{}][{}][{}]:95硬體錯誤代碼4[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));		
+						ResetPrinter();
+					}
+					byte[] nr = new byte[1];
+					nr[0] = (byte)'X';
+					this.curmsdata = nr;
+					return this.curmsdata;
+					//----
 				}
 				this.curState = MS_Read_START_2;
 				log.debug("MS_Read 1 ===<><>{} chkChkState {} curmsdata={}", this.curState, this.curChkState, this.curmsdata);
@@ -1803,7 +1815,7 @@ public class CS5240Impl implements Printer {
 				this.curState = MS_Write;
 				this.curChkState = CheckStatus_START;
 			}
-			data = CheckStatus();
+			data = Rcv_Data();  //20220828 data = CheckStatus() change to data = Rcv_Data()
 			log.debug("1 ===<><>{} MS_Write {} {} iCnt={}", this.curState, this.curChkState, data, this.iCnt);
 			if (CheckDis(data) != 0) {
 				this.curChkState = CheckStatus_FINISH;
@@ -1928,6 +1940,15 @@ public class CS5240Impl implements Printer {
 						if (Send_hData(S5240_PERRCODE_REQ) == 0)
 							return false;
 					//----
+					//20220827 MatsudairaSyuMe
+					case (byte) '4':
+						if (data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
+							ResetPrinter();
+							this.curChkState = CheckStatus_START;
+							amlog.info("[{}][{}][{}]:95硬體錯誤代碼3(r475)", brws, pasname, account);		
+						}
+						//----
+						return true;
 					default:
 						// 20060713 , RECEVIE UNKNOWN ERROR , JUST RESET
 						this.curState = ResetPrinterInit_START;
@@ -2096,6 +2117,14 @@ public class CS5240Impl implements Printer {
 		   if (this.curState == SetCPI && data[2] == (byte) '2' && data.length == 3) //20220803 BatsudairaSyuMe add for S5240
 		    	Send_hData(S5240_CANCEL);  //special for S5040
 		    //----
+			//20220827 MatsudairaSyuMe for ESC,r475
+			if (data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
+				ResetPrinter();
+				this.curChkState = CheckStatus_START;
+				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
+			}
+			//----
+			return true;
 		//----
 		case (byte) 'P':
 		case (byte) 'A':
