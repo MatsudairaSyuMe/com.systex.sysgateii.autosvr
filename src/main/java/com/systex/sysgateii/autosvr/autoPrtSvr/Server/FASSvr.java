@@ -61,7 +61,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	private String header2 = "";
 	private int setSeqNo = 0;
 	private String getSeqStr = "";
-	private String fasSendPtrn = "-->FAS len %4d :[............%s]";
+	private String fasSendPtrn = "-->FAS len %4d :[............%s\u0003]"; //20220902 MatsudairaSyuMe add 1 byte tail for fas
 	private String fasRecvPtrn = "<--FAS len %4d :[............%s]";
 	private CharsetCnv charcnv = new CharsetCnv();
 	int bufferSize;
@@ -212,24 +212,38 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				//	log.warn("WORNING!!! update new seq number string {} error {}", seqno, e.getMessage());
 				//}
 					//--
+					/* 20220902 MatsudairaSyuMe mark for make telegram head payload and tail one byte before send
 					ByteBuf req = Unpooled.buffer();
 					req.clear();
 					req.writeBytes(header1.getBytes());
 					req.writeBytes(dataUtil.to3ByteArray(sendlen));
 					req.writeBytes(header2.getBytes());
 					req.writeBytes(telmsg);
+					*/
+					byte[] sndm = new byte[13 + telmsg.length];
+					System.arraycopy(header1.getBytes(), 0, sndm, 0, 3);
+					System.arraycopy(dataUtil.to3ByteArray(telmsg.length + 13), 0, sndm, 3, 3);
+					System.arraycopy(header2.getBytes(), 0, sndm, 6, 6);
+					System.arraycopy(telmsg, 0, sndm, 12, telmsg.length);
+					System.arraycopy("\u0003".getBytes(), 0, sndm, (telmsg.length + 12), 1);
+					ByteBuf req = Unpooled.wrappedBuffer(sndm);
 					this.currConn.writeAndFlush(req.retain()).sync();
+					sndm = null;
+					req = null;
+					//---- 20220902 MatsidairasyuMe
 					rtn = true;
+					//20220902 MatsudairaSyuMe add tail one byte
 					try {
 						log.debug(String.format(fasSendPtrn,
 						header1.getBytes().length + dataUtil.to3ByteArray(sendlen).length
-								+ header2.getBytes().length + telmsg.length,
+								+ header2.getBytes().length + telmsg.length + 1,
 						charcnv.BIG5bytesUTF8str(telmsg)) + " isCurrConnNull=[" + isCurrConnNull() + "]");
 						faslog.info(//20220409 change to info
 						String.format(fasSendPtrn,
 								header1.getBytes().length + dataUtil.to3ByteArray(sendlen).length
-										+ header2.getBytes().length + telmsg.length,
+										+ header2.getBytes().length + telmsg.length + 1,
 								charcnv.BIG5bytesUTF8str(telmsg)));
+					//-- MatsudairaSyuMe add tail one byte
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
