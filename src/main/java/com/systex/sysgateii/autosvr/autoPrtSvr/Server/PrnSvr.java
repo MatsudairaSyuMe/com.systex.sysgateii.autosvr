@@ -51,6 +51,7 @@ import com.systex.sysgateii.autosvr.listener.MessageListener;
 import com.systex.sysgateii.autosvr.util.Big5FontImg;
 import com.systex.sysgateii.autosvr.util.DateTimeUtil;
 import com.systex.sysgateii.autosvr.util.StrUtil;
+import com.systex.sysgateii.comm.sdk.RouteConnection;
 
 public class PrnSvr implements MessageListener<byte[]> {
 	private static Logger log = LoggerFactory.getLogger(PrnSvr.class);
@@ -131,6 +132,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 	private static int reqTime = 250; //miniseconds
 	private static int chgidleTime = 60; //seconds
 	//----
+	//20220905 MatsudairaSyuMe use RouteConnection as dispatcher
+	private static RouteConnection dispatcher = null;
+	//--
 
 	public PrnSvr() {
 		log.info("[0000]:=============[Start]=============");
@@ -169,13 +173,19 @@ public class PrnSvr implements MessageListener<byte[]> {
 			threadList.clear();
 			getMe().nodeList.clear();
 			if (list != null && list.size() > 0) {
+				//20220905 MatsudairaSyuMe use RouteConnection as dispatcher
+				dispatcher = new RouteConnection("127.0.0.1", 5555, new Timer());
 				for (int i = 0; i < list.size(); i++) {
 					synchronized (getMe()) {
 						//20201006
 						cfgMap = list.get(i);
 						//20210628 use MDP
 //						conn = new PrtCli(cfgMap, fasDespacther, new Timer());
-						conn = new PrtCli(cfgMap, new Timer());
+						//conn = new PrtCli(cfgMap, new Timer());
+						//20220905 MatsudairaSyuMe using RouteConnection as dispatcher
+						//conn = new PrtCli(cfgMap, new Timer());
+						conn = new PrtCli(cfgMap, dispatcher, new Timer());
+						//---- 20220905 using RouteConnection as dispatcher
 						thread = new Thread(conn);
 						getMe().threadMap.put(conn.getId(), thread);
 						//----
@@ -380,8 +390,8 @@ public class PrnSvr implements MessageListener<byte[]> {
 													selCmd = Constants.RESTART;
 												switch (selCmd) {//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 												case Constants.START://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
-													//20201006, 20201026 cmdhis
-													createNode(cmdary[0]);
+													//20201006, 20201026 cmdhis, 20220905 change function name to create Nodefun
+													createNodefun(cmdary[0]);
 													//----
 													if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
 														//20201026 for cmdhis
@@ -454,7 +464,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 													} else {
 														//start to create new node and start
 														log.debug("start to create new node and start sno=[{}]", sno[0]);
-														createNode(cmdary[0]);
+														createNodefun(cmdary[0]);  //20220905 change function name to createNodefun
 														//----
 														if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
 															getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.ACTIVE, sno[0]);
@@ -571,8 +581,14 @@ public class PrnSvr implements MessageListener<byte[]> {
 		log.debug("stop current nodeList size=[{}]", getMe().nodeList.size());
 		return rtn;
 	};
-	public int createNode(String nid) {
+	//20220905 MAtsudairaSyyuMe change function name from createNode to createNodefun
+	public int createNodefun(String nid) {
 		int ret = 0;
+		//20220905 MatsudairaSyuMe use RouteConnection as dispatcher
+		if (dispatcher == null) {
+			dispatcher = new RouteConnection("127.0.0.1", 5555, new Timer());
+		}
+		//--
 		if (getMe().nodeList != null && getMe().nodeList.size() > 0) {
 			if (getMe().nodeList.containsKey(nid)) {
 				// 20210714 MatsudairaSyuMe Log Forging
@@ -599,7 +615,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 					log.debug("prepare to create node brws [{}]", newcfgMap.get("brws"));
 					//20210628 use MDP
 //					PrtCli conn = new PrtCli(newcfgMap, fasDespacther, new Timer());
-					PrtCli conn = new PrtCli(newcfgMap, new Timer());
+					//20220905 MatsudairaSyuMe using RouteConnection as dispatcher
+					//PrtCli conn = new PrtCli(newcfgMap, new Timer());
+					PrtCli conn = new PrtCli(cfgMap, dispatcher, new Timer());
+					//---- 20220905 using RouteConnection as dispatcher
 					Thread thread = new Thread(conn);
 					getMe().threadMap.put(conn.getId(), thread);
 					getMe().nodeList.put(conn.getId(), conn);

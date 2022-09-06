@@ -22,6 +22,10 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Timer;
 import java.util.TimerTask;
+//20220905 MatsudairaSyuMe RouteConnection using as Dispatcher
+import java.util.concurrent.ConcurrentHashMap;
+//----
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +45,16 @@ public class RouteConnection {
 	private byte[] rtnmsg = null;
 	private int bufferSize = Integer.parseInt(System.getProperty("bufferSize", Constants.DEF_CHANNEL_BUFFER_SIZE + ""));
 	private ByteBuf clientSessionRecvMessageBuf = null;
+	//20220905 MatsudairaSyuMe for RouteConnection as dispatcher
+	private final ConcurrentHashMap<String, Object> incomingTelegramMap = new ConcurrentHashMap<String, Object>();
+	//----20220905
+
 	public RouteConnection(String host, int port, Timer timer) {
 		this(new InetSocketAddress(host, port), timer);
 		log.info("initial connect to [{}] port [{}]", host, port);
+		//20220905 MatsudairaSyuMe
+		this.incomingTelegramMap.clear();
+		//----
 	}
 
 	public RouteConnection(SocketAddress addr, Timer timer) {
@@ -59,6 +70,9 @@ public class RouteConnection {
 		bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
 		bootstrap.option(ChannelOption.SO_RCVBUF, bufferSize);
 		bootstrap.option(ChannelOption.SO_SNDBUF, bufferSize);
+		//20220905 MatsudairaSyuMe
+		this.incomingTelegramMap.clear();
+		//----
 		bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 			@Override
 			public void initChannel(SocketChannel ch) throws Exception {
@@ -102,6 +116,13 @@ public class RouteConnection {
 	public boolean sendCANCEL(byte[] msg) {  //20220819 MatsudairaSyuMe send COMM_STATE.CANCEL command and telegramKey
 		this.rtnmsg = null;
 		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
+			//20220905 MatsudairaSyuMe
+			String telegramKey = dataUtil.getTelegramKey(msg);
+			if (this.incomingTelegramMap.containsKey(telegramKey)) {
+				this.incomingTelegramMap.remove(telegramKey);
+				log.debug("!!! cancel incomming telegram remove [{}] from incomingTelegramMap after remove size=[{}]", telegramKey, this.incomingTelegramMap.size());
+			}
+			//----
 			//20220818 MatsudairaSyuMe add 2 bytes length before msg as real send message
 			byte[] sndmsg = new byte [msg.length + 3];  //total send msgary is 2 byte length + 1 byte COMM_STATE.TRANSF + msg
 			sndmsg[0] = (byte) (sndmsg.length / 256);
@@ -127,6 +148,22 @@ public class RouteConnection {
 		log.debug("try to get return TRANSFE message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
 		return this.rtnmsg;
 	}
+
+	//20220905 MatsudairaSyuMe
+	public byte[] recv(String telegramKey) {
+		synchronized (this.incomingTelegramMap) {
+			this.rtnmsg = null;
+			if (this.incomingTelegramMap.containsKey(telegramKey)) {
+				this.rtnmsg = (byte[]) this.incomingTelegramMap.remove(telegramKey);
+				log.debug("get incomming telegram remove [{}] from incomingTelegramMap after remove size=[{}]", telegramKey, this.incomingTelegramMap.size());
+			} else {
+				log.debug("not yet get incomming telegram from incomingTelegramMap");
+			}
+			log.debug("try to get return TRANSFE message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
+			return this.rtnmsg;
+		}
+	}
+	//----
 
 	public void close() {
 		try {
@@ -231,9 +268,23 @@ public class RouteConnection {
 							//rtnmsg = cnvResultTelegram();
 							byte[] rtnTmpary = cnvResultTelegram();
 							switch (COMM_STATE.ById(rtnTmpary[0])) {
-							case TRANSF: // <==傳送電文
+							case TRANSF: // <==接收傳送電文
 								rtnmsg = new byte[rtnTmpary.length - 1];
 								System.arraycopy(rtnTmpary, 1, rtnmsg, 0, (rtnTmpary.length - 1));
+								//20220905 MatsudairaSyuMe
+								String telegramKey = dataUtil.getTelegramKey(rtnmsg);
+								if (incomingTelegramMap.containsKey(telegramKey)) {
+									if (incomingTelegramMap.replace(telegramKey, rtnmsg) == null)
+										log.error("new incoming update by telegramKey [{}] into map table error!!!!", telegramKey);
+									else
+										log.debug("new incoming already update by telegramKey [{}] into map table", telegramKey);
+								} else {
+									incomingTelegramMap.put(telegramKey, rtnmsg);
+									log.debug("new incoming telegram put into map table by telegramKey [{}]", telegramKey);
+								}
+								log.debug("new incoming telegram map table size=[{}]", incomingTelegramMap.size());
+								rtnmsg = null; //clear this parameter !!!!!!
+								//----20220905
 								break;
 							case CANCEL: // <==刪除記錄
 								log.info("RouteServerHandler--> RouteConnection 刪除記錄 ignore");
@@ -312,6 +363,9 @@ public class RouteConnection {
 	}
 
 	public void connectionEstablished() {
+		//20220905 MatsudairaSyuMe
+		this.incomingTelegramMap.clear();
+		//----
 		//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
 		this.clientSessionRecvMessageBuf.clear();
 		//----

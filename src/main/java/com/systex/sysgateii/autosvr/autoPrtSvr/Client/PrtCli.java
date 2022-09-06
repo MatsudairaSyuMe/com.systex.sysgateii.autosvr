@@ -338,7 +338,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 	//20210627 change to use MDP take off dispatcher
 //	public PrtCli(ConcurrentHashMap<String, Object> map, FASSvr dispatcher, Timer timer)
-	public PrtCli(ConcurrentHashMap<String, Object> map, Timer timer)
+	//20220905 MAtsudairaSyuMe using RouteConnection as dispatcher
+	// public PrtCli(ConcurrentHashMap<String, Object> map, Timer timer)
+	public PrtCli(ConcurrentHashMap<String, Object> map, RouteConnection prnsvrdispatcher, Timer timer)
 	{
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		this.setByDate(sdf.format(new Date()));
@@ -357,7 +359,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //20220729		this.clientSession.setTimeout(PrnSvr.getReqTime());//20220613//, 20220718 MatsudairaSyuMe change from PrnSvr.getReqTime() to setResponseTimeout
 		//----
 		//20220809 MatsydairaSyuMe use RouteConnection
-		this.clientSession = new RouteConnection("127.0.0.1", 5555, new Timer());
+		//20220905 MatsudairaSyuMe using RouteConnection as dispatcher
+		//this.clientSession = new RouteConnection("127.0.0.1", 5555, new Timer());
+		this.clientSession = prnsvrdispatcher;
 		this.descm = new DscptMappingTable();
 		//20200716 add for message table
 		this.m_Msg = new MessageMappingTable();
@@ -3102,7 +3106,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						reply.destroy();
 					}
 					*/
-					this.rtelem = clientSession.recv();
+					//20220905 MatsudairaSyuMe change to us clientSession as dispatcher
+					//this.rtelem = clientSession.recv();
+					this.rtelem = clientSession.recv(this.telegramKey);
+					//----20220905
 					if (this.rtelem != null) {
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 						this.setTITA_TOTA_START(false);
@@ -3587,12 +3594,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.curSockNm = "";
 				this.clientMessageBuf.clear();
 				this.clientChannel = null;
+				/* 20220905 MatsudairaSyuMe use RouteConnection as dispatcher no need to shutdown anyway!!!
 				//20210628 use MDP
 				if (clientSession != null)
 					//20220809 MatsudairaSyuMe change to use RouteConnection
 //					clientSession.destroy();
 					clientSession.shutdown();
 				//----
+				*/
 				close();
 				// 20201006
 				if (this.lastState != SESSIONBREAK) {
