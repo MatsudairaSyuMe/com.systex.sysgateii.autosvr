@@ -11,10 +11,10 @@
 	<property name="CONTEXT_NAME" value="sysgateii-test" />
 	<property name="FAS_NAME" value="fas" />
 	<property name="RATE_NAME" value="rate" />
-	<property name="logs.dir" value="/home/scotthong/tmp" />
+	<property name="logs.dir" value="/log/bis/autosvr" />
 	<property name="telegrampattern" value="%d{yyyy/MM/dd HH:mm:ss.SSS} L%X{LOCAL_ADDRESS}:%X{LOCAL_PORT}-R%X{SERVER_ADDRESS}:%X{SERVER_PORT} - %msg%n" scope="context"/>
 	<!--<timestamp key="byDate" datePattern="yyyyMMdd" />-->
-	<!--<timestamp key="bySecond" datePattern="yyyyMMdd.HHmmss" />-->
+
 	<!-- 上下文名稱：<contextName>, 每個logger都關聯到logger上下文， 預設上下文名稱為"default"。
 	但可以使用<contextName>設置成其他名字，用於區分不同應用程序的記錄。一旦設置，不能修改。 -->
 	<contextName>${CONTEXT_NAME}</contextName>
@@ -39,7 +39,7 @@
         		<level>DEBUG</level>
         </filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-		    <fileNamePattern>/${logs.dir}/archive/${CONTEXT_NAME}-${log.name}.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+		    <fileNamePattern>${logs.dir}/archive/${CONTEXT_NAME}-${log.name}.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
 		    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
 		    	<maxFileSize>${maxSize}</maxFileSize>
 		    </timeBasedFileNamingAndTriggeringPolicy>
@@ -50,18 +50,17 @@
         		<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%level|%class{30}|%thread|%method|%line|%msg%n</pattern>
         	<charset>${encoding}</charset>
         </encoder>
-     </appender>
-
+    </appender>
 
     <appender name="trace_file"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <Append>true</Append>
         <file>${logs.dir}/${CONTEXT_NAME}-${log.name}-TRACE.log</file>
         <filter class = "ch.qos.logback.classic.filter.ThresholdFilter" >
-        		<level>WARN</level>
+        		<level>DEBUG</level>
         </filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-		    <fileNamePattern>/${logs.dir}/archive/${CONTEXT_NAME}-${log.name}-WARN.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+		    <fileNamePattern>${logs.dir}/archive/${CONTEXT_NAME}-${log.name}-WARN.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
 		    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
 		    	<maxFileSize>${maxSize}</maxFileSize>
 		    </timeBasedFileNamingAndTriggeringPolicy>
@@ -72,7 +71,7 @@
         		<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%level|%class{30}|%thread|%method|%line|%msg%n</pattern>
         	<charset>${encoding}</charset>
         </encoder>
-     </appender>
+    </appender>
 
     <appender name="FAS_LOG"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -94,8 +93,9 @@
         	<charset>${encoding}</charset>
         </encoder>
     </appender>
+
     <appender name="RATE_LOG"
-              class="ch.qos.logback.core.ConsoleAppender">
+	      class="ch.qos.logback.core.ConsoleAppender">
         <Append>true</Append>
         <file>${logs.dir}/${RATE_NAME}.log</file>
         <filter class = "ch.qos.logback.classic.filter.ThresholdFilter" >
@@ -137,7 +137,7 @@
         <appender-ref ref="file"/>
     </logger> 
 
-    <logger name="faslog" level="info" additivity="false">
+    <logger name="faslog" level="debug" additivity="false">
         <appender-ref ref="FAS_LOG"/>
     </logger>
     <logger name="ratelog" level="debug" additivity="false">
@@ -146,5 +146,6 @@
     <logger name="trace" level="info" additivity="false">
         <appender-ref ref="trace_file"/>
     </logger>
+
 
 </configuration>
