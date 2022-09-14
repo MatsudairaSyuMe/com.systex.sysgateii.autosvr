@@ -1225,9 +1225,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		log.debug("[{}]", new String(cussrc));
 		/*************** check MSR's apno ***************/
 		if (iEnd == 1) {
-			//20200611
+			//20200611, 20220914 MatsudairaSyuMe add differential message
 			if (!new String(cussrc, 0, TXP.ACTNO_LEN).equals(this.account)) {
-				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！", brws, pasname, this.account);
+				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！翻頁後應置入帳號 [{}]", brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN), this.account);
 				rtn = false;
 				return rtn;
 			}
@@ -3852,6 +3852,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					this.curState = EJECTAFTERPAGEERROR;
 					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000001000");
 					SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000001000");
+					Sleep(2 * 1000); //20220914 MatsudairaSyuMe for signal delay
 					amlog.info("[{}][{}][{}]:11磁條讀取失敗！", brws, "        ", "            ");
 					//20201119
 					InsertAMStatus(brws, "", "", "11磁條讀取失敗！");
@@ -3927,7 +3928,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					}
 				}
 			} else {
-				this.curState = SESSIONBREAK;
+				//20220914 MatsudairaSyuMe
+				SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000001000");
+				SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000001000");
+				Sleep(2 * 1000);
+				this.curState = EJECTAFTERPAGEERROR;//20220914 MatsudairaSyuMe this.curState = SESSIONBREAK;
 				log.debug("{} {} {} AutoPrnCls : --check Account error", brws, catagory, account);
 			}
 			log.debug("{} {} {} AutoPrnCls : --Read MSR error", brws, catagory, account);
@@ -4468,7 +4473,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					this.iEnd = 0;
 					this.iFirst = 0;
 
-					this.curState = SESSIONBREAK;
+					this.curState = SESSIONBREAK;resetPassBook();//20220914 MatsudairaSyuMe
 					amlog.info("[{}][{}][{}]:73存摺資料補登刪除失敗！", brws, pasname, account);				
 				}
 			}
