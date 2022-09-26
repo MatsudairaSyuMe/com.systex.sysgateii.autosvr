@@ -42,7 +42,7 @@ public class RouteConnection {
 	private SocketAddress addr_;
 	private Channel channel_;
 	private Timer timer_;
-	private byte[] rtnmsg = null;
+	//20220923 private byte[] rtnmsg = null;
 	private int bufferSize = Integer.parseInt(System.getProperty("bufferSize", Constants.DEF_CHANNEL_BUFFER_SIZE + ""));
 	private ByteBuf clientSessionRecvMessageBuf = null;
 	//20220905 MatsudairaSyuMe for RouteConnection as dispatcher
@@ -90,7 +90,7 @@ public class RouteConnection {
 	}
 
 	public boolean send(byte[] msg) {  //20220819 MatsudairaSyuMe send TRANSFER data add COMM_STATE.TRANSF
-		this.rtnmsg = null;
+		//20220923 this.rtnmsg = null;
 		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
 			//20220818 MatsudairaSyuMe add 2 bytes length before msg as real send message
 			byte[] sndmsg = new byte [msg.length + 3];  //total send msgary is 2 byte length + 1 byte COMM_STATE.TRANSF + msg
@@ -114,7 +114,7 @@ public class RouteConnection {
 		}
 	}
 	public boolean sendCANCEL(byte[] msg) {  //20220819 MatsudairaSyuMe send COMM_STATE.CANCEL command and telegramKey
-		this.rtnmsg = null;
+		//20220923 this.rtnmsg = null;
 		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
 			//20220905 MatsudairaSyuMe
 			String telegramKey = dataUtil.getTelegramKey(msg);
@@ -144,23 +144,29 @@ public class RouteConnection {
 			return false;
 		}
 	}
+	/*20220923
 	public byte[] recv() {
 		log.debug("try to get return TRANSFE message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
 		return this.rtnmsg;
 	}
+	*/
 
 	//20220905 MatsudairaSyuMe
 	public byte[] recv(String telegramKey) {
 		synchronized (this.incomingTelegramMap) {
-			this.rtnmsg = null;
+			//20220923 mark this.rtnmsg = null;
 			if (this.incomingTelegramMap.containsKey(telegramKey)) {
-				this.rtnmsg = (byte[]) this.incomingTelegramMap.remove(telegramKey);
-				log.debug("get incomming telegram remove [{}] from incomingTelegramMap after remove size=[{}]", telegramKey, this.incomingTelegramMap.size());
+				// 20220923 this.rtnmsg = (byte[]) this.incomingTelegramMap.remove(telegramKey);
+				byte[] rcvary = (byte[]) this.incomingTelegramMap.remove(telegramKey);
+				log.debug("get incomming telegram remove [{}] from incomingTelegramMap after remove size=[{}] TRANSFE message rcvary.length=[{}]",
+						telegramKey, this.incomingTelegramMap.size(), rcvary != null ? rcvary.length: 0);
+				return rcvary;
 			} else {
 				log.debug("not yet get incomming telegram from incomingTelegramMap");
+				return null; //20220923 add 
 			}
-			log.debug("try to get return TRANSFE message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
-			return this.rtnmsg;
+			//20220923 mark log.debug("try to get return TRANSFE message rtnmsg.length=[{}]", this.rtnmsg != null ? this.rtnmsg.length: 0);
+			//return this.rtnmsg;
 		}
 	}
 	//----
@@ -269,7 +275,7 @@ public class RouteConnection {
 							byte[] rtnTmpary = cnvResultTelegram();
 							switch (COMM_STATE.ById(rtnTmpary[0])) {
 							case TRANSF: // <==接收傳送電文
-								rtnmsg = new byte[rtnTmpary.length - 1];
+								byte[] rtnmsg = new byte[rtnTmpary.length - 1];  //20220923 rtnmsg change from class parameter to method  parameter
 								System.arraycopy(rtnTmpary, 1, rtnmsg, 0, (rtnTmpary.length - 1));
 								//20220905 MatsudairaSyuMe
 								String telegramKey = dataUtil.getTelegramKey(rtnmsg);

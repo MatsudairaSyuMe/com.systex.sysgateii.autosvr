@@ -128,7 +128,7 @@ public class CS5240Impl implements Printer {
 	private byte[] S5240_TURN_PAGE = { ESQ, (byte) 'W', (byte) 'B'};
 	private byte[] S5240_REVS_PAGE = { ESQ, (byte) 'W', (byte) 'C' };
 	private byte[] S5240_DET_PASS = { ESQ, (byte) 'Y', (byte) ESQ, (byte) 'j' };
-	private byte[] S5240_CANCEL = { ESQ, CANCEL};  //20220828
+	private byte[] S5240_CANCEL = { CANCEL};  //20220828, 20220923 change to CANCEL
 	private byte[] inBuff = new byte[128];
 	private byte[] curmsdata;
 	private byte[] curbarcodedata;
@@ -2112,7 +2112,14 @@ public class CS5240Impl implements Printer {
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
 //				Send_hData(S5240_CANCEL);  //special for S5020
 				//----
-				return false;
+				//20220923 special for r427
+				if (data[2] == (byte) '4' && data[3] == (byte) '2' && data[4] == (byte) '7') {
+					Send_hData(S5240_CANCEL);
+					ResetPrinter();
+					return true;
+				} else
+					//----
+					return false;
 			}
 		   if (this.curState == SetCPI && data[2] == (byte) '2' && data.length == 3) //20220803 BatsudairaSyuMe add for S5240
 		    	Send_hData(S5240_CANCEL);  //special for S5040

@@ -131,7 +131,7 @@ public class CS4625Impl implements Printer {
 	private byte[] S4625_TURN_PAGE = { ESQ, (byte) 'W', (byte) 'B'};
 	private byte[] S4625_REVS_PAGE = { ESQ, (byte) 'W', (byte) 'C' };
 	private byte[] S4625_DET_PASS = { ESQ, (byte) 'Y', (byte) ESQ, (byte) 'j' };
-	private byte[] S4625_CANCEL = { ESQ, CANCEL};  //20220828
+	private byte[] S4625_CANCEL = { CANCEL};  //20220828, 20220923 change from ESQ, CANCEL to CANCEL
 	private byte[] inBuff = new byte[128];
 	private byte[] curmsdata;
 	private byte[] curbarcodedata;
@@ -2091,7 +2091,14 @@ public class CS4625Impl implements Printer {
 				//20200827
 //				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", new String(data));
 				//----
-				return false;
+				//20220923 special for r427
+				if (data[2] == (byte) '4' && data[3] == (byte) '2' && data[4] == (byte) '7') {
+					Send_hData(S4625_CANCEL);
+					ResetPrinter();
+					return true;
+				} else
+					//----
+					return false;
 			}
 			//20220827 MatsudairaSyuMe for ESC,r475
 			if (data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
@@ -2204,8 +2211,12 @@ public class CS4625Impl implements Printer {
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
 				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
 				pc.InsertAMStatus(brws, "", "", s);
+				//20220923 
+				Send_hData(S4625_CANCEL);
+				//----
 				//20201216
 				ResetPrinter();
+				//----
 				this.curState = ResetPrinterInit_START;
 				ResetPrinterInit();
 				if (this.curState == ResetPrinterInit &&  this.curChkState == CheckStatusRecvData) {

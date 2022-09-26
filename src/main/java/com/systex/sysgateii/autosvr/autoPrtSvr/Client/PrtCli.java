@@ -3097,7 +3097,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //					this.rtelem = dispatcher.getResultTelegram();
 					//20210628 change to use MDP
 					//this.rtelem = dispatcher.getResultTelegram(this.telegramKey);
-					log.debug("{} {} {} AutoPrnCls : clientSession.recv() start", brws, catagory, account);
+					log.debug("{} {} {} AutoPrnCls : clientSession.recv() start DEBUG-TEST!!! iFirst=[{}] iEnd=[{}]!!!", brws, catagory, account, this.iFirst, this.iEnd); //20220923 debug test
 					/* 20220809 MatsudairaSyuMe
 					ZMsg reply = null;
 					reply = clientSession.recv();
@@ -3109,6 +3109,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//20220905 MatsudairaSyuMe change to us clientSession as dispatcher
 					//this.rtelem = clientSession.recv();
 					this.rtelem = clientSession.recv(this.telegramKey);
+					//20220923 debug-test if (this.iFirst > 0 && this.rtelem != null) {this.rtelem = null;  log.debug("!!!DEBUG-TEST!!! iFirst=[{}] this.relem set to null for timeout testing ", this.iFirst);}//20220923 DEBUG-TEST
 					//----20220905
 					if (this.rtelem != null) {
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
