@@ -312,7 +312,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//20210116 MataudairaSyuMe  for incoming TOTA telegram
 	private String telegramKey = "";
 	//----
-
+	private boolean changeLightOnLastPage = false; //20220927 MatsudairaSyuMe when printer stop print job on last line and last page will show error light
 	//----
 	//20210414 MatsudairaSyuMe
 	private final long connectTimeOut = 3l;
@@ -2122,7 +2122,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					tx_area.put("c_Msr", new String(c_Msr));
 				}
 				rtn = prt.MS_Write(start, brws, account, c_Msr);//20200712 add for test
-				log.debug(" after to write new PBTYPE line={} page={} MSR {}", l, p, tx_area.get("c_Msr"));
+				if (p > TXP.PB_MAX_PAGE) this.changeLightOnLastPage = true; //20220927
+				log.debug(" after to write new PBTYPE line={} page={} MSR {} changeLight=[{}]", l, p, tx_area.get("c_Msr"), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 				break;
 			case TXP.FCTYPE:
 				if (start) {
@@ -2138,7 +2139,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//----
 				}
 				rtn = prt.MS_Write(start, brws, account, c_Msr);  //20200712 add for test
-				log.debug(" after to write new FCTYPE line={} page={} MSR {}", l, p, tx_area.get("c_Msr"));
+				if (p > TXP.FC_MAX_PAGE) this.changeLightOnLastPage = true; //20220927
+				log.debug(" after to write new FCTYPE line={} page={} MSR {} changeLight=[{}]", l, p, tx_area.get("c_Msr"), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 				break;
 			case TXP.GLTYPE:
 				if (start ) {
@@ -2154,7 +2156,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//----
 				}
 				rtn = prt.MS_Write(start, brws, account, c_Msr);  //20200712 add for test
-				log.debug(" after to write new GLTYPE line={} page={} MSR {}", l, p, tx_area.get("c_Msr"));
+				if (p > TXP.GL_MAX_PAGE) this.changeLightOnLastPage = true; //20220927
+				log.debug(" after to write new GLTYPE line={} page={} MSR {} changeLight=[{}]", l, p, tx_area.get("c_Msr"), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 				break;
 			default:
 				rtn = false;
@@ -3462,6 +3465,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.fc_arr.clear();
 		this.gl_arr.clear();
 		this.pasname = "        ";
+		this.changeLightOnLastPage = false; //20220927
 		this.curState = ENTERPASSBOOKSIG;
 		this.passSNDANDRCVTLM = false;  //20200714
 		SetSignal(firstOpenConn, firstOpenConn, "1100000000", "0000000000");
@@ -3488,6 +3492,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			this.account = "";
 			this.pasname = "        ";
 			this.passSNDANDRCVTLM = false;  //20200714
+			this.changeLightOnLastPage = false; //20220927
 			log.debug("=======================check prtcliFSM init");
 			return;
 		}
@@ -3646,6 +3651,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			this.catagory = "";
 			this.account = "";
 			this.pasname = "        ";
+			this.changeLightOnLastPage = false; //20220927
 			if ((this.iFirst == 0) && prt.OpenPrinter(!firstOpenConn)) {
 				this.curState = ENTERPASSBOOKSIG;
 				SetSignal(firstOpenConn, firstOpenConn, "1100000000", "0000000000");
@@ -4505,12 +4511,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 /*//20200403				if (SetSignal(firstOpenConn, firstOpenConn, "0000000000","0001000000")) {
 					this.curState = SNDANDRCVDELTLMCHKENDSETSIG;
 				}*/
+				//20220927
+				if (this.changeLightOnLastPage)
+					SetSignal(firstOpenConn, firstOpenConn, "0000000000","0000000001");
+				else
+				//----
 				SetSignal(firstOpenConn, firstOpenConn, "0000000000","0001000000");
 				this.curState = SNDANDRCVDELTLMCHKENDSETSIG;
 			}
 			//20200718
 			lastCheck(before);
-			log.debug("after {}=>{} iEnd={} =====check prtcliFSM", before, this.curState, iEnd);
+			log.debug("after {}=>{} iEnd={} changeLight=[{}]=====check prtcliFSM", before, this.curState, iEnd, (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 			break;
 
 		case SNDANDRCVDELTLMCHKENDSETSIG:
@@ -4540,17 +4551,27 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 			} else {
 				// Show Signal
-				if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0001000000")) {
-					this.curState = SNDANDRCVDELTLMCHKENDEJECTPRT;
-					if (prt.Eject(firstOpenConn)) {
+				if (this.changeLightOnLastPage) {
+					if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
+						this.curState = SNDANDRCVDELTLMCHKENDEJECTPRT;
+						if (prt.Eject(firstOpenConn)) {
+	//20200401						Sleep(2 * 1000);
+							this.curState = FINISH;
+						}
+					}				
+				} else {
+					if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0001000000")) {
+						this.curState = SNDANDRCVDELTLMCHKENDEJECTPRT;
+						if (prt.Eject(firstOpenConn)) {
 //20200401						Sleep(2 * 1000);
-						this.curState = FINISH;
+							this.curState = FINISH;
+						}
 					}
 				}
 			}
 			//20200718
 			lastCheck(before);
-			log.debug("after {}=>{} iEnd={} =====check prtcliFSM", before, this.curState, iEnd);
+			log.debug("after {}=>{} iEnd={} changeLight=[{}]=====check prtcliFSM", before, this.curState, iEnd, (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 			break;
 
 		case SNDANDRCVDELTLMCHKENDEJECTPRT:
@@ -4589,6 +4610,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		case FINISH:
 			log.debug("{} {} {} :AutoPrnCls : process FINISH", brws, catagory, account);
 			iFirst = 0;
+			this.changeLightOnLastPage = false; //20220927
 			if (iEnd == 2)
 				iEnd = 0;
 			resetPassBook();
