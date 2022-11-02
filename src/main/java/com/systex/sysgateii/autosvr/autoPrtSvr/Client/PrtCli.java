@@ -2110,15 +2110,27 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			switch (this.iFig) {
 			case TXP.PBTYPE:
 				if (start) {
+					//20221102 MSR new format negative symbol '<' immediately before the number characters
 					byte[] spbbal = p0080DataFormat.getTotaTextValueSrc("spbbal", pb_arr.get(iCnt - 1));
-					if (new String(spbbal).equals("-"))
+					/*if (new String(spbbal).equals("-"))
 						System.arraycopy(spbbal, 0, c_Msr, 16, 1);
 					else
 						System.arraycopy("0".getBytes(), 0, c_Msr, 16, 1);
+					*/
 					System.arraycopy(p0080DataFormat.getTotaTextValueSrc("pbbal", pb_arr.get(iCnt - 1)), 0, c_Msr, 17,
 							13);
 					System.arraycopy(String.format("%02d", l).getBytes(), 0, c_Msr, 30, 2);
 					System.arraycopy(String.format("%02d", p).getBytes(), 0, c_Msr, 32, 2);
+					System.arraycopy("0".getBytes(), 0, c_Msr, 16, 1);
+					if (new String(spbbal).equals("-")) {
+						for (int tidx = 17; tidx < c_Msr.length; tidx++) {
+							if (c_Msr[tidx] != (byte)'0') {
+								c_Msr[tidx - 1] = (byte)'-';
+								break;
+							}
+						}
+					}
+					//---- 20221102
 					tx_area.put("c_Msr", new String(c_Msr));
 				}
 				rtn = prt.MS_Write(start, brws, account, c_Msr);//20200712 add for test
