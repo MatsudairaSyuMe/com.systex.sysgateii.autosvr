@@ -2969,7 +2969,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						this.setSeqNo = Integer
 								.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 1;
 						//20210630 MatsudairaSyuMe make sure seqno Exceed the maximum 
-						if (this.setSeqNo >= 99999)
+						if (this.setSeqNo >= 99999999) //20221123 99999->99999999
 							this.setSeqNo = 0;
 						FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
 								Charset.defaultCharset());
