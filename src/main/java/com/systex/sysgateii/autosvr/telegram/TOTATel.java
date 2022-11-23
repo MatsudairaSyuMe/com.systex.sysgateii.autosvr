@@ -19,8 +19,8 @@ public class TOTATel {
 	// private int WSNO = 2;
 	// 20061219 , 2位放大成4位
 	private int WSNO = 4;
-	private int FTXSEQ = 3; // 20051031 , add
-	private int TXSEQ = 5;
+	//20221123 private int FTXSEQ = 3; // 20051031 , add
+	private int TXSEQ = 8; //20221123 5->8
 	private int TRANCD = 2;
 	private int FWSTYPE = 1; // 20051031 , add
 	private int WSTYPE = 1;
@@ -38,7 +38,7 @@ public class TOTATel {
 	// private String wsno = ;
 	// 20061219 , 2位放大成4位
 	private String wsno = "wsno";
-	private String ftxseq = "ftxseq"; // 20051031 , add
+	//20221123 private String ftxseq = "ftxseq"; // 20051031 , add
 	private String txseq = "txseq";
 	private String trancd = "trancd";
 	private String fwstype = "fwstype"; // 20051031 , add
@@ -52,7 +52,7 @@ public class TOTATel {
 	private String msglng = "msglng"; // 20051031 , fix
 	private String warncnt = "warncnt"; // 20051125 , add
 
-	private int totalabel_lens[] = { BRNO, WSNO, FTXSEQ, // 20051031 , add
+	private int totalabel_lens[] = { BRNO, WSNO, //20221123 FTXSEQ, // 20051031 , add
 			TXSEQ, TRANCD, FWSTYPE, // 20051031 , add
 			WSTYPE, TXTSK, MSGEND, TOTASEQ, // 20051031 , add
 			APTYPE, // 20051031 , add
@@ -60,7 +60,7 @@ public class TOTATel {
 			WARNCNT // 20051125 , add
 	};
 
-	private String totalabel_names[] = { brno, wsno, ftxseq, txseq, trancd, fwstype, wstype, txtsk, msgend, totaseq,
+	private String totalabel_names[] = { brno, wsno, /* 20221123 ftxseq,*/ txseq, trancd, fwstype, wstype, txtsk, msgend, totaseq,
 			aptype, mtype, msgno, msglng, warncnt };
 
 	public void setValueLtoRfill(String fieldN, String setsV, byte fillV) throws Exception {

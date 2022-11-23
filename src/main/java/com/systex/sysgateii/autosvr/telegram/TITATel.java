@@ -18,8 +18,8 @@ public class TITATel {
 	private static Logger log = LoggerFactory.getLogger(TITATel.class);
     private int  BRNO = 3;
     private int  WSNO = 4;
-    private int  FTXSEQ = 3;   // 20051031 , ADD , 20060120 FOR UONLINE TEST , BRANCH TXSEQ IS 5 DIGITS , C11 WILL SYNC WITH HOST SCTL
-    private int  TXSEQ = 5;
+    //20221123 private int  FTXSEQ = 3;   // 20051031 , ADD , 20060120 FOR UONLINE TEST , BRANCH TXSEQ IS 5 DIGITS , C11 WILL SYNC WITH HOST SCTL
+    private int  TXSEQ = 8; //20221123 5->8
     private int  ORGKIN = 3;   // 20051031 , ADD
     private int  ORGTRM = 4;   // 20051031 , ADD
     private int  ORGTNO = 8;   // 20051031 , ADD
@@ -65,7 +65,7 @@ public class TITATel {
 
     private String  brno = "brno";
     private String  wsno = "wsno";
-    private String  ftxseq = "ftxseq";    
+    //20221123 private String  ftxseq = "ftxseq";    
     private String  txseq = "txseq";
     private String  orgkin = "orgkin";    
     private String  orgtrm = "orgtrm";    
@@ -112,7 +112,7 @@ public class TITATel {
     private int titalabel_lens[] = {
         BRNO,
         WSNO,
-        FTXSEQ,
+        //20221123 FTXSEQ,
         TXSEQ,
         ORGKIN,
         ORGTRM,
@@ -160,7 +160,7 @@ public class TITATel {
     private String titalabel_names[] = {
         brno,
         wsno,
-        ftxseq,
+        //20221123 ftxseq,
         txseq,
         orgkin,
         orgtrm,
