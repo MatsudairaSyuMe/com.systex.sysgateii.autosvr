@@ -8,7 +8,7 @@
 	<property name="maxSize" value="30MB" scope="context"/>
 	<!-- 上下文變數設置,用來定義變數值,其中name的值是變數的名稱，value的值時變數定義的值。
 	通過<property>定義的值會被插入到logger上下文中。定義變數後，可以使“${}”來使用變數。 -->
-	<property name="CONTEXT_NAME" value="sysgateii-test" />
+	<property name="CONTEXT_NAME" value="autosvr" />
 	<property name="FAS_NAME" value="fas" />
 	<property name="RATE_NAME" value="rate" />
 	<property name="logs.dir" value="/log/bis/autosvr" />
