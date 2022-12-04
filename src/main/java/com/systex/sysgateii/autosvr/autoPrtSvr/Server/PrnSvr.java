@@ -617,7 +617,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 //					PrtCli conn = new PrtCli(newcfgMap, fasDespacther, new Timer());
 					//20220905 MatsudairaSyuMe using RouteConnection as dispatcher
 					//PrtCli conn = new PrtCli(newcfgMap, new Timer());
-					PrtCli conn = new PrtCli(cfgMap, dispatcher, new Timer());
+					PrtCli conn = new PrtCli(newcfgMap, dispatcher, new Timer());//20221204 cfgMap change to newcfgMap
 					//---- 20220905 using RouteConnection as dispatcher
 					Thread thread = new Thread(conn);
 					getMe().threadMap.put(conn.getId(), thread);
