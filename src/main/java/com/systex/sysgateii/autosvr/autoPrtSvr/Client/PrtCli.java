@@ -464,7 +464,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//20210427 MatsudairaSyuMe
 			this.remoteHostAddr = nodePars.getCurrentRemoteHostAddress();
 			this.localHostAddr = nodePars.getCurrentLocalHostAddress();
-			/*** 20220525 MatsudaiarSyuMe mark for not delete status data
+			/*** 20220525 MatsudaiarSyuMe mark for not delete status data */
 			if (PrnSvr.dburl != null && PrnSvr.dburl.trim().length() > 0) {
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
 				//20201119 add for make reset the status table
@@ -477,7 +477,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//20210112 MatsudairaSyume
 			jsel2ins.CloseConnect();
 			jsel2ins = null;
-			*/ //----
+			/**/ //----
 		} catch (Exception e) {
 			log.error("Address format error!!! {}", e.getMessage());
 		}
