@@ -2121,6 +2121,13 @@ public class CS4625Impl implements Printer {
 			amlog.info("[{}][{}][{}]:95硬體錯誤代碼1[{}]", brws, "        ", "            ", String.format(outptrn1, data));		
 
 			ResetPrinter();
+			//20230204 Test
+			if (this.curState == DetectPaper) {
+				this.curChkState = CheckStatus_START;
+				pc.close();
+				return false;
+			}
+			//-----
 			this.curState = ResetPrinterInit_START;
 			ResetPrinterInit();
 			return false;

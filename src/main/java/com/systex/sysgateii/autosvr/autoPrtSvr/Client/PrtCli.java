@@ -3606,8 +3606,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					e.printStackTrace();
 				}
 				// 20201004 test
-				if (this.lastState != SESSIONBREAK)
+				if (this.lastState != SESSIONBREAK) { //20230204 Reset the printer and set the signal to no service mode
 					amlog.info("[{}][{}][{}]:99接收指令停止與補摺機連線...", brws, "        ", "            ");
+					//20230204 Reset the printer and set the signal to no service mode
+					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+					SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+					byte[] PINIT = { (byte) 0x1b, (byte) '0' };
+					prt.Send_hData(PINIT);
+					Sleep(500);
+
+					//----
+				}
 //				this.curState = SESSIONBREAK;
 				this.curSockNm = "";
 				this.clientMessageBuf.clear();
@@ -3694,7 +3703,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					amlog.info("[{}][{}][{}]:62等待請翻下頁繼續補登...", brws, pasname, account);
 					log.debug("DetectPaper [{}][{}][{}]:62等待請翻下頁繼續補登...", brws, pasname, account);
 				} else {
-					amlog.info("[{}][{}][{}]:****************************", brws, "        ", "            ");
+					amlog.info("[{}][{}][{}]:****************************", StrUtil.convertValidLog(brws), "        ", "            "); //20230112 change brws to StrUtil.convertValidLog(brws)
 					amlog.info("[{}][{}][{}]:00請插入存摺...", brws, pasname, "            ");
 					//20220429 MatsudairaSyuMe
 					this.startIdleMode = false;
