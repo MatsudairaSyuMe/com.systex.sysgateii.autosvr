@@ -113,11 +113,13 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 							String telegramKey = "";
 							boolean alreadySendTelegram = false;
 							telegramKey = dataUtil.getTelegramKey(req);
-							String body = new String(req, CharsetUtil.UTF_8).substring(0, req.length);
+							//20230217 mark for not use UTF8
+							//String body = new String(req, CharsetUtil.UTF_8).substring(0, req.length);
 							//20220819 MatsudairaSyuMe change to use new outgoingTelegramKeyMap
 //							alreadySendTelegram = dispatcher.sendTelegram(req);
 							alreadySendTelegram = dispatcher.sendTelegram(req, ctx);
-							log.info("get request from RouteClient [{}]: telegramKey=[{}] [{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, body, alreadySendTelegram);
+//							log.info("get request from RouteClient [{}]: telegramKey=[{}] [{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, body, alreadySendTelegram);
+							log.info("get request from RouteClient [{}]: telegramKey=[{}] len={{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, req.length, alreadySendTelegram);
 							// 20220819 int reTry = 0;
 							byte[] resultmsg = null;
 							/* 20220810 MatsudairaSyuMe change to send telegram back by FASClientChannelHandler

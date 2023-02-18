@@ -261,7 +261,8 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						else { */ //20220221 mark up
 						byte[] resultmsg = cnvResultTelegram();
 						//20220221 MatsudairSyuMe drop non-service telegram
-						String checkTRN = new String(trnidbary, StandardCharsets.UTF_8);
+//	2023017 MatsudairaSyuMe					String checkTRN = new String(trnidbary, StandardCharsets.UTF_8);
+						String checkTRN = new String(trnidbary);
 						if ((trnidbary[0] == (byte)'S') || (trnidbary[0] == (byte)'T'))
 						{
 							log.warn("receive TOTA-MSGID=[{}] non-service telegram drop it !!!", checkTRN);

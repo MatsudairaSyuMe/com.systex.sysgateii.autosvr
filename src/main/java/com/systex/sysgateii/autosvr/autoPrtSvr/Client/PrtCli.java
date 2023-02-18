@@ -3614,7 +3614,6 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					byte[] PINIT = { (byte) 0x1b, (byte) '0' };
 					prt.Send_hData(PINIT);
 					Sleep(500);
-
 					//----
 				}
 //				this.curState = SESSIONBREAK;

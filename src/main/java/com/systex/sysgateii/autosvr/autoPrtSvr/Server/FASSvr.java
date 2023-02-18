@@ -220,6 +220,17 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 					req.writeBytes(header2.getBytes());
 					req.writeBytes(telmsg);
 					*/
+					//20230217 MatsudairaSyuMe save key first
+					telegramKey = dataUtil.getTelegramKey(telmsg);
+					SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
+					long curTimel = System.currentTimeMillis();
+					String ot = df.format(curTimel);
+					if (Constants.outgoingTelegramKeyMap.containsKey(telegramKey))
+						log.warn("telegramKey [{}] already exist on outgoingTelegramKeyMap table will update register time", telegramKey);
+//					Constants.outgoingTelegramKeyMap.put(telegramKey, curTimel);
+					Constants.outgoingTelegramKeyMap.put(telegramKey, new TelegramReg(curTimel, svrHandlerctx));
+					log.info("telegramKey [{}] send at [{}] sizeof Constants.outgoingTelegramKeyMap=[{}]", telegramKey, ot, Constants.outgoingTelegramKeyMap.size());
+					//----
 					byte[] sndm = new byte[13 + telmsg.length];
 					System.arraycopy(header1.getBytes(), 0, sndm, 0, 3);
 					System.arraycopy(dataUtil.to3ByteArray(telmsg.length + 13), 0, sndm, 3, 3);
@@ -254,6 +265,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				}
 				//20220719 MatsudairaSyuMe
 				//20220819 MatsudairaSyuMe telegramKey change the declare place
+				/* 20230217 MatsidairaSyuMe mark for save key first
 				telegramKey = dataUtil.getTelegramKey(telmsg);
 				SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
 				long curTimel = System.currentTimeMillis();
@@ -263,6 +275,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 //				Constants.outgoingTelegramKeyMap.put(telegramKey, curTimel);
 				Constants.outgoingTelegramKeyMap.put(telegramKey, new TelegramReg(curTimel, svrHandlerctx));
 				log.info("telegramKey [{}] send at [{}] sizeof Constants.outgoingTelegramKeyMap=[{}]", telegramKey, ot, Constants.outgoingTelegramKeyMap.size());
+				*/
 				//----
 			//----
 //20220715 MatsudairaSyuMe			} catch (final InterruptedException e) {

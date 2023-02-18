@@ -100,7 +100,14 @@ public class RouteConnection {
 			System.arraycopy(msg, 0, sndmsg, 3, msg.length);
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(sndmsg);
 			log.debug("send to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg));
-			channel_.writeAndFlush(buf);
+			//20230217 MatsudairaSyume make sure for write and flush synchronize mode
+			try {
+				channel_.writeAndFlush(buf.retain()).sync();
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("Can't send message to RouteSvrHandler");
+			}
+			//----
 			sndmsg = null;
 			buf = null;
 			//******
@@ -131,7 +138,14 @@ public class RouteConnection {
 			System.arraycopy(msg, 0, sndmsg, 3, msg.length);
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(sndmsg);
 			log.debug("send CANCEL command to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg));
-			channel_.writeAndFlush(buf);
+			//20230217 MatsudairaSyume make sure for write and flush synchronize mode
+			try {
+				channel_.writeAndFlush(buf.retain()).sync();
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("Can't sendCANCEL message to RouteSvrHandler");
+			}
+			//----
 			sndmsg = null;
 			buf = null;
 			//******
