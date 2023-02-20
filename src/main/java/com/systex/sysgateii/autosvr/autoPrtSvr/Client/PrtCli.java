@@ -1178,7 +1178,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 	private void setpasname(byte[] cussrc) {
 		String chkcatagory = new String(cussrc, 3, 3);
-
+		String chkcusid = "";
+		boolean negiative = false;
+		boolean allzero = true;
+		int i = 0, j = 0;
 		switch (chkcatagory) {
 		// 台幣存摺
 			case "001":
@@ -1189,6 +1192,26 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			case "006":
 			case "008":
 				pasname = "台幣存摺";
+				//20230220 MatsudairaSyuMe check pb msr balance if <0000000000000 change to +0000000000000
+				chkcusid = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN);
+				negiative = false;
+				allzero = true;
+				i = 0;
+				j = 0;
+				for ( char c : chkcusid.toCharArray()) {
+					if (c == '-' || c == '<') {
+						negiative = true;
+						j = i;
+					} else	if (c != '0') {
+						allzero = false;
+						break;
+					}
+					i += 1;
+				}
+				if (negiative && allzero) // balance is zero but sign is minus
+					cusid[TXP.ACTNO_LEN + TXP.ACFILLER_LEN + j] = (byte)'0';
+				log.info("WOW !!!! after check pb msr neiactive and all zero [{}] [{}] new cusid[{}] !!!", negiative, allzero, new String(cusid));
+				//---- end 20230220
 				break;
 				// 外幣存摺
 			case "007":
