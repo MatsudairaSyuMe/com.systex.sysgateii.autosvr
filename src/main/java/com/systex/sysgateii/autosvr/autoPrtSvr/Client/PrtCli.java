@@ -2144,9 +2144,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							13);
 					System.arraycopy(String.format("%02d", l).getBytes(), 0, c_Msr, 30, 2);
 					System.arraycopy(String.format("%02d", p).getBytes(), 0, c_Msr, 32, 2);
+log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new String(c_Msr));
+
 					System.arraycopy("0".getBytes(), 0, c_Msr, 16, 1);
 					if (new String(spbbal).equals("-")) {
-						for (int tidx = 17; tidx < c_Msr.length; tidx++) {
+						for (int tidx = 17; tidx < (TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN); tidx++) {
 							if (c_Msr[tidx] != (byte)'0') {
 								c_Msr[tidx - 1] = (byte)'-';
 								break;
@@ -2158,7 +2160,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				rtn = prt.MS_Write(start, brws, account, c_Msr);//20200712 add for test
 				if (p > TXP.PB_MAX_PAGE) this.changeLightOnLastPage = true; //20220927
-				log.debug(" after to write new PBTYPE line={} page={} MSR {} changeLight=[{}]", l, p, tx_area.get("c_Msr"), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
+//				log.debug(" after to write new PBTYPE line={} page={} MSR {} changeLight=[{}]", l, p, tx_area.get("c_Msr"), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
+				log.debug(" after to write new PBTYPE line={} page={} MSR {} changeLight=[{}]", l, p, new String(tx_area.get("c_Msr")), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 				break;
 			case TXP.FCTYPE:
 				if (start) {
