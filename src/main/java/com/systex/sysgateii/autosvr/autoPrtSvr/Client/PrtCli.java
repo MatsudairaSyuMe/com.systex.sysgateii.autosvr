@@ -2367,9 +2367,13 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					String curnpbbal = tx_area.get("npbbal");   //20230221 MatsudairaSyume
 					log.debug("1 check PB current snpbbal= [{}]", cursnpbbal);
 					log.debug("2 check PB current npbbal= [{}]", curnpbbal);//20230221 MatsudairaSyume
-					if (Integer.parseInt(curnpbbal) == 0) {
-						cursnpbbal = "0";
-						log.debug("2.1 check PB current npbbal= [{}] so snpbbal change to=[{}]", curnpbbal, cursnpbbal);//20230221 MatsudairaSyume
+					try {
+				        if (Long.parseLong(curnpbbal) == 0) {  // 20230221 15:15change to Long
+					        cursnpbbal = "0";
+					        log.debug("2.1 check PB current npbbal= [{}] so snpbbal change to=[{}]", curnpbbal, cursnpbbal);//20230221 MatsudairaSyume
+				        }
+					} catch( NumberFormatException e) {
+						log.error("Input string Error");
 					}
 //					p85text.setValue("npbbal", this.msrbal.substring(1));//20230221 MatsudairaSyume mark up
 //					p85text.setValue("npbbal", tx_area.get("npbbal"));//20230221 MatsudairaSyume mark up
