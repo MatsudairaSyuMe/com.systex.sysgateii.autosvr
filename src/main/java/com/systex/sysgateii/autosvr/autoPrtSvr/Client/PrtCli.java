@@ -2347,8 +2347,10 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					p85text.setValue("bkseq", this.bkseq);
 					//20200523
 					String set_str = this.bkseq;
+
 //					p85text.appendTitaText("date", pb_arr.get(0));
 					//----
+					/* 20230221 MatsudairaSyuMe mark for check PB snpbbal from last printed telegram
 					if (tital.ChkCrdb(this.msrbal) > 0) {    ///check 20200224
 						p85text.setValue("snpbbal", "+");
 						//20200523
@@ -2360,12 +2362,23 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						set_str = set_str + "-";
 						//----
 					}
-//					p85text.setValue("npbbal", this.msrbal.substring(1));
-					p85text.setValue("npbbal", tx_area.get("npbbal"));
+					20230221 mark */
+					String cursnpbbal = tx_area.get("snpbbal");
+					String curnpbbal = tx_area.get("npbbal");   //20230221 MatsudairaSyume
+					log.debug("1 check PB current snpbbal= [{}]", cursnpbbal);
+					log.debug("2 check PB current npbbal= [{}]", curnpbbal);//20230221 MatsudairaSyume
+					if (Integer.parseInt(curnpbbal) == 0) {
+						cursnpbbal = "0";
+						log.debug("2.1 check PB current npbbal= [{}] so snpbbal change to=[{}]", curnpbbal, cursnpbbal);//20230221 MatsudairaSyume
+					}
+//					p85text.setValue("npbbal", this.msrbal.substring(1));//20230221 MatsudairaSyume mark up
+//					p85text.setValue("npbbal", tx_area.get("npbbal"));//20230221 MatsudairaSyume mark up
+					p85text.setValue("snpbbal", cursnpbbal);
+					p85text.setValue("npbbal", curnpbbal);//20230221 MatsudairaSyume
 //					String scnt = String.format("%04d", pb_arr.size());
 					p85text.setValue("delcnt", String.format("%04d", pb_arr.size()));
 //					p85text.setValue("fnbdtl", pb_arr.get(pb_arr.size() - 1)); 20200523 change to pb_arr = 0
-					log.debug("pb_arr {} [{}]", 0, new String(pb_arr.get(0)));
+					log.debug("3 pb_arr {} [{}]", 0, new String(pb_arr.get(0)));
 					//20200523
 					set_str = set_str + tx_area.get("npbbal") + String.format("%04d", pb_arr.size());
 					byte[] set_arr = new byte[p85text.getP85TitatextLen() - set_str.getBytes().length];
