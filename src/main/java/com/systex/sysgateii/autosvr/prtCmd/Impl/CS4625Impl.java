@@ -2239,6 +2239,18 @@ public class CS4625Impl implements Printer {
 			//----
 			}
 		//----
+		//20230306 MatsudairasyuMe for Normalcy system response ESC r 0 0 0
+		case (byte) '0':
+			if (data[2] == (byte) '0' && data[3] == (byte) '0' && data[4] == (byte) '0') {
+				log.warn("receive Normalcy system response r000 ignoreit");
+				return true;
+			} else {
+				this.curChkState = CheckStatus_START;
+				log.error("receive un-normal code reset priner");
+				pc.close();
+				return false;
+			}
+		//----
 		default:
 			atlog.info("Error Reset[{}]", String.format(outptrn3, data[2]));
 			ResetPrinter();
