@@ -599,6 +599,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.curSockNm = "";
 				// 20201004
 				channel_ = null;
+				Sleep(3000);  //20230309 slower the reconnect time make sure the passbook printer as already reset
 				// 20210415 MatsudairaSyuMe
 				if (getCurMode() != EventType.SHUTDOWN && getCurMode() != EventType.RESTART) {
 					bootstrap = new Bootstrap();
@@ -3651,9 +3652,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				// 20201004 test
 				if (this.lastState != SESSIONBREAK) { //20230204 Reset the printer and set the signal to no service mode
 					amlog.info("[{}][{}][{}]:99接收指令停止與補摺機連線...", brws, "        ", "            ");
-					//20230204 Reset the printer and set the signal to no service mode
-					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
-					SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+					//20230310 Reset the printer and set the signal  to no service mode
+					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000010");
+//					SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000010");
 					byte[] PINIT = { (byte) 0x1b, (byte) '0' };
 					prt.Send_hData(PINIT);
 					Sleep(500);

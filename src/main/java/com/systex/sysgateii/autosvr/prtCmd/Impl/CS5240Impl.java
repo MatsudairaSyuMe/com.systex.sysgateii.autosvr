@@ -1411,7 +1411,17 @@ public class CS5240Impl implements Printer {
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ",
 								new String(data, 1, data.length - 1));
 						Send_hData(S5240_CANCEL); // special for S5020
+					} else {  //20230309
+						log.debug("{} {} eject paper", brws, wsno);
+						Send_hData(S5240_PEJT);  //eject paper
+						Sleep(500);
+						log.debug("{} {} reset printer", brws, wsno);
+						ResetPrinter();
+						Sleep(500);
+						log.debug("{} {} close connection", brws, wsno);
+						pc.close();   //close
 					}
+					//20230309 end
 					//----
 
 				} else {
@@ -2125,11 +2135,28 @@ public class CS5240Impl implements Printer {
 		    	Send_hData(S5240_CANCEL);  //special for S5040
 		    //----
 			//20220827 MatsudairaSyuMe for ESC,r475
-			if (data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
+			if (data.length > 3 && data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
 				ResetPrinter();
 				this.curChkState = CheckStatus_START;
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
+			}  //20230309 MatsudairaSyuMe for ESC,r434
+//			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
+			else if (data.length > 3 && (data[2] == (byte) '4'))
+			{
+				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
+				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] reset printer", brws, "        ", "            ", "r434");
+				this.curChkState = CheckStatus_START;
+				log.debug("{} {} eject paper", brws, wsno);
+				Send_hData(S5240_PEJT);  //eject paper
+				Sleep(500);
+				log.debug("{} {} reset printer", brws, wsno);
+				ResetPrinter();
+				Sleep(500);
+				log.debug("{} {} close connection", brws, wsno);
+				pc.close();   //close
+				return false;		
 			}
+			//----20230309
 			//----
 			return true;
 		//----
@@ -2143,7 +2170,14 @@ public class CS5240Impl implements Printer {
 			this.curChkState = CheckStatusRecvData;
 			this.iCnt = 0;
 			//----
-
+			//20230309 reset printer for error data in printer
+			if (this.curState == DetectPaper) {
+				ResetPrinter();
+				this.curChkState = CheckStatus_START;
+				pc.close();
+				return false;
+			}
+			//-----
 			Sleep(50);
 			data = Rcv_Data(5);
 			// 20091002 , show error code
@@ -2170,7 +2204,17 @@ public class CS5240Impl implements Printer {
 			// 20091002 , show error code
 			amlog.info("[{}][{}][{}]:95硬體錯誤代碼2[{}]", brws, "        ", "            ", String.format(outptrn1, data));		
 
+			//2030309 add for reset conection
+			this.curChkState = CheckStatus_START;
+			log.debug("{} {} eject paper", brws, wsno);
+			Send_hData(S5240_PEJT);  //eject paper
+			Sleep(500);
+			log.debug("{} {} reset printer", brws, wsno);
 			ResetPrinter();
+			Sleep(500);
+			log.debug("{} {} close connection", brws, wsno);
+			pc.close();   //close
+			//----20230309 end
 			return false;
 		case (byte) 'X': // Warning , paper lower
 			Send_hData(S5240_PERRCODE_REQ);
@@ -2219,9 +2263,23 @@ public class CS5240Impl implements Printer {
 			// 20091002 , show error code
 			amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", String.format(outptrn1, data));		
 
+			/* 20230309 mark up
 			ResetPrinter();
 			this.curState = ResetPrinterInit_START;
 			ResetPrinterInit();
+			*/
+			//20230309 add for reset connection
+			this.curChkState = CheckStatus_START;
+			log.debug("{} {} eject paper", brws, wsno);
+			Send_hData(S5240_PEJT);  //eject paper
+			Sleep(500);
+			log.debug("{} {} reset printer", brws, wsno);
+			ResetPrinter();
+			Sleep(500);
+			log.debug("{} {} close connection", brws, wsno);
+			pc.close();   //close
+			//----20230309 end
+
 			return false;
 		case 0x00:
 			log.debug("[{}]:S5240 : Error Reset[0x00]", String.format(outptrn2, wsno));

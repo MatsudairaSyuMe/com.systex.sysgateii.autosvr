@@ -1398,6 +1398,17 @@ public class CS4625Impl implements Printer {
 					PurgeBuffer();
 					log.debug("{} {} {} get '4' paper in chasis curState={}  curChkState={} ", brws, wsno, "",this.curState,  this.curChkState);
 					this.iCnt = 0;
+					//20230309 reset connection
+					log.debug("{} {} eject paper", brws, wsno);
+					Send_hData(S4625_PEJT);  //eject paper
+					Sleep(500);
+					log.debug("{} {} reset printer", brws, wsno);
+					ResetPrinter();
+					Sleep(500);
+					log.debug("{} {} close connection", brws, wsno);
+					pc.close();   //close
+					return false;		
+					//----
 				} else {
 					switch (data[2]) {
 					case (byte) '1': // 20060619 paper jam
@@ -2101,11 +2112,28 @@ public class CS4625Impl implements Printer {
 					return false;
 			}
 			//20220827 MatsudairaSyuMe for ESC,r475
-			if (data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
+			if (data.length > 3 && data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
 				ResetPrinter();
 				this.curChkState = CheckStatus_START;
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
+			}  //20230309 MatsudairaSyuMe for ESC,r434
+//			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
+			else if (data.length > 3 && (data[2] == (byte) '4'))
+			{
+				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
+				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] reset printer", brws, "        ", "            ", "r434");
+				this.curChkState = CheckStatus_START;
+				log.debug("{} {} eject paper", brws, wsno);
+				Send_hData(S4625_PEJT);  //eject paper
+				Sleep(500);
+				log.debug("{} {} reset printer", brws, wsno);
+				ResetPrinter();
+				Sleep(500);
+				log.debug("{} {} close connection", brws, wsno);
+				pc.close();   //close
+				return false;		
 			}
+			//----20230309
 			//----
 			return true;
 		//----
@@ -2147,7 +2175,18 @@ public class CS4625Impl implements Printer {
 			// 20091002 , show error code
 			amlog.info("[{}][{}][{}]:95硬體錯誤代碼2[{}]]", brws, "        ", "            ", String.format(outptrn1, data));		
 
+			//2030309 add for reset conection
+			this.curChkState = CheckStatus_START;
+			log.debug("{} {} eject paper", brws, wsno);
+			Send_hData(S4625_PEJT);  //eject paper
+			Sleep(500);
+			log.debug("{} {} reset printer", brws, wsno);
 			ResetPrinter();
+			Sleep(500);
+			log.debug("{} {} close connection", brws, wsno);
+			pc.close();   //close
+			//----20230309 end
+
 			return false;
 		case (byte) 'X': // Warning , paper lower
 			Send_hData(S4625_PERRCODE_REQ);
@@ -2198,9 +2237,24 @@ public class CS4625Impl implements Printer {
 			data = Rcv_Data(5);
 			// 20091002 , show error code
 			amlog.info("[{}][{}][{}]:95硬體錯誤代碼5{}]", brws, "        ", "            ", String.format(outptrn1, data));		
+
+			/*
+			 * 20230309  mark up
 			ResetPrinter();
 			this.curState = ResetPrinterInit_START;
 			ResetPrinterInit();
+			*/
+			//2030309 add for reset conection
+			this.curChkState = CheckStatus_START;
+			log.debug("{} {} eject paper", brws, wsno);
+			Send_hData(S4625_PEJT);  //eject paper
+			Sleep(500);
+			log.debug("{} {} reset printer", brws, wsno);
+			ResetPrinter();
+			Sleep(500);
+			log.debug("{} {} close connection", brws, wsno);
+			pc.close();   //close
+			//----20230309 end
 			return false;
 		case 0x00:
 			atlog.info("Error [0x00]");
