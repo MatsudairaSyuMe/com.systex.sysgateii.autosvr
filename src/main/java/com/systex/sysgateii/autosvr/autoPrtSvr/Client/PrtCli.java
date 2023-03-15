@@ -328,6 +328,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private boolean startIdleMode = false;
 	private long lastRequestTime = 0l;
 	//----
+	
 	public List<ActorStatusListener> getActorStatusListeners() {
 		return actorStatusListeners;
 	}
@@ -538,6 +539,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			log.debug("update status table {} error:", PrnSvr.statustbname, e.getMessage());
 		}
 		PeriodDayEndSchedule();  //20211203 MatsudairasyuMe set day end check log schedule
+		//20240314 MatsudairaSyuMe
+		rmAbNomalAlart(this.brws);
+		//----
 	}
 	//20210217 MatsudairaSyume for brws name check
 	boolean isValidBrws (String askbrws) {
@@ -569,7 +573,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				if (cnvStr == null || cnvStr.trim().length() == 0)
 					cnvStr = new String(msg);
 			}
-			try {//20210803 MAtsydairaSyuMe change to use ESAPI for Log Forging
+			try {//20210803 MAtsydairaSyuMe change to use ESAPI for Log Forging, 20230314 change to use time stamp parameter
 				if (((startIdleMode == true) && ((System.currentTimeMillis() - this.lastCheckTime) >= (PrnSvr.getChgidleTime() * 1000))) || ((startIdleMode == false)))
 					aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, StrUtil.convertValidLog(cnvStr)));
 			} catch (Exception e) {
@@ -621,7 +625,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						@Override
 						public void initChannel(SocketChannel ch) throws Exception {
 							ch.pipeline().addLast("log", new LoggingHandler(PrtCli.class, LogLevel.INFO));
-							ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), 0, 0, TimeUnit.MILLISECONDS)); //20220430 MatsudairaSyuMe 200 change to use getReadIdleTime()
+//20230314 mark up		ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), 0, 0, TimeUnit.MILLISECONDS)); //20220430 MatsudairaSyuMe 200 change to use getReadIdleTime()
+							ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), (PrnSvr.getChgidleTime() * 3 * 1000), 0, TimeUnit.MILLISECONDS)); //20230314 MatsudairaSyuMe add write idle use 3 times of chgidleTime
 							//ch.pipeline().addLast(new IdleStateHandler(100, 0, 0, TimeUnit.MILLISECONDS));  //20220425 MatsudairaSyuMe 200 changed to used getReadIdleTime()
 							ch.pipeline().addLast(getHandler("PrtCli"));
 						}
@@ -777,7 +782,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			@Override
 			public void initChannel(SocketChannel ch) throws Exception {
 				ch.pipeline().addLast("log", new LoggingHandler(PrtCli.class, LogLevel.INFO));
-				ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), 0, 0, TimeUnit.MILLISECONDS)); //20220430 MatsudairaSyuMe 200 change to use getReadIdleTime()
+//20230314 mark up				ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), 0, 0, TimeUnit.MILLISECONDS)); //20220430 MatsudairaSyuMe 200 change to use getReadIdleTime()
+				ch.pipeline().addLast(new IdleStateHandler(((PrnSvr.getReqTime() > 110) ? (PrnSvr.getReqTime() - 10) : PrnSvr.getReqTime()), (PrnSvr.getChgidleTime() * 3 * 1000), 0, TimeUnit.MILLISECONDS)); //20230314 MatsudairaSyuMe add write idle for 3 time of chgidletime
 				ch.pipeline().addLast(getHandler("PrtCli"));
 			}
 		});
@@ -878,7 +884,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					dup.readBytes(asary);
 					//20220429 MatsuairaSyuMe mark up log
 					if (startIdleMode == true) {
-						if ((System.currentTimeMillis() - this.lastCheckTime) > (PrnSvr.getChgidleTime() * 1000)) {
+						if ((System.currentTimeMillis() - this.lastCheckTime) > (PrnSvr.getChgidleTime() * 1000)) { //20230314 change to use parameter curTime
 							aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary)));
 							this.lastCheckTime = System.currentTimeMillis();
 						}
@@ -995,9 +1001,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----
 			IdleStateEvent e = (IdleStateEvent) evt;
 			if (e.state() == IdleState.READER_IDLE) {
+				//20230314 MattaudairaSyuMe registered the read time stamp
 				log.debug(clientId + " READER_IDLE");
 				//20220429 MatsudairaSyuMe ====
 				if ((this.curState == CAPTUREPASSBOOK) && (this.iFirst == 0) && (PrnSvr.getChgidleTime() > 0)) {
+					//20230314 change to use curTime
 					if (((System.currentTimeMillis() - this.lastCheckTime) >= (PrnSvr.getChgidleTime() * 1000)) && (startIdleMode == false))
 						startIdleMode = true;
 				} else
@@ -1005,7 +1013,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				prtcliFSM(!firstOpenConn);
 
 			} else if (e.state() == IdleState.WRITER_IDLE) {
+				//20230314 MatsudairaSyuMe writer idle happened !!!,
+				//it is too long that no data had been send to pass book printer
 				log.debug(clientId + " WRITER_IDLE");
+				prtAbNomalAlart(this.brws); //20230314 create or update pass book printer alart file
 			} else if (e.state() == IdleState.ALL_IDLE) {
 				log.debug(clientId + " ALL_IDLE");
 			}
@@ -3550,6 +3561,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			this.passSNDANDRCVTLM = false;  //20200714
 			this.changeLightOnLastPage = false; //20220927
 			log.debug("=======================check prtcliFSM init");
+			//20240314 MatsudairaSyuMe
+			rmAbNomalAlart(this.brws);
+			//----
 			return;
 		}
         //20200616 add this.lastState and check duration time
@@ -3716,6 +3730,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			this.account = "";
 			this.pasname = "        ";
 			this.changeLightOnLastPage = false; //20220927
+			//20240314 MatsudairaSyuMe
+			rmAbNomalAlart(this.brws);
+			//----
 			if ((this.iFirst == 0) && prt.OpenPrinter(!firstOpenConn)) {
 				this.curState = ENTERPASSBOOKSIG;
 				SetSignal(firstOpenConn, firstOpenConn, "1100000000", "0000000000");
@@ -5037,6 +5054,58 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			if (aslog != null)
 				aslog.info(String.format("SCH  %s[%04d]:", curSockNm, 0));
 			log.info("Task 執行時間：" + new Date());
+		}
+	}
+	
+	//20230314 create register pass book printer abnormal alart file
+	private void prtAbNomalAlart(String brws) {
+		try {
+			File alartf = new File("Mon", StrUtil.cleanString(brws + "_alt"));
+			//og.debug("alart file=[{}]", alartf.getAbsolutePath());
+			if (alartf.exists() == false) {
+				File parent = alartf.getParentFile();
+				if (alartf.exists() == false) {
+					parent.mkdirs();
+				}
+				alartf.createNewFile();
+				FileUtils.writeStringToFile(alartf, "0", Charset.defaultCharset());
+				log.debug("create alart file=[{}] seq=0", alartf.getAbsolutePath());
+			} else {
+				try {
+					String f = FileUtils.readFileToString(alartf, Charset.defaultCharset());
+					log.debug("alart file=[{}] flag=[{}]", alartf.getAbsolutePath(), f);
+					if (f != null && f.trim().length() > 0 && f.charAt(0) == (char) '0') {
+						log.warn("stable still not trigger OSM please check stable and restart [{}]", this.brws);
+						amlog.info("[{}][{}][{}]:97補摺機太久無回應且stable沒有發出警訊，請儘快重啟連線並同時檢查stable程式", brws, "        ", "            ");
+					} else {
+						log.info("stable already trigger OSM please restart [{}] asap!!!", this.brws);
+						amlog.info("[{}][{}][{}]:97補摺機太久無回應，請儘快重啟連線", brws, "        ", "            ");									
+					}
+				} catch (Exception e) {
+					log.error("ERROR!!! check alart file  error {}", e.getMessage());
+					FileUtils.writeStringToFile(alartf, "0",	Charset.defaultCharset());
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("error!!! create or open brws alart file error");
+		}
+	}
+	private void rmAbNomalAlart(String brws) {
+		try {
+			File alartf = new File("Mon", StrUtil.cleanString(brws + "_alt"));
+			log.debug("alart file=[{}]", alartf.getAbsolutePath());
+			if (alartf.exists() == false) {
+				log.debug("alart file=[{}] not exist no need to delete", alartf.getAbsolutePath());
+			} else {
+				if (alartf.delete())
+					log.debug("alart file=[{}] delete successfully", alartf.getAbsolutePath());
+				else
+					log.debug("alart file=[{}] delete failly", alartf.getAbsolutePath());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("error!!! delete brws alart file error");
 		}
 	}
 }

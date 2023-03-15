@@ -2163,9 +2163,23 @@ public class CS4625Impl implements Printer {
 		case (byte) 'b':
 			// 20170116 , fix
 			// ResetPrinterInit();
+			/* 20230314 MatsudairaSyuMe change to close and reset connection
 			ResetPrinter();
 			this.curState = ResetPrinterInit_START;
 			ResetPrinterInit();
+			*/
+			//20230314 MatsudairaSyuMe change to close and reset connection
+			this.curChkState = CheckStatus_START;
+			log.debug("{} {} eject paper", brws, wsno);
+			Send_hData(S4625_PEJT);  //eject paper
+			Sleep(500);
+			log.debug("{} {} reset printer", brws, wsno);
+			ResetPrinter();
+			Sleep(500);
+			log.debug("{} {} close connection", brws, wsno);
+			pc.close();   //close
+			//----20230314 end
+
 			return false;
 		case (byte) '8':
 			// command error,
