@@ -363,7 +363,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//20220905 MatsudairaSyuMe using RouteConnection as dispatcher
 		//this.clientSession = new RouteConnection("127.0.0.1", 5555, new Timer());
 		this.clientSession = prnsvrdispatcher;
-		this.descm = new DscptMappingTable();
+		//20230316 MatsudairaSyuMe mark up for directly read from TB_AUDM
+		//this.descm = new DscptMappingTable();
+		//----20230316 end
 		//20200716 add for message table
 		this.m_Msg = new MessageMappingTable();
 		//----
@@ -1393,11 +1395,36 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					dsptb = FilterBig5(dsptb);
 				} else {
 					String desc = new String(p0080DataFormat.getTotaTextValueSrc("dscpt", pb_arr.get(i))).trim();
+					//20230316 MatsudairaSyuMe read Dscpt from table TB_AUDM
+					byte[] tmpdsp = null;
+					if (jsel2ins == null)
+						jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+					tmpdsp = jsel2ins.SELONEFLDBary(PrnSvr.dmtbname, "NAME", PrnSvr.dmtbsearkey, "'" + desc + "'" , false);
+					if (tmpdsp == null)
+						dsptb = desc.getBytes();
+					else {
+						int s = 0;
+						for (s = 0; s < tmpdsp.length; s++)
+							if (tmpdsp[s] == (byte)0x0)
+								break;
+							else
+								s++;
+						if (s < 1)
+							dsptb = desc.getBytes();
+						else {
+							dsptb = new byte[s];
+							System.arraycopy(tmpdsp, 0, dsptb, 0, s);
+						}
+						tmpdsp = null;
+					}
+					/*20230316 mark up
 					if (DscptMappingTable.m_Dscpt2.containsKey(desc))
 ////						dsptb = DscptMappingTable.m_Dscpt.get(desc).getBytes();
 						dsptb = DscptMappingTable.m_Dscpt2.get(desc);
 					else
 						dsptb = desc.getBytes();
+					*/
+					//----20230316 end
 				}
 				//20220701 MatsudairaSyuMe
 				//dsptbsnd = dsptb;

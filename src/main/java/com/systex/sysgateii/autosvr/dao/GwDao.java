@@ -1701,5 +1701,60 @@ public class GwDao {
 		return this.selconn;
 	}
 
+	//20230316 MatsudairaSuMe get one field byte array
+	public byte[] SELONEFLDBary(String fromTblName, String fieldn, String keyname, String keyvalue, boolean verbose)
+			throws Exception {
+		byte[] rtnVal = null;
+		tbsdytblcolumnNames = new Vector<String>();
+		tbsdytblcolumnTypes = new Vector<Integer>();
+		if (fromTblName == null || fromTblName.trim().length() == 0 || fieldn == null || fieldn.trim().length() == 0
+				|| keyname == null || keyname.trim().length() == 0)
+			return rtnVal;
+		try {
+			log.debug("keyname = keyvalue=[{}]",  keyname + "=" + keyvalue);
+			String keyset = "";
+			String[] keynameary = keyname.split(",");
+			String[] keyvalueary = keyvalue.split(",");
+			if (keynameary.length != keyvalueary.length)
+				throw new Exception("given fields keyname can't correspond to keyvfield =>keynames [" + keyname + "] keyvalues [" + keyvalue + "]");
+			else {
+				for (int i = 0; i < keynameary.length; i++)
+					keyset = keyset + keynameary[i] + " = " + keyvalueary[i] + (i == (keynameary.length - 1) ? "" : " and ");
+			}
+
+			if ((keyname.indexOf(',') > -1) && (keyvalue.indexOf(',') > -1)
+					&& (keynameary.length != keyvalueary.length))
+				return rtnVal;
+			String selstr = "SELECT " + fieldn + " FROM " + fromTblName + " where " + keyset;
+			String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
+			log.debug("SELONEFLDBary selstr [{}]-->[{}]",selstr, wowstr);
+			Statement stmt = selconn.createStatement();
+			ResultSet tblrs = stmt.executeQuery(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
+			
+			int type = -1;
+			if (tblrs != null) {
+				ResultSetMetaData rsmd = tblrs.getMetaData();
+				int columnCount = 0;
+				while (columnCount < rsmd.getColumnCount()) {
+					columnCount++;
+					type = rsmd.getColumnType(columnCount);
+					if (verbose)
+						log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
+					tbsdytblcolumnNames.add(rsmd.getColumnName(columnCount));
+					tbsdytblcolumnTypes.add(type);
+				}
+				while (tblrs.next()) {
+					rtnVal = tblrs.getBytes(fieldn);
+				}
+				tblrs.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("error : {}", e.toString());
+		}
+		log.debug("return SELONEFLDBary={}", rtnVal);
+		return rtnVal;
+	}
+
 	//----
 }
