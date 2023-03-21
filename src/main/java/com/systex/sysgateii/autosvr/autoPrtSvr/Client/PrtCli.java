@@ -3796,6 +3796,19 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					this.startIdleMode = false;
 					//--
 					log.debug("DetectPaper [{}][{}][{}]:00請插入存摺...", brws, pasname, "            ");
+					//20230321 MatsudairaSyuMe update status of device table
+					try {
+						String updValue = String.format(updValueptrn,this.remoteHostAddr,
+								this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
+						if (jsel2ins == null)
+							jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+						int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false);
+						log.debug("total {} records update status [{}] ENTERPASSBOOKSIG", row, Constants.STSUSEDACT);
+					} catch (Exception e) {
+						e.printStackTrace();
+						log.error("update state table {} in ENTERPASSBOOKSIG error:{}", PrnSvr.statustbname, e.getMessage());
+					}
+					//---- 20230321 end
 				}
 				//----
 				this.lastCheckTime = System.currentTimeMillis();
