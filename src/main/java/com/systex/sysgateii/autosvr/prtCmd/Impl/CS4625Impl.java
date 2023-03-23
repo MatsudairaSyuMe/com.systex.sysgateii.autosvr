@@ -1388,9 +1388,9 @@ public class CS4625Impl implements Printer {
 					amlog.info("[{}][{}][{}]:01偵測到存摺插入！", brws, "        ", "            ");
 					this.curState = DetectPaper_FINISH;
 					return true;
-				} else if (data[2] == (byte)'A') {
+				} else if (data[2] == (byte)'A' || data[2] == (byte)'0') {  //20230322 MatsudairaSyuMe add for ESC r 0 0 0 accept normalcy data
 					this.curChkState = CheckStatus_START;
-					log.debug("{} {} {} get 'A' curState={} change to curChkState={} ", brws, wsno, "",this.curState,  this.curChkState);
+					log.debug("{} {} {} get 'A' or '0 curState={} change to curChkState={} ", brws, wsno, "",this.curState,  this.curChkState);
 					this.iCnt = 0;
 				} else if (data[2] == (byte)'4') {
 					this.curChkState = CheckStatus_START;
@@ -2076,6 +2076,14 @@ public class CS4625Impl implements Printer {
 	public boolean CheckError(byte[] data) {
 		if (data == null || data.length == 0)
 			return false;
+		//20230322 MatsudairaSyuMe ignore the data not start with ESQ
+		if (data.length > 0 && data[0] != ESQ) {
+			log.warn("{} {} ignore receive data not start with ESC [{}]", brws, wsno, data);
+			data = null;
+			PurgeBuffer();
+			return false;
+		}
+		//----20230322 end
 		// TODO Auto-generated method stub
 		// S4265
 		// ESC 'r' '2' --> DOCUMENT EMPTY nopaper
@@ -2309,15 +2317,15 @@ public class CS4625Impl implements Printer {
 		//----
 		//20230306 MatsudairasyuMe for Normalcy system response ESC r 0 0 0
 		case (byte) '0':
-			if (data[2] == (byte) '0' && data[3] == (byte) '0' && data[4] == (byte) '0') {
-				log.warn("receive Normalcy system response r000 ignoreit");
-				return true;
-			} else {
-				this.curChkState = CheckStatus_START;
-				log.error("receive un-normal code reset priner");
-				pc.close();
-				return false;
-			}
+			//20230322 MatsudairaSyuMe ignore the other data after data.length > 3
+			log.warn("receive Normalcy system response r000 ignoreit");
+			return true;
+			/*20230322 MatsudairaSyuMe ignore the other data after data.length > 3
+			this.curChkState = CheckStatus_START;
+			log.error("receive un-normal code reset priner");
+			pc.close();
+			return false;
+			*/
 		//----
 		default:
 			atlog.info("Error Reset[{}]", String.format(outptrn3, data[2]));
