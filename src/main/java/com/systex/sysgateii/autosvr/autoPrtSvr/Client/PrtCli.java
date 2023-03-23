@@ -328,7 +328,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private boolean startIdleMode = false;
 	private long lastRequestTime = 0l;
 	//----
-	
+
 	public List<ActorStatusListener> getActorStatusListeners() {
 		return actorStatusListeners;
 	}
@@ -1248,6 +1248,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	}
 	private boolean MS_Check(byte[] cussrc) {
 		boolean rtn = true;
+		//20230323 MatsudairaSyuMe
+		try {
+		//----20230323
 		//20200611
 		if (iEnd == 0)
 			this.account = new String(cussrc, 0, TXP.ACTNO_LEN);
@@ -1331,7 +1334,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			return rtn;
 		this.nline = Integer.parseInt(this.cline);
 		this.npage = Integer.parseInt(this.cpage);
-
+		} catch (Exception e) {
+			e.printStackTrace();
+			amlog.info("[{}][{}][{}]:13存摺格式錯誤！", brws, "        ", this.account);
+			atlog.info("MSR format ERROR！！[{}]", account);
+			iFig = 0;
+			rtn = false;
+		}
+		//----20230323
 		return rtn;
 	}
 
@@ -4859,7 +4869,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 //			this.curState = SESSIONBREAK;
 			}
 		}
-//		log.debug("startTime={} now={} durationTime ={}", this.startTime, now, durationTime);
+		// log.debug("now={} durationTime ={}", now, durationTime);
 	}
 	private void updatefepdd() {
 		try {
@@ -5110,6 +5120,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				alartf.createNewFile();
 				FileUtils.writeStringToFile(alartf, "0", Charset.defaultCharset());
 				log.debug("create alart file=[{}] seq=0", alartf.getAbsolutePath());
+				log.info("stable already trigger OSM please restart [{}] asap!!!", this.brws);
+				amlog.info("[{}][{}][{}]:97補摺機太久無回應，開始嘗試重啟連線", brws, "        ", "            ");									
+				close();
 			} else {
 				try {
 					String f = FileUtils.readFileToString(alartf, Charset.defaultCharset());
@@ -5119,13 +5132,14 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						amlog.info("[{}][{}][{}]:97補摺機太久無回應且stable沒有發出警訊，請儘快重啟連線並同時檢查stable程式", brws, "        ", "            ");
 					} else {
 						log.info("stable already trigger OSM please restart [{}] asap!!!", this.brws);
-						amlog.info("[{}][{}][{}]:97補摺機太久無回應，請儘快重啟連線", brws, "        ", "            ");									
+						amlog.info("[{}][{}][{}]:97補摺機太久無回應，請儘快重啟連線", brws, "        ", "            ");
 					}
 				} catch (Exception e) {
 					log.error("ERROR!!! check alart file  error {}", e.getMessage());
 					FileUtils.writeStringToFile(alartf, "0",	Charset.defaultCharset());
 				}
 			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			log.error("error!!! create or open brws alart file error");
