@@ -541,8 +541,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			log.debug("update status table {} error:", PrnSvr.statustbname, e.getMessage());
 		}
 		PeriodDayEndSchedule();  //20211203 MatsudairasyuMe set day end check log schedule
-		//20240314 MatsudairaSyuMe
-		rmAbNomalAlart(this.brws);
+		//20230314 MatsudairaSyuMe, 20230325 add svrid
+		rmAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws);
 		//----
 	}
 	//20210217 MatsudairaSyume for brws name check
@@ -1018,7 +1018,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//20230314 MatsudairaSyuMe writer idle happened !!!,
 				//it is too long that no data had been send to pass book printer
 				log.debug(clientId + " WRITER_IDLE");
-				prtAbNomalAlart(this.brws); //20230314 create or update pass book printer alart file
+				prtAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws); //20230314 create or update pass book printer alart file, 20230325 add svrid
 			} else if (e.state() == IdleState.ALL_IDLE) {
 				log.debug(clientId + " ALL_IDLE");
 			}
@@ -3598,8 +3598,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			this.passSNDANDRCVTLM = false;  //20200714
 			this.changeLightOnLastPage = false; //20220927
 			log.debug("=======================check prtcliFSM init");
-			//20240314 MatsudairaSyuMe
-			rmAbNomalAlart(this.brws);
+			//20230314 MatsudairaSyuMe, 20230325 add svrid
+			rmAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws);
 			//----
 			return;
 		}
@@ -3767,8 +3767,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			this.account = "";
 			this.pasname = "        ";
 			this.changeLightOnLastPage = false; //20220927
-			//20240314 MatsudairaSyuMe
-			rmAbNomalAlart(this.brws);
+			//20230314 MatsudairaSyuMe, 20230325 add svrid
+			rmAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws);
 			//----
 			if ((this.iFirst == 0) && prt.OpenPrinter(!firstOpenConn)) {
 				this.curState = ENTERPASSBOOKSIG;
