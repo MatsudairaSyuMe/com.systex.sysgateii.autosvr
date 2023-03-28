@@ -10,6 +10,7 @@ package com.systex.sysgateii.autosvr.conf;
  */
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -53,8 +54,12 @@ public class DynamicProps {
 
 	public DynamicProps(String string) {
 		Parameters params = new Parameters();
+		//20230328 MatsudairaSyuMe fix "Path Manipulation Vulnerability"
+		string = "rateprtservice.xml";
+		File file = new File(string);
+       //20230328 MatsudairaSyuMe end
 		builder = new ReloadingFileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
-				.configure(params.fileBased().setFile(new File(string)));
+				.configure(params.fileBased().setFile(file)); //20230328 change to use File(name)
 		try {
 			ChkCfg(builder.getConfiguration());
 		} catch (ConfigurationException e) {
