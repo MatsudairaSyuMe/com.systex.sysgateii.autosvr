@@ -3533,6 +3533,31 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				}
 			}
 			log.debug("====================================this.curState=[{}] this.Send_Recv_DATAInq=[{}] this.passSNDANDRCVTLM=[{}] alreadySendTelegram=[{}] isTITA_TOTA_START()=[{}]" , this.curState, this.Send_Recv_DATAInq, this.passSNDANDRCVTLM, alreadySendTelegram , this.isTITA_TOTA_START());
+			//20230331 MatsudairaSyuMe ccheck timeout
+			if (this.curState == RECVTLM && this.Send_Recv_DATAInq == true && this.passSNDANDRCVTLM == true && alreadySendTelegram == false) {
+				long now = System.currentTimeMillis();
+				if ((now - startTime) > responseTimeout) {
+					this.curState = EJECTAFTERPAGEERROR;
+					log.error("2 ERROR!!! received data from host timeout {}", responseTimeout);
+					amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時2 {}", brws, pasname, this.account, responseTimeout);
+					clientSession.sendCANCEL(this.telegramKey.getBytes());
+					trace.error("中心存摺{}資料接收電文逾時2 {} sendCANCEL {} to RouteServer", (ifun == TXP.INQ) ? "補登" : "刪除", responseTimeout, this.telegramKey);
+					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
+					if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
+						log.debug(
+							"{} {} {} AutoPrnCls : --ckeep cheak barcode after Set Signal after check barcode 2 ",
+							brws, catagory, account);
+					} else {
+						log.debug(
+							"{} {} {} AutoPrnCls : --keep cheak barcode after Set Signal after check barcode 2",
+							brws, catagory, account);
+					}
+					rtn = -1;
+					break;
+				} else
+					log.debug("2 not yet received data from host {} dispatcher.isTITA_TOTA_START()={} alreadySendTelegram={}", now - startTime, this.isTITA_TOTA_START(), alreadySendTelegram);				
+			}
+			//20230331 MatsudairaSyuMe end
 		} while (this.iCount < iCon);
 
 		//20200428 add for receive error TOTA  ERROR message set to this.curState == EJECTAFTERPAGEERROR
