@@ -3522,6 +3522,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 										brws, catagory, account);
 							}
 							rtn = -1;
+							//20230406 MatsudairaSyuMe add for Timeout
+							break;
+							//20230406 MattsudairaSyuMe
 						} else {
 							//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 							log.warn("WARN!!! not yet received data from host {} dispatcher.isTITA_TOTA_START()={} alreadySendTelegram={}", now - startTime, this.isTITA_TOTA_START(), alreadySendTelegram);
@@ -3533,8 +3536,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				}
 			}
 			log.debug("====================================this.curState=[{}] this.Send_Recv_DATAInq=[{}] this.passSNDANDRCVTLM=[{}] alreadySendTelegram=[{}] isTITA_TOTA_START()=[{}]" , this.curState, this.Send_Recv_DATAInq, this.passSNDANDRCVTLM, alreadySendTelegram , this.isTITA_TOTA_START());
-			//20230331 MatsudairaSyuMe ccheck timeout
-			if (this.curState == RECVTLM && this.Send_Recv_DATAInq == true && this.passSNDANDRCVTLM == true && alreadySendTelegram == false) {
+			//20230331 MatsudairaSyuMe check timeout
+			//20230406 MatudiraSyuMe mark Up for always check timeout
+			//if (this.curState == RECVTLM && this.Send_Recv_DATAInq == true && this.passSNDANDRCVTLM == true && alreadySendTelegram == false) {
 				long now = System.currentTimeMillis();
 				if ((now - startTime) > responseTimeout) {
 					this.curState = EJECTAFTERPAGEERROR;
@@ -3555,8 +3559,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					rtn = -1;
 					break;
 				} else
-					log.debug("2 not yet received data from host {} dispatcher.isTITA_TOTA_START()={} alreadySendTelegram={}", now - startTime, this.isTITA_TOTA_START(), alreadySendTelegram);				
-			}
+					log.debug("2 not yet received data from host Waiting <<{}>>", now - startTime);				
+			//20230406 MatsudairaSyuMe Mark Up for always check timeout }
 			//20230331 MatsudairaSyuMe end
 		} while (this.iCount < iCon);
 
