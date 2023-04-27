@@ -528,13 +528,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				jsel2ins.SELTBSDY_R(PrnSvr.svrtbsdytbname, selfld, PrnSvr.svrtbsdytbmkey, "?", true);  //20220613 MatsudairaSyuMe
 				jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, true);
 			}
-//			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 change this.brws to "'" + this.brws + "'"
-			int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false);  //20220613 MatsudairaSyuMe
+			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 change this.brws to "'" + this.brws + "'"
+//20230427			int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false);  //20220613 MatsudairaSyuMe
 			//20210827 MatsudairaSyuMe set to current mode to on init Constants.STSNOTUSED
 			log.debug("total {} records update  status [{}]", row, Constants.STSNOTUSED);
 			//----
-//20220525			jsel2ins.CloseConnect();
-//			jsel2ins = null;
+			jsel2ins.CloseConnect();
+			jsel2ins = null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -837,12 +837,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
 		if (jsel2ins == null)
 			jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-//		int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
-		int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false);//20220613 MatsudairaSyuMe
+		int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
+//20240427		int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false);//20220613 MatsudairaSyuMe
 //----
 		log.debug("total {} records update status [{}]", row, Constants.STSUSEDACT);
-//20220525		jsel2ins.CloseConnect();
-//		jsel2ins =  null;
+		jsel2ins.CloseConnect();  //20230427
+		jsel2ins =  null;
 		prtcliFSM(!firstOpenConn);
 	}
 
@@ -862,11 +862,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDINACT);
 		if (jsel2ins == null)
 			jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-		//int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid); //20220525 MatsudairasyuMe change this.brws to "'" + this.brws + "'"
-		int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false); //20220613 MatsudairasyuMe
+		    int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid); //20220525 MatsudairasyuMe change this.brws to "'" + this.brws + "'"
+//20230427		int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false); //20220613 MatsudairasyuMe
 		log.debug("total {} records update  status [{}]", row, Constants.STSUSEDINACT);
-//20220525		jsel2ins.CloseConnect();
-//		jsel2ins = null;
+		jsel2ins.CloseConnect(); //20230427
+		jsel2ins = null;
 		this.curSockNm = "";
 		this.clientMessageBuf.clear();
 		prtcliFSM(firstOpenConn);
@@ -950,13 +950,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		try {
 			if (jsel2ins == null)
 				jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-//			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid); //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
-			int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false); //20220613 MatsudairaSyuMe
+			int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid); //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
+//20240327			int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey, "'" + this.brws + "'" + "," + PrnSvr.svrid, false); //20220613 MatsudairaSyuMe
 			//20210827 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED otherwise Constants.STSUSEDINACT
 			log.debug("total {} records update  status [{}]", row, (getCurMode() == EventType.SHUTDOWN || getCurMode() == EventType.RESTART) ? Constants.STSNOTUSED : Constants.STSUSEDINACT );
 			//----
-//20220525			jsel2ins.CloseConnect();
-//			jsel2ins = null;
+			jsel2ins.CloseConnect();
+			jsel2ins = null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -3835,7 +3835,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					this.startIdleMode = false;
 					//--
 					log.debug("DetectPaper [{}][{}][{}]:00請插入存摺...", brws, pasname, "            ");
-					//20230321 MatsudairaSyuMe update status of device table
+					/*//20230321 MatsudairaSyuMe update status of device table
 					try {
 						String updValue = String.format(updValueptrn,this.remoteHostAddr,
 								this.rmtaddr.getPort(),this.localHostAddr, this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
@@ -3847,14 +3847,14 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						e.printStackTrace();
 						log.error("update state table {} in ENTERPASSBOOKSIG error:{}", PrnSvr.statustbname, e.getMessage());
 					}
-					//---- 20230321 end
+					//---- 20230321 end*/
 				}
 				//----
 				this.lastCheckTime = System.currentTimeMillis();
 				//20220429 MatsudairaSyuMe use fix Request command Time
 				this.lastRequestTime = this.lastCheckTime;
 				//----
-				/* 20200427 mark up for  performance
+				/* 20200427 mark up for  performance*/
 //20200910 change to use UPSERT
 //				String updValue = String.format(updValueptrn,this.brws, this.rmtaddr.getAddress().getHostAddress(),
 //						this.rmtaddr.getPort(),this.localaddr.getAddress().getHostAddress(), this.localaddr.getPort(), this.typeid, Constants.STSUSEDACT);
@@ -3872,7 +3872,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					e.printStackTrace();
 					log.error("update state table {} error:{}", PrnSvr.statustbname, e.getMessage());
 				}
-				20200427  */
+				/*20200427  */
 //20200925				prt.DetectPaper(firstOpenConn, 0);
 				prt.DetectPaper(firstOpenConn, responseTimeout);
 			}
