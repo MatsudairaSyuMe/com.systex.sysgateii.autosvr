@@ -236,8 +236,21 @@ public class PrnSvr implements MessageListener<byte[]> {
 							log.info("initial delete SVRID devcmdtbl [{}]", jdawcon.DELETETB_R(PrnSvr.cmdtbname, "SVRID,BRWS", "?,?", true));
 							//----
 						}
+						/* 20230517 MatsudairaSyuMe mark up for closing connection after access db 
 						if (cmdhiscon == null)
 							cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+						*/
+						// 20230517 MatsudairaSyuMe add for closing connection after access db
+						if (jdawcon != null) {
+							try {
+								jdawcon.CloseConnect();
+							} catch (Exception any) {
+								any.printStackTrace();
+								log.error("jdawcon close error ignore");
+							}
+							jdawcon = null;
+						}
+						// 20230517 ----
 					// ----
 					while (true) {
 						log.info("monitorThread");
@@ -253,11 +266,13 @@ public class PrnSvr implements MessageListener<byte[]> {
 								selkey = PrnSvr.cmdtbsearkey;
 							}
 							try {
-								// 20220607 MatsydairaSyuMe jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-								log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, PrnSvr.cmdtbsearkey);
-								//20220613 MatsudairasyuMe Change to use reused prepared statement
-								//String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
-								String[] cmd = jdawcon.SELMFLD_R(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
+								// 20220607 MatsydairaSyuMe, 20230517 take out mark for closing connection after access db 
+								jdawcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+								// 20230517 take out mark
+								log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, PrnSvr.svrid);
+								//20220613 MatsudairasyuMe Change to use reused prepared statement, 20230517 take out mark for closing connection after access db 
+								String[] cmd = jdawcon.SELMFLD(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);
+								//String[] cmd = jdawcon.SELMFLD_R(PrnSvr.cmdtbname, selfld, selkey, PrnSvr.svrid, false);20230517 mark up for closing connection after access db 
 								if(cmd != null && cmd.length > 0)
 									for (String s: cmd) {
 										s = s.trim();
@@ -279,10 +294,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 													log.debug("brws=[{}] keep in cmd table longer then 3 minutes will be cleared",cmdary[0]);
 													if (cmdary[1].trim().length() > 0) {
 														log.debug("brws=[{}] cmd[{}] not execute will be marked fail in cmdhis",cmdary[0], cmdary[1]);
-														/*20220607 MatsudairaSyuMe
+														/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 														if (cmdhiscon == null)
 															cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-														*/
+														/* 20230517 take out mark*/
 														//20201119
 														String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
 														SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -294,13 +309,27 @@ public class PrnSvr implements MessageListener<byte[]> {
 															chksno[0] = "-1";
 														}
 														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO", failfldvals, PrnSvr.devcmdhistbsearkey, chksno[0], false, false);
-														/*20220607 MatsudairaSyuMe
+														/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 														cmdhiscon.CloseConnect();
 														cmdhiscon = null;
-														*/
+														/* 2023016 take out mark */
 														sno = null;
 													}
+													/*20230517 mark up for closing connection after access db 
 													jdawcon.DELETETB_R(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'", false);  //20220613 change to use reused statement
+													*/
+													jdawcon.DELETETB(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'");
+													// 20230517 MatsudairaSyuMe add for closing connection after access db
+													if (jdawcon != null) {
+														try {
+															jdawcon.CloseConnect();
+														} catch (Exception any) {
+															any.printStackTrace();
+															log.error("jdawcon close error ignore");
+														}
+														jdawcon = null;
+													}
+													// 20230517 ----
 													continue;
 												}
 												//----
@@ -309,9 +338,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 												String curcmd = cmdary[1].trim().toUpperCase();
 												//20201026 for cmdhis
 												if (curcmd != null && curcmd.length() > 0) {
-													/*20220607 MatsudairaSyuMe
+													/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 													cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-													*/
+													/* 20240516 take out mark */
 													if (getMe().nodeList != null && getMe().nodeList.size() > 0) {
 														if (getMe().nodeList.containsKey(cmdary[0])) {
 															//20210204, 20210714 MatsudairaSyuMe Log Forging
@@ -344,6 +373,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 																	if (!restartAlreadyStop) {
 																		sno = null; // prepared to start new node
 																		restartAlreadyStop = true;
+																		sleep(4);  //20230517 MatsudairasyuMe PrtCli add 3 second delay wait time
 																	} else {
 																		sno = new String[1];
 																		sno[0] = chksno[i];																																				
@@ -391,6 +421,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 												switch (selCmd) {//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 												case Constants.START://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 													//20201006, 20201026 cmdhis, 20220905 change function name to create Nodefun
+													sleep(4);  //20230517 MatsudairasyuMe PrtCli add 3 second delay wait time
 													createNodefun(cmdary[0]);
 													//----
 													if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
@@ -462,8 +493,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 														getMe().nodeList.get(cmdary[0]).onEvent(getMe().nodeList.get(cmdary[0]).getId(), EventType.RESTART, sno[0]);
 														log.debug("cmd object node=[{}] stop session getCurMode=[{}]", getMe().nodeList.get(cmdary[0]).getId(), getMe().nodeList.get(cmdary[0]).getCurMode());
 													} else {
-														//start to create new node and start
-														log.debug("start to create new node and start sno=[{}]", sno[0]);
 														createNodefun(cmdary[0]);  //20220905 change function name to createNodefun
 														//----
 														if (getMe().nodeList.get(cmdary[0]).getCurState() == -1) {
@@ -504,7 +533,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 											log.error("!!!current row cmd error"); //chks
 										}
 									}
-								/*20220607 MatsudairaSyuMe
+								/*20220607 MatsudairaSyuMe, 20230517 MatsudairaSyuMe take out mark for closing connection after access db */
 								jdawcon.CloseConnect();
 								jdawcon = null;
 								//20201026
@@ -512,8 +541,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 									cmdhiscon.CloseConnect();
 								cmdhiscon = null;
 								//----
-								 * 
-								 */
+								 /*20230517 take out mark*/ 
 							} catch (Exception e) {
 								e.printStackTrace();
 								log.info("monitorThread read database error [{}]", e.toString());

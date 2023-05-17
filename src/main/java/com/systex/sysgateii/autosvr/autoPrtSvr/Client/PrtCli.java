@@ -3685,10 +3685,13 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						//----
 						if (jsel2ins == null)
 							jsel2ins = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-//						int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey,
-//							"'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
+						//20230517 MatsudairaSyuMe take out the mark for connect once
+						int row = jsel2ins.UPSERT(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey,
+							"'" + this.brws + "'" + "," + PrnSvr.svrid);  //20220525 MatsudairaSyuMe change this.brws to "'" + this.brws + "'"
+						/*20230517 MatsudairaSyuMe mark up for connect once
 						int row = jsel2ins.UPSERT_R(PrnSvr.statustbname, PrnSvr.statustbfields, updValue, PrnSvr.statustbmkey,
 								"'" + this.brws + "'" + "," + PrnSvr.svrid, false);  //20220613 MatsudairaSyuMe
+						*/
 						//20210826 MatsudairaSyuMe if current mode CurMode SHUTDOWN/RESTART device stat set to Constants.STSNOTUSED or Constants.STSUSEDINACT
 						log.debug("total {} records update status [{}]", row, Constants.STSNOTUSED);
 						//----
@@ -4923,14 +4926,15 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			e.printStackTrace();
 			log.error("update state table {} error:{}", PrnSvr.svrtbsdytbname, e.getMessage());
 		} finally {
-/*20220525			try {
-			jsel2ins.CloseConnect();
+/*20220525 ,20230517 MatsudairaSyuMe take out mark for connect once*/
+			try {
+				jsel2ins.CloseConnect();
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error("close connect to table {} error:{}", PrnSvr.svrtbsdytbname, e.getMessage());
 			}
 			jsel2ins = null;
-			*/
+			/* 20230517 MatsudairaSyuMe take out mark for connect once */
 		}
 		return;
 	}

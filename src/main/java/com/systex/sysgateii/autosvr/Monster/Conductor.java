@@ -162,18 +162,32 @@ public class Conductor implements Runnable {
 				log.info("initial delete SVRID svrcmdtbl [{}]", jdawcon.DELETETB_R(cmdtbname, "SVRID", "?", true));
 				//----
 			}
+			/* 20230517 MatsudairaSyuMe mark up for closing connection after access db 
 			if (cmdhiscon == null)
 				cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+			*/
+			// 20230517 MatsudairaSyuMe add for closing connection after access db
+			if (jdawcon != null) {
+				try {
+					jdawcon.CloseConnect();
+				} catch (Exception any) {
+					any.printStackTrace();
+					log.error("jdawcon close error ignore");
+				}
+				jdawcon = null;
+			}
+			// 20230517 ----
 		// ----
 			while (true) {
 				log.info("monitorThread");
 				try {
-					// 20220607 MatsydairaSyuMe jdawcon = new GwDao(dburl, dbuser, dbpass, false);
+					// 20220607 MatsydairaSyuMe, 20230517 take out mark for closing connection after access db 
+					jdawcon = new GwDao(dburl, dbuser, dbpass, false);
 					log.debug("current selfld=[{}] selkey=[{}] cmdtbsearkey=[{}]", selfld, selkey, cmdtbsearkey);
-					//20220613 MatsudairasyuMe Change to use reused prepared statement
-					//String[] cmd = jdawcon.SELMFLD(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
+					//20220613 MatsudairasyuMe Change to use reused prepared statement, 20230517 take out mark for closing connection after access db 
+					String[] cmd = jdawcon.SELMFLD(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
 //					log.debug("current connect [{}]",jdawcon.getConn().isValid(1));
-					String[] cmd = jdawcon.SELMFLD_R(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);
+					//String[] cmd = jdawcon.SELMFLD_R(cmdtbname, selfld, selkey, "'" + getSvrip() + "'", false);20230517 mark up for closing connection after access db
 					//----
 					if (cmd != null && cmd.length > 0)
 						for (String s : cmd) {
@@ -202,9 +216,10 @@ public class Conductor implements Runnable {
 																: cmdary[1]);
 												log.debug(logStr);
 												/*
-												 * 20220607 MatsudairaSyuMe if (cmdhiscon == null) cmdhiscon = new
-												 * GwDao(dburl, dbuser, dbpass, false);
-												 */
+												 * 20220607 MatsudairaSyuMe/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
+												if (cmdhiscon == null)
+													cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+												 /* 20230517 take out mark for closing connection after access db */
 												String[] chksno = cmdhiscon.SELMFLD(svrcmdhistbname, "SNO",
 														"SVRID,CMD,CMDCREATETIME",
 														"'" + cmdary[0] + "','" + cmdary[1] + "','" + cmdary[2] + "'",
@@ -221,11 +236,27 @@ public class Conductor implements Runnable {
 												sno = cmdhiscon.INSSELChoiceKey(svrcmdhistbname, svrcmdhistbfields,
 														failfldvals, svrcmdhistbsearkey, chksno[0], false, false);
 												/*
-												 * 20220607 MatsudairaSyuMe cmdhiscon.CloseConnect(); cmdhiscon = null;
-												 */
+												 * 20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
+												 cmdhiscon.CloseConnect();
+												 cmdhiscon = null;
+												/*20230517 take out mark for closing connection after access db */
 												sno = null;
 											}
+											/*20230517 mark up for closing connection after access db 
 											jdawcon.DELETETB_R(cmdtbname, "SVRID", cmdary[0], false);  //20220613 change to use reused statement
+											*/
+											jdawcon.DELETETB(cmdtbname, "SVRID", cmdary[0]);
+											// 20230517 MatsudairaSyuMe add for closing connection after access db
+											if (jdawcon != null) {
+												try {
+													jdawcon.CloseConnect();
+												} catch (Exception any) {
+													any.printStackTrace();
+													log.error("jdawcon close error ignore");
+												}
+												jdawcon = null;
+											}
+											// 20230517 ----
 											continue;
 										}
 										// ----
@@ -235,9 +266,9 @@ public class Conductor implements Runnable {
 										// svrcmdhis
 										if (curcmd != null && curcmd.length() > 0) {
 											/*
-											 * 20220607 MatsudairaSyuMe cmdhiscon = new GwDao(dburl, dbuser, dbpass,
-											 * false);
-											 */
+											 * 20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
+											cmdhiscon = new GwDao(dburl, dbuser, dbpass, false);
+											/*20230517 take out mark for closing connection after access db */
 											if (Conductor.svridnodeMap != null && Conductor.svridnodeMap.size() > 0) {
 												if (Conductor.svridnodeMap.containsKey(cmdary[0])) {
 													// 20210204,20210427 MatsudairaSyuMe Log Forging remove final
@@ -315,9 +346,10 @@ public class Conductor implements Runnable {
 													log.error("sno null");
 											}
 											/*
-											 * 20220607 MatsudairaSyuMe //---- //20210302 MatsudairaSyuMe
-											 * cmdhiscon.CloseConnect(); cmdhiscon = null; //----
-											 */
+											 * 20220607 MatsudairaSyuMe //---- //20210302 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
+											cmdhiscon.CloseConnect();
+											cmdhiscon = null; //----
+											/* 20230517 take out mark for closing connection after access d*/
 										}
 										// ----
 										// log.debug("table sno=[{}] createNode=[{}] restartAlreadyStop=[{}]", (sno ==
@@ -328,9 +360,10 @@ public class Conductor implements Runnable {
 												(sno == null ? 0 : sno[0]), createNode, restartAlreadyStop);
 										log.debug(logStr);
 										/*
-										 * 20220607 MatsudairaSyuMe //20210302 MatsudairaSyuMe if (cmdhiscon == null)
-										 * cmdhiscon = new GwDao(dburl, dbuser, dbpass, false); //----
-										 */
+										 * 20220607 MatsudairaSyuMe //20210302 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
+										 if (cmdhiscon == null)
+											 cmdhiscon = new GwDao(dburl, dbuser, dbpass, false); //----
+										 /* , 20230517 take out mark for closing connection after access db */
 										// 20210413 MatsudairaSyuMe prevent Null Dereference
 										if (sno == null) {
 											sno = new String[1];
@@ -480,9 +513,11 @@ public class Conductor implements Runnable {
 											break;
 										}
 										/*
-										 * 20220607 MatsudairaSyuMe //20210302 MatsudairaSyuMe if (cmdhiscon != null)
-										 * cmdhiscon.CloseConnect(); cmdhiscon = null;
-										 */
+										 * 20220607 MatsudairaSyuMe //20210302 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
+										if (cmdhiscon != null)
+											cmdhiscon.CloseConnect();
+										cmdhiscon = null;
+										 /* 20230517 take out mark for closing connection after access db */
 										// ----
 									} else {
 										// 20210204 MatsidairaSyuMe
@@ -503,9 +538,14 @@ public class Conductor implements Runnable {
 							}
 						}
 					/*
-					 * 20220607 MatsudairaSyuMe //20210302---- jdawcon.CloseConnect(); jdawcon =
-					 * null; if (cmdhiscon != null) cmdhiscon.CloseConnect(); cmdhiscon = null;
-					 */
+					 * 20220607 MatsudairaSyuMe, 20230517 MatsudairaSyuMe take out mark for closing connection after access db */
+					   //20210302---- 
+					   jdawcon.CloseConnect();
+					   jdawcon = null;
+					   if (cmdhiscon != null)
+						   cmdhiscon.CloseConnect();
+					   cmdhiscon = null;
+					 /*20230517 MatsudairaSyuMe take out mark for closing connection after access db */
 				} catch (Exception e) {
 					e.printStackTrace();
 					log.error("parse command error:{}", e.getMessage());
