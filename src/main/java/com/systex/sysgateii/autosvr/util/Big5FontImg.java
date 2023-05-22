@@ -1,5 +1,6 @@
 package com.systex.sysgateii.autosvr.util;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -29,6 +30,15 @@ public class Big5FontImg {
 			throw new IOException("filename null or length == 0");
 		keyname = filenamekey;
 		glyphname = filename;
+		//20230522 MatsudairaSyuMe change the tns path from /biscon/tns to /tns
+		File testf = new File(keyname);
+		if(!testf.exists())
+			throw new IOException(String.format("file %s not exist", keyname));
+		testf = new File(glyphname);
+		if(!testf.exists())
+			throw new IOException(String.format("file %s not exist", glyphname));
+		testf = null;
+		//----
 		/*
 		try {
 			// create new file input stream
