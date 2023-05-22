@@ -328,6 +328,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private boolean startIdleMode = false;
 	private long lastRequestTime = 0l;
 	//----
+	// 20230522 MasudairaSyuMe register last time read data from pass book print
+	private long lastTimeFromPrt = 0l;
 
 	public List<ActorStatusListener> getActorStatusListeners() {
 		return actorStatusListeners;
@@ -603,8 +605,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//----
 				aslog.info(String.format("DIS  %s[%04d]:", this.curSockNm, 0));
 				this.curSockNm = "";
+				// 20230522 MasudairaSyuMe register last time read data from pass book print
+				this.lastTimeFromPrt = 0l;
 				// 20201004
 				channel_ = null;
+				// 20230522 MasudairaSyuMe register last time read data from pass book print
+				this.lastTimeFromPrt = 0l;
 				Sleep(3000);  //20230309 slower the reconnect time make sure the passbook printer as already reset
 				// 20210415 MatsudairaSyuMe
 				if (getCurMode() != EventType.SHUTDOWN && getCurMode() != EventType.RESTART) {
@@ -666,6 +672,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							if (curState == SESSIONBREAK && !showStateMsg) {
 								amlog.info("[{}][{}][{}]:99補摺機斷線，請檢查線路！", brws, "        ", "            ");
 								showStateMsg = true;
+								// 20230522 MasudairaSyuMe register last time read data from pass book print
+								lastTimeFromPrt = 0l;
 							}
 							MDC.put("WSNO", brws.substring(3));
 							MDC.put("PID", pid);
@@ -754,11 +762,15 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 	public void connectionLost() {
 		log.debug("connectionLost()");
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 	}
 
 	public void connectionEstablished() {
 		log.debug("connectionEstablished()");
 		this.clientMessageBuf.clear();
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 	}
 
 	@Override
@@ -843,6 +855,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		log.debug("total {} records update status [{}]", row, Constants.STSUSEDACT);
 		jsel2ins.CloseConnect();  //20230427
 		jsel2ins =  null;
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 		prtcliFSM(!firstOpenConn);
 	}
 
@@ -869,6 +883,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		jsel2ins = null;
 		this.curSockNm = "";
 		this.clientMessageBuf.clear();
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 		prtcliFSM(firstOpenConn);
 	}
 
@@ -876,6 +892,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	public void channelRead(ChannelHandlerContext ctx, Object msg) {
 		log.debug(clientId + " channelRead");
 		try {
+			this.lastTimeFromPrt = System.currentTimeMillis();// 20230522 MasudairaSyuMe register last time read data from pass book printer
 			if (msg instanceof ByteBuf) {
 				ByteBuf buf = (ByteBuf) msg;
 				if (buf.isReadable() && !buf.hasArray()) {
@@ -934,6 +951,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
 		log.debug(clientId + " channelRegister");
 		prt.getIsShouldShutDown().set(false);  //20200719
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 		super.channelRegistered(ctx);
 	}
 
@@ -962,13 +981,16 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			e.printStackTrace();
 			log.debug("update status table {} error:", PrnSvr.statustbname, e.getMessage());
 		}
-
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 		ctx.close();
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		log.debug(clientId + " exceptionCaught=" + cause.getMessage());
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 		if (cause instanceof ConnectException) {
 			publishInactiveEvent();
 			ctx.close();
@@ -3603,6 +3625,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		this.passSNDANDRCVTLM = false;  //20200714
 		SetSignal(firstOpenConn, firstOpenConn, "1100000000", "0000000000");
 		log.debug("{}=====resetPassBook prtcliFSM", this.curState);
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		this.lastTimeFromPrt = 0l;
 		return;
 	}
 
@@ -3630,6 +3654,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			//20230314 MatsudairaSyuMe, 20230325 add svrid
 			rmAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws);
 			//----
+			// 20230522 MasudairaSyuMe register last time read data from pass book print
+			this.lastTimeFromPrt = 0l;
 			return;
 		}
         //20200616 add this.lastState and check duration time
@@ -3776,6 +3802,16 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			} else
 				log.info("CurMode {} curState == [{}] prepare to shutdown", getCurMode(), this.curState);
 		}
+		// 20230522 MasudairaSyuMe register last time read data from pass book print
+		if ((this.curState >= ENTERPASSBOOKSIG) && ((System.currentTimeMillis() - this.lastTimeFromPrt) > (this.responseTimeout / 2))) {
+			amlog.info("[{}][{}][{}]:97補摺機超過{}秒無回應，開始嘗試重啟連線", brws, "        ", "            ", (this.responseTimeout / 2000));									
+			log.error("[{}][{}][{}]補摺機超過{}秒無回應，開始嘗試重啟連線", brws, "        ", "            ", (this.responseTimeout / 2000));									
+			close();
+			return;
+		}/* else
+			amlog.info("[{}][{}][{}]:97-1補摺機 {} 回應MAX {}", brws, "        ", "            ", (System.currentTimeMillis() - this.lastTimeFromPrt), (this.responseTimeout / 2));									
+			*/
+		//----20230522
 		//----
 		switch (this.curState) {
 		case SESSIONBREAK:
