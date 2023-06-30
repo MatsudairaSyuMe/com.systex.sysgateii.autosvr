@@ -107,6 +107,10 @@ public class RouteConnection {
 				e.printStackTrace();
 				log.error("Can't send message to RouteSvrHandler");
 			}
+			//20230630 MatsudairaSyuMe release
+			finally {
+				buf.release();
+			}
 			//----
 			sndmsg = null;
 			buf = null;
@@ -328,7 +332,7 @@ public class RouteConnection {
 					} else
 						log.debug("clientMessageBuf.readableBytes lower to 2 bytes wait next incomming");
 					//----
-				}
+				}  buf.release(); //20240630 MatsudairaSyume release()
 			}
 
 			@Override

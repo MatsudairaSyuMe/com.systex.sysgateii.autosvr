@@ -197,7 +197,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 //							log.debug("adjustment clientMessageBuf readerindex ={}" + clientMessageBuf.readableBytes());
 //						}
 					clientMessageBuf.writeBytes(buf);
-					buf = null; //20220819 clean buffer
+//20230630 MatsudairaSyuMe for buf release					buf = null; //20220819 clean buffer
 					log.debug("clientMessageBuf.readableBytes={}",clientMessageBuf.readableBytes());
 					//20211209 MatsudairaSyuMe take off all the data from  clientMessageBuf and convert to TOTA telegram
 					// change from if to while
@@ -295,7 +295,13 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 									sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
 									System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
 									log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
-									ot.getSourceHandlerCtx().writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
+									//20230630 MatsudairaSyuMe release ByteBuf
+//									ot.getSourceHandlerCtx().writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
+									ByteBuf rsp = Unpooled.wrappedBuffer(sndmsg);
+									ot.getSourceHandlerCtx().writeAndFlush(rsp.retain()).sync();
+									rsp.release();
+									rsp = null;
+									//20230630 MatsudairaSyuMe
 									sndmsg = null;
 									resultmsg = null;
 								} else {
@@ -327,6 +333,10 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 					}
 				} else // if
 					log.warn("not readable ByteBuf");
+				//20230630 MatsudairaSyuMe release
+				buf.release();
+				buf = null;
+				//20230630 ----
 			} else
 				log.error("not ByteBuf message");
 		} catch (Exception e) {

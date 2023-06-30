@@ -588,7 +588,16 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			cnvStr = null;
 			//----
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(msg);
-			channel_.writeAndFlush(buf);
+			//20230630 MatudairaSyuMe ByteBuf release
+			try {
+//				channel_.writeAndFlush(buf));
+				channel_.writeAndFlush(buf.retain()).sync();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+			buf.release();
+			}
 		} else {
 			throw new IOException("Can't send message to inactive connection");
 		}
