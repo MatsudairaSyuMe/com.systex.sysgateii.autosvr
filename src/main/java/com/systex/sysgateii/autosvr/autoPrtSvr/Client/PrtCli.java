@@ -588,7 +588,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			cnvStr = null;
 			//----
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(msg);
-			channel_.writeAndFlush(buf);
+			//channel_.writeAndFlush(buf);
+			//20230703 MatsudairaSyume make sure for write and flush synchronize mode an
+			try {
+				channel_.writeAndFlush(buf.retain()).sync();
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("Can't send message to Passbook Printer");
+			}
+			buf.release();
+			buf = null;
+			//20230703 MatsudairaSyuMe make sure for no direct memory leak
 		} else {
 			throw new IOException("Can't send message to inactive connection");
 		}
