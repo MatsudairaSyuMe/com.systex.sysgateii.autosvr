@@ -191,6 +191,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						MDC.put("LOCAL_ADDRESS", (String) localsock.getAddress().toString());
 						MDC.put("LOCAL_PORT", String.valueOf(localsock.getPort()));
 
+<<<<<<< HEAD
 						log.debug("readableBytes={} barray={}", size, buf.hasArray());
 						// it is long raw telegram
 						//20200105
@@ -204,6 +205,22 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 						//buf = null; //20220819 clean buffer
 						//----20230703
 						log.debug("clientMessageBuf.readableBytes={}",clientMessageBuf.readableBytes());
+=======
+					log.debug("readableBytes={} barray={}", size, buf.hasArray());
+					// it is long raw telegram
+					//20200105
+					log.debug("readableBytes={} barray={}", buf.readableBytes(), buf.hasArray());
+//						if (clientMessageBuf.readerIndex() > (clientMessageBuf.capacity() / 2)) {
+//							clientMessageBuf.discardReadBytes();
+//							log.debug("adjustment clientMessageBuf readerindex ={}" + clientMessageBuf.readableBytes());
+//						}
+					clientMessageBuf.writeBytes(buf);
+//20230630 MatsudairaSyuMe for buf release					buf = null; //20220819 clean buffer
+					log.debug("clientMessageBuf.readableBytes={}",clientMessageBuf.readableBytes());
+					//20211209 MatsudairaSyuMe take off all the data from  clientMessageBuf and convert to TOTA telegram
+					// change from if to while
+					while (clientMessageBuf.readableBytes() > 47) {
+>>>>>>> 5be8ed2b3d7b192497ff750d7698c9af417a3ebb
 						//20211209 MatsudairaSyuMe take off all the data from  clientMessageBuf and convert to TOTA telegram
 						// change from if to while
 						while (clientMessageBuf.readableBytes() > 47) {
@@ -293,6 +310,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 										log.debug("new incoming telegram put into map table by telegramKey [{}]", telegramKey);
 									}
 									log.debug("new incoming telegram map table size=[{}]", Constants.incomingTelegramMap.size());*/
+<<<<<<< HEAD
 										//log.debug("new incoming telegram map table size=[{}] send back to RouteConnection", Constants.incomingTelegramMap.size());
 										byte[] sndmsg = new byte [resultmsg.length + 3];  //total send msgary is 2 byte length + COMM_STATE.TRANSF.Getid() + msg
 										sndmsg[0] = (byte) (sndmsg.length / 256);
@@ -327,6 +345,33 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 										trace.error("!!!! receive TOTA-telegramKey=[{}] in outgoingTelegramKeyMap time=[{}] already expired [{}] drop it !!!", telegramKey, lastTime, PrnSvr.setResponseTimeout);
 										//20220819 abolish incomingTelegramMap
 										/*
+=======
+									//log.debug("new incoming telegram map table size=[{}] send back to RouteConnection", Constants.incomingTelegramMap.size());
+									byte[] sndmsg = new byte [resultmsg.length + 3];  //total send msgary is 2 byte length + COMM_STATE.TRANSF.Getid() + msg
+									sndmsg[0] = (byte) (sndmsg.length / 256);
+									sndmsg[1] = (byte) (sndmsg.length % 256);
+									sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
+									System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
+									log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
+									//20230630 MatsudairaSyuMe release ByteBuf
+//									ot.getSourceHandlerCtx().writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
+									ByteBuf rsp = Unpooled.wrappedBuffer(sndmsg);
+									ot.getSourceHandlerCtx().writeAndFlush(rsp.retain()).sync();
+									rsp.release();
+									rsp = null;
+									//20230630 MatsudairaSyuMe
+									sndmsg = null;
+									resultmsg = null;
+								} else {
+									SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
+//									String lastTime = df.format(ot);
+									String lastTime = df.format(ot.getOutTime());
+									log.error("!!!! receive TOTA-telegramKey=[{}] in outgoingTelegramKeyMap time=[{}] already expired [{}] drop it !!!", telegramKey, lastTime, PrnSvr.setResponseTimeout);
+									//20220819 MatsudairaSyuMe
+									trace.error("!!!! receive TOTA-telegramKey=[{}] in outgoingTelegramKeyMap time=[{}] already expired [{}] drop it !!!", telegramKey, lastTime, PrnSvr.setResponseTimeout);
+									//20220819 abolish incomingTelegramMap
+									/*
+>>>>>>> 5be8ed2b3d7b192497ff750d7698c9af417a3ebb
 									if (Constants.incomingTelegramMap.containsKey(telegramKey)) {
 										Constants.incomingTelegramMap.remove(telegramKey);
 										log.error("!!!! receive TOTA-telegramKey=[{}] also remove from incomingTelegramMap", telegramKey);
@@ -345,6 +390,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 							}
 							//----
 						}
+<<<<<<< HEAD
 					} else // if
 						log.warn("not readable ByteBuf");
 				} else
@@ -352,6 +398,28 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error(e.getMessage());
+=======
+						//----
+					}
+				} else // if
+					log.warn("not readable ByteBuf");
+				//20230630 MatsudairaSyuMe release
+				buf.release();
+				buf = null;
+				//20230630 ----
+			} else
+				log.error("not ByteBuf message");
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error(e.getMessage());
+		}
+		//20220819 add finally processing
+		finally {
+			if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey)) {
+				log.warn("there some exception break the receive program drop the register element for telegramKey=[{}] from outgoingTelegramKeyMap!!!", telegramKey);
+				Constants.outgoingTelegramKeyMap.remove(telegramKey);
+				telegramKey = null;
+>>>>>>> 5be8ed2b3d7b192497ff750d7698c9af417a3ebb
 			}
 			//20220819 add finally processing
 			finally {

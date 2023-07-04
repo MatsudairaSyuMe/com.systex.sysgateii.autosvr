@@ -107,10 +107,16 @@ public class RouteConnection {
 				e.printStackTrace();
 				log.error("Can't send message to RouteSvrHandler");
 			}
+<<<<<<< HEAD
 			//20230703 MatsudairaSyuMe make sure for no direct memory leak
 			finally {
 				buf.release();
 				buf = null;
+=======
+			//20230630 MatsudairaSyuMe release
+			finally {
+				buf.release();
+>>>>>>> 5be8ed2b3d7b192497ff750d7698c9af417a3ebb
 			}
 			//----
 			sndmsg = null;
@@ -341,12 +347,16 @@ public class RouteConnection {
 					} else
 						log.debug("clientMessageBuf.readableBytes lower to 2 bytes wait next incomming");
 					//----
+<<<<<<< HEAD
 				}
 				//20230703 MatsudairaSyuMe use direct memory Leak check
 				} finally {
 					io.netty.util.ReferenceCountUtil.release(msg);
 				}
 				//----20230703
+=======
+				}  buf.release(); //20240630 MatsudairaSyume release()
+>>>>>>> 5be8ed2b3d7b192497ff750d7698c9af417a3ebb
 			}
 
 			@Override
