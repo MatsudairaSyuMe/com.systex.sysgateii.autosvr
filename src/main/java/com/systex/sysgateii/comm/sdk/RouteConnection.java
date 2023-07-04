@@ -107,9 +107,14 @@ public class RouteConnection {
 				e.printStackTrace();
 				log.error("Can't send message to RouteSvrHandler");
 			}
+			//20230703 MatsudairaSyuMe make sure for no direct memory leak
+			finally {
+				buf.release();
+				buf = null;
+			}
 			//----
 			sndmsg = null;
-			buf = null;
+			//20230704 MatsudairaSyuMebuf = null;
 			//******
 			return true;
 		} else {
@@ -145,9 +150,14 @@ public class RouteConnection {
 				e.printStackTrace();
 				log.error("Can't sendCANCEL message to RouteSvrHandler");
 			}
+			//20230703 MatsudairaSyuMe make sure for no direct memory leak
+			finally {
+				buf.release();
+				buf = null;
+			}
 			//----
 			sndmsg = null;
-			buf = null;
+			//20230704 MatsudairaSyuMebuf = null;
 			//******
 			return true;
 		} else {
@@ -261,7 +271,10 @@ public class RouteConnection {
 			@Override
 			public void channelRead(ChannelHandlerContext ctx, Object msg) {
 				log.info("get message from RouterServer");
-				ByteBuf buf = (ByteBuf) msg;
+				//20230703 MatsudairaSyuMe check Direct Memory LEAK
+				try {
+				//20230703----
+					ByteBuf buf = (ByteBuf) msg;
 				//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
 				log.debug("capacity=" + buf.capacity() + " readableBytes=" + buf.readableBytes() + " barray="
 						+ buf.hasArray() + " nio=  " + buf.nioBufferCount());
@@ -329,6 +342,11 @@ public class RouteConnection {
 						log.debug("clientMessageBuf.readableBytes lower to 2 bytes wait next incomming");
 					//----
 				}
+				//20230703 MatsudairaSyuMe use direct memory Leak check
+				} finally {
+					io.netty.util.ReferenceCountUtil.release(msg);
+				}
+				//----20230703
 			}
 
 			@Override

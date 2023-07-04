@@ -13,6 +13,9 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.CharsetUtil;
+//20230703 MatsudairaSyuMe test for Direct Memory Leak
+import io.netty.util.IllegalReferenceCountException;
+//----
 
 public class RouteServerHandler extends ChannelDuplexHandler {
 	private static Logger log = LoggerFactory.getLogger(RouteServerHandler.class);
@@ -43,86 +46,88 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (msg instanceof ByteBuf) {
-			//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
-			log.info("get message from RouterConnection");
-			//----
-			ByteBuf buf = (ByteBuf) msg;
-			//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
-			log.debug("capacity=" + buf.capacity() + " readableBytes=" + buf.readableBytes() + " barray="
-					+ buf.hasArray() + " nio=  " + buf.nioBufferCount());
-			if (this.serverSessionRecvMessageBuf.readerIndex() > (this.serverSessionRecvMessageBuf.capacity() / 2)) {
-				this.serverSessionRecvMessageBuf.discardReadBytes();
-				log.debug("adjustment clientSessionRecvMessageBuf readerindex ={}" + this.serverSessionRecvMessageBuf.readableBytes());
-			}
-			log.debug("readableBytes={} barray={}", buf.readableBytes(), buf.hasArray());
-			//----
-			if (buf.isReadable() && !buf.hasArray()) { //20220818 add check for !buf.hasArray()
+		//20230703 MatsudairaSyuMe check Direct Memory LEAK
+		try {
+		//20230703----
+			if (msg instanceof ByteBuf) {
+				log.info("get message from RouterConnection");
+				//----
+				ByteBuf buf = (ByteBuf) msg;
 				//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
-				//byte[] req = new byte[buf.readableBytes()];
-				//buf.readBytes(req);
-				//byte[] req = null;
+				log.debug("capacity=" + buf.capacity() + " readableBytes=" + buf.readableBytes() + " barray="
+						+ buf.hasArray() + " nio=  " + buf.nioBufferCount());
+				if (this.serverSessionRecvMessageBuf.readerIndex() > (this.serverSessionRecvMessageBuf.capacity() / 2)) {
+					this.serverSessionRecvMessageBuf.discardReadBytes();
+					log.debug("adjustment clientSessionRecvMessageBuf readerindex ={}" + this.serverSessionRecvMessageBuf.readableBytes());
+				}
 				log.debug("readableBytes={} barray={}", buf.readableBytes(), buf.hasArray());
-//				if (this.serverSessionRecvMessageBuf.readerIndex() > (this.serverSessionRecvMessageBuf.capacity() / 2)) {
-//					this.serverSessionRecvMessageBuf.discardReadBytes();
-//					log.debug("adjustment serverSessionRecvMessageBuf readerindex ={}" + this.serverSessionRecvMessageBuf.readableBytes());
-//				}
-				this.serverSessionRecvMessageBuf.writeBytes(buf);
-				log.debug("serverSessionRecvMessageBuf.readableBytes={}",this.serverSessionRecvMessageBuf.readableBytes());
-				if (this.serverSessionRecvMessageBuf.readableBytes() >= 2) {
-					byte[] lenbary = new byte[2];
-					log.debug("this.serverSessionRecvMessageBuf.readerIndex()={}", this.serverSessionRecvMessageBuf.readerIndex());
-					this.serverSessionRecvMessageBuf.getBytes(this.serverSessionRecvMessageBuf.readerIndex(), lenbary);
-					//log.debug("this.serverSessionRecvMessageBuf.readerIndex()={} [{}] [{}]", this.serverSessionRecvMessageBuf.readerIndex(), lenbary[0], lenbary[1]);
-					int rcvmsglen = ((int)(lenbary[0] & 0xff)  * 256 + (int)(lenbary[1] & 0xff));
-					if (rcvmsglen >= 2 && rcvmsglen <= this.serverSessionRecvMessageBuf.readableBytes()) {
-						//log.debug("serverSessionRecvMessageBuf.readableBytes={} rcvmsglen={}",this.serverSessionRecvMessageBuf.readableBytes(), rcvmsglen);
-						byte[] reqTmpary = cnvResultTelegram();
-						byte[] req = null;
-						switch (COMM_STATE.ById(reqTmpary[0])) {
-						case TRANSF: // <==傳送電文
-							req = new byte[reqTmpary.length - 1];
-							System.arraycopy(reqTmpary, 1, req, 0, (reqTmpary.length - 1));
-							log.info("RouteConnection--> RouteServerHandler 傳送電文  Constants.outgoingTelegramKeyMap.size()=[{}]", Constants.outgoingTelegramKeyMap.size());
-							break;
-						case CANCEL: // <==刪除記錄
-							byte[] reqDataary = new byte[reqTmpary.length - 1];
-							System.arraycopy(reqTmpary, 1, reqDataary, 0, (reqTmpary.length - 1));
-//							log.info("RouteConnection--> RouteServerHandler 刪除記錄  Constants.outgoingTelegramKeyMap.size()=[{}]", Constants.outgoingTelegramKeyMap.size());
-							String canceltelegramKey = dataUtil.getTelegramKey(reqDataary);
-							if (canceltelegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(canceltelegramKey))
-								Constants.outgoingTelegramKeyMap.remove(canceltelegramKey);
-							log.info("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
-							trace.error("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
-							canceltelegramKey = "";
-							reqDataary = null;
-							break;
-						case CHECK: // <==詢問
-							log.info("RouteConnection--> RouteServerHandler 詢問 ignore");
-							break;
-						case ACK: // <==回覆成功
-							log.info("RouteConnection--> RouteServerHandler 回覆成功 ignore");
-							break;
-						case NAK: // <==回覆失敗
-							log.info("RouteConnection--> RouteServerHandler 回覆失敗 ignore");
-							break;
-						}
-						reqTmpary = null;
-						if (req != null && req.length > 0) {
-							//log.info("receive from RouteClient [{}]", new String(req));
-							String telegramKey = "";
-							boolean alreadySendTelegram = false;
-							telegramKey = dataUtil.getTelegramKey(req);
-							//20230217 mark for not use UTF8
-							//String body = new String(req, CharsetUtil.UTF_8).substring(0, req.length);
-							//20220819 MatsudairaSyuMe change to use new outgoingTelegramKeyMap
-//							alreadySendTelegram = dispatcher.sendTelegram(req);
-							alreadySendTelegram = dispatcher.sendTelegram(req, ctx);
-//							log.info("get request from RouteClient [{}]: telegramKey=[{}] [{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, body, alreadySendTelegram);
-							log.info("get request from RouteClient [{}]: telegramKey=[{}] len={{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, req.length, alreadySendTelegram);
-							// 20220819 int reTry = 0;
-							byte[] resultmsg = null;
-							/* 20220810 MatsudairaSyuMe change to send telegram back by FASClientChannelHandler
+				//----
+				if (buf.isReadable() && !buf.hasArray()) { //20220818 add check for !buf.hasArray()
+					//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
+					//byte[] req = new byte[buf.readableBytes()];
+					//buf.readBytes(req);
+					//byte[] req = null;
+					log.debug("readableBytes={} barray={}", buf.readableBytes(), buf.hasArray());
+					//				if (this.serverSessionRecvMessageBuf.readerIndex() > (this.serverSessionRecvMessageBuf.capacity() / 2)) {
+					//					this.serverSessionRecvMessageBuf.discardReadBytes();
+					//					log.debug("adjustment serverSessionRecvMessageBuf readerindex ={}" + this.serverSessionRecvMessageBuf.readableBytes());
+					//				}
+					this.serverSessionRecvMessageBuf.writeBytes(buf);
+					log.debug("serverSessionRecvMessageBuf.readableBytes={}",this.serverSessionRecvMessageBuf.readableBytes());
+					if (this.serverSessionRecvMessageBuf.readableBytes() >= 2) {
+						byte[] lenbary = new byte[2];
+						log.debug("this.serverSessionRecvMessageBuf.readerIndex()={}", this.serverSessionRecvMessageBuf.readerIndex());
+						this.serverSessionRecvMessageBuf.getBytes(this.serverSessionRecvMessageBuf.readerIndex(), lenbary);
+						//log.debug("this.serverSessionRecvMessageBuf.readerIndex()={} [{}] [{}]", this.serverSessionRecvMessageBuf.readerIndex(), lenbary[0], lenbary[1]);
+						int rcvmsglen = ((int)(lenbary[0] & 0xff)  * 256 + (int)(lenbary[1] & 0xff));
+						if (rcvmsglen >= 2 && rcvmsglen <= this.serverSessionRecvMessageBuf.readableBytes()) {
+							//log.debug("serverSessionRecvMessageBuf.readableBytes={} rcvmsglen={}",this.serverSessionRecvMessageBuf.readableBytes(), rcvmsglen);
+							byte[] reqTmpary = cnvResultTelegram();
+							byte[] req = null;
+							switch (COMM_STATE.ById(reqTmpary[0])) {
+							case TRANSF: // <==傳送電文
+								req = new byte[reqTmpary.length - 1];
+								System.arraycopy(reqTmpary, 1, req, 0, (reqTmpary.length - 1));
+								log.info("RouteConnection--> RouteServerHandler 傳送電文  Constants.outgoingTelegramKeyMap.size()=[{}]", Constants.outgoingTelegramKeyMap.size());
+								break;
+							case CANCEL: // <==刪除記錄
+								byte[] reqDataary = new byte[reqTmpary.length - 1];
+								System.arraycopy(reqTmpary, 1, reqDataary, 0, (reqTmpary.length - 1));
+								//							log.info("RouteConnection--> RouteServerHandler 刪除記錄  Constants.outgoingTelegramKeyMap.size()=[{}]", Constants.outgoingTelegramKeyMap.size());
+								String canceltelegramKey = dataUtil.getTelegramKey(reqDataary);
+								if (canceltelegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(canceltelegramKey))
+									Constants.outgoingTelegramKeyMap.remove(canceltelegramKey);
+								log.info("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
+								trace.error("RouteConnection--> RouteServerHandler 刪除記錄 [{}] result Constants.outgoingTelegramKeyMap.size()=[{}]", canceltelegramKey, Constants.outgoingTelegramKeyMap.size());
+								canceltelegramKey = "";
+								reqDataary = null;
+								break;
+							case CHECK: // <==詢問
+								log.info("RouteConnection--> RouteServerHandler 詢問 ignore");
+								break;
+							case ACK: // <==回覆成功
+								log.info("RouteConnection--> RouteServerHandler 回覆成功 ignore");
+								break;
+							case NAK: // <==回覆失敗
+								log.info("RouteConnection--> RouteServerHandler 回覆失敗 ignore");
+								break;
+							}
+							reqTmpary = null;
+							if (req != null && req.length > 0) {
+								//log.info("receive from RouteClient [{}]", new String(req));
+								String telegramKey = "";
+								boolean alreadySendTelegram = false;
+								telegramKey = dataUtil.getTelegramKey(req);
+								//20230217 mark for not use UTF8
+								//String body = new String(req, CharsetUtil.UTF_8).substring(0, req.length);
+								//20220819 MatsudairaSyuMe change to use new outgoingTelegramKeyMap
+								//							alreadySendTelegram = dispatcher.sendTelegram(req);
+								alreadySendTelegram = dispatcher.sendTelegram(req, ctx);
+								//							log.info("get request from RouteClient [{}]: telegramKey=[{}] [{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, body, alreadySendTelegram);
+								log.info("get request from RouteClient [{}]: telegramKey=[{}] len={{}] start send to FAS [{}]", ctx.channel().id(), telegramKey, req.length, alreadySendTelegram);
+								// 20220819 int reTry = 0;
+								byte[] resultmsg = null;
+								/* 20220810 MatsudairaSyuMe change to send telegram back by FASClientChannelHandler
 							if (alreadySendTelegram)
 								do {
 									resultmsg = dispatcher.getResultTelegram(telegramKey);
@@ -142,35 +147,50 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 								log.error("{} FAS connection break!!! send E002 telegramKey=[{}] resultmsg=[{}]", ctx.channel().id(), telegramKey, new String(resultmsg));
 								//20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing ctx.writeAndFlush(Unpooled.wrappedBuffer(resultmsg));
 							}*/
-							if (!alreadySendTelegram) {
-								resultmsg = dispatcher.mkE002(telegramKey);
-//20220819 abolish		if (resultmsg == null || reTry >= this.totalReTryTime) {
-//20220819 abolish			log.error("{} getResultTelegram FAS timeout !!!! [{}]", ctx.channel().id(), (resultmsg == null) ? "": new String(resultmsg));
-//20220819 abolish		} else {
-								//20220819 MatsudairasyuMe add for receive buffer for 2 byte length processing + 1 byte COMM_STATE.TRANSFE
-								if (resultmsg != null) {
-									byte[] sndmsg = new byte [resultmsg.length + 3];  //total send msgary is 2 byte length + msg
-									sndmsg[0] = (byte) (sndmsg.length / 256);
-									sndmsg[1] = (byte) (sndmsg.length % 256);
-									sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
-									System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
-									log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
-									ctx.writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
-									if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey))
-										Constants.outgoingTelegramKeyMap.remove(telegramKey);
-									sndmsg = null;
-									resultmsg = null;
+								if (!alreadySendTelegram) {
+									resultmsg = dispatcher.mkE002(telegramKey);
+									//20220819 abolish		if (resultmsg == null || reTry >= this.totalReTryTime) {
+									//20220819 abolish			log.error("{} getResultTelegram FAS timeout !!!! [{}]", ctx.channel().id(), (resultmsg == null) ? "": new String(resultmsg));
+									//20220819 abolish		} else {
+									//20220819 MatsudairasyuMe add for receive buffer for 2 byte length processing + 1 byte COMM_STATE.TRANSFE
+									if (resultmsg != null) {
+										byte[] sndmsg = new byte [resultmsg.length + 3];  //total send msgary is 2 byte length + msg
+										sndmsg[0] = (byte) (sndmsg.length / 256);
+										sndmsg[1] = (byte) (sndmsg.length % 256);
+										sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
+										System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
+										log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
+										//20230703 MatsudairaSyume make sure for write and flush synchronize mode
+										//ctx.writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
+										ByteBuf intbuf = Unpooled.wrappedBuffer(sndmsg);
+										try {
+											ctx.writeAndFlush(buf.retain()).sync();
+										}  catch (Exception e) {
+											e.printStackTrace();
+											log.error("Can't send E002 message to RouteConnection");
+										}
+										//20230703 MatsudairaSyuMe make sure for no direct memory leak
+										finally {
+											intbuf.release();
+											intbuf = null;
+										}
+										//----
+										if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey))
+											Constants.outgoingTelegramKeyMap.remove(telegramKey);
+										sndmsg = null;
+										resultmsg = null;
+									}
+									//20230703 MatsudairaSyuMe mark for use direct memory leak check
+									//buf = null;
+									//----20230703	
 								}
-								buf = null;
-								//----	
 							}
-						}
+						} else
+							log.debug("serverSessionRecvMessageBuf.readableBytes={} rcvmsglen={}",this.serverSessionRecvMessageBuf.readableBytes(), rcvmsglen);
 					} else
-						log.debug("serverSessionRecvMessageBuf.readableBytes={} rcvmsglen={}",this.serverSessionRecvMessageBuf.readableBytes(), rcvmsglen);
-				} else
-					log.debug("serverSessionRecvMessageBuf.readableBytes lower to 2 bytes wait next incomming");
-				//----
-				/*20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
+						log.debug("serverSessionRecvMessageBuf.readableBytes lower to 2 bytes wait next incomming");
+					//----
+					/*20220818 MatsudairasyuMe add for receive buffer for 2 byte length processing
 				String telegramKey = "";
 				boolean alreadySendTelegram = false;
 				telegramKey = dataUtil.getTelegramKey(req);
@@ -215,14 +235,19 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 					buf = null;
 					//----	
 				}
-				*/
-			} else {
-				log.error("unknow message type");
-				trace.error("unknow message type");
+					 */
+				} else {
+					log.error("unknow message type");
+					trace.error("unknow message type");
+				}
 			}
+			//ByteBuf req = Unpooled.wrappedBuffer("Welcome to Netty.$_".getBytes(CharsetUtil.UTF_8));
+			//ctx.writeAndFlush(req);
+			//20230703 MatsudairaSyuMe use direct memory Leak check
+		} finally {
+			io.netty.util.ReferenceCountUtil.release(msg);
 		}
-		//ByteBuf req = Unpooled.wrappedBuffer("Welcome to Netty.$_".getBytes(CharsetUtil.UTF_8));
-		//ctx.writeAndFlush(req);
+		//----20230703
 	}
 
 	@Override
