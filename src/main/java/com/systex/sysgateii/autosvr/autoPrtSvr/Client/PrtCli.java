@@ -422,7 +422,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//20211115 MatsudairasyuMe auto rolling start by Date
 		//20201214
 //		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3) + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
-		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3), "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
+//20230704 MatsudairaSyuMe use ConsoleAppender		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3), "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
+		this.atlog = LoggerFactory.getLogger(ch.qos.logback.core.ConsoleAppender.class);
 		atlog.info("=============[Start]=============");
 		atlog.info("------MainThreadId={}------", pid);
 		atlog.info("------Call MaintainLog OK------");
