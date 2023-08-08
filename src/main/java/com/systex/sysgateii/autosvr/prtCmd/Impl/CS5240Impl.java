@@ -659,6 +659,14 @@ public class CS5240Impl implements Printer {
 						{
 							log.debug("1 ===<><>{} {} Prt_Text i={} AddFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
 							if (AddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff)))) {
+								//20230728 MatsudairaSyuMe check if PSI has been sent before and not yet send PSO, if it is the situation then send PSO firstly
+								if ( bBeginSISession == true ) {
+									log.debug("1.01 ===<><>{} {} Prt_Text leave S5240_PSO {} wlen={} i={}", this.curState, this.curChkState, wlen, i);
+									System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
+									wlen+=5;
+									hBuf[wlen+3] = buff[i];
+								}
+								//---- 20230728
 								System.arraycopy(this.command, 0, hBuf, wlen+3, this.command.length);
 								wlen+=this.command.length;
 								bBeginSISession=false;
@@ -672,6 +680,14 @@ public class CS5240Impl implements Printer {
 						{
 							log.debug("2 ===<><>{} {} Prt_Text i={} AddExtFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
 							if (AddExtFont(chrtmp,chrtmp1)) {
+								//20230728 MatsudairaSyuMe check if PSI has been sent before and not yet send PSO, if it is the situation then send PSO firstly
+								if ( bBeginSISession == true ) {
+									log.debug("2.01 ===<><>{} {} Prt_Text leave S5240_PSO {} wlen={} i={}", this.curState, this.curChkState, wlen, i);
+									System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
+									wlen+=5;
+									hBuf[wlen+3] = buff[i];
+								}
+								//---- 20230728
 								System.arraycopy(this.command, 0, hBuf, wlen+3, this.command.length);
 								wlen+=this.command.length;
 								bBeginSISession=false;
@@ -946,6 +962,14 @@ public class CS5240Impl implements Printer {
 						{
 							log.debug("1 ===<><>{} {} Prt_Text i={} AddFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
 							if (AddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff)))) {
+								//20230728 MatsudairaSyuMe check if PSI has been sent before and not yet send PSO, if it is the situation then send PSO firstly
+								if ( bBeginSISession == true ) {
+									log.debug("1.01 ===<><>{} {} Prt_Text leave S5240_PSO {} wlen={} i={}", this.curState, this.curChkState, wlen, i);
+									System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
+									wlen+=5;
+									hBuf[wlen+3] = buff[i];
+								}
+								//---- 20230728
 								System.arraycopy(this.command, 0, hBuf, wlen+3, this.command.length);
 								wlen+=this.command.length;
 								bBeginSISession=false;
@@ -959,6 +983,14 @@ public class CS5240Impl implements Printer {
 						{
 							log.debug("2 ===<><>{} {} Prt_Text i={} AddExtFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
 							if (AddExtFont(chrtmp,chrtmp1)) {
+								//20230728 MatsudairaSyuMe check if PSI has been sent before and not yet send PSO, if it is the situation then send PSO firstly
+								if ( bBeginSISession == true ) {
+									log.debug("2.01 ===<><>{} {} Prt_Text leave S5240_PSO {} wlen={} i={}", this.curState, this.curChkState, wlen, i);
+									System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
+									wlen+=5;
+									hBuf[wlen+3] = buff[i];
+								}
+								//---- 20230728
 								System.arraycopy(this.command, 0, hBuf, wlen+3, this.command.length);
 								wlen+=this.command.length;
 								bBeginSISession=false;
