@@ -4472,6 +4472,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			lastCheck(before);
 			log.debug("after {}=>{}=====check prtcliFSM", before, this.curState);
 			//20230302 sent PSTAT beofre WRITMSR
+			/* 20230809 MatsudairaSyuMe mark up for not receive data so don't send ESC, j
 			if ((before != this.curState) && (this.curState == WRITEMSR)) {
 				byte[] PSTAT = { (byte) 0x1b, (byte) 'j' };
 				if (prt.Send_hData(PSTAT) == 0)
@@ -4479,6 +4480,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				else
 					log.error("write PSTAT before WRITEMSR ERROR!!!!");
 			}
+			*/
 			//----
 			break;
 

@@ -1857,7 +1857,7 @@ public class CS5240Impl implements Printer {
 				this.curState = MS_Write;
 				this.curChkState = CheckStatus_START;
 			}
-			data = Rcv_Data();  //20220828 data = CheckStatus() change to data = Rcv_Data()
+			//20230809 MatsudairaSyuMe mark up for not receive data data = Rcv_Data();  //20220828 data = CheckStatus() change to data = Rcv_Data()
 			log.debug("1 ===<><>{} MS_Write {} {} iCnt={}", this.curState, this.curChkState, data, this.iCnt);
 			if (CheckDis(data) != 0) {
 				this.curChkState = CheckStatus_FINISH;
