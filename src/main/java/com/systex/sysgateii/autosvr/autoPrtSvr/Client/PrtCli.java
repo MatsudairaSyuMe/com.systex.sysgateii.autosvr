@@ -3460,6 +3460,23 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 												mt, mnostr, cMsg);
 									}
 									amlog.info("[{}][{}][{}]:53[{}{}]{}！", brws, pasname, this.account,mt,mnostr, charcnv.BIG5UTF8str(cMsg));  //20200714 change 52 to 53
+									//20231026 add check for duplicate seq. no. if mt + mnostr == "E692" then increment 10 to setSeq and save toe locale reg. file
+									if (new String(mt + mnostr).equals("E692")) {
+										try {
+											this.setSeqNo = Integer
+													.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 10;
+											if (this.setSeqNo > 99999999)
+												this.setSeqNo = 1;
+											FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
+													Charset.defaultCharset());
+										} catch (Exception e) {
+											log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+											FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
+											this.setSeqNo = 0;
+										}
+										log.debug("debug!!! E692 change setSeqNo to {}", this.setSeqNo);
+									}
+									//----
 								}
 								if (ifun == 1) {
 									log.debug("[{}]:TxFlow : Send_Recv() -- INQ Data Failed ! msgid=[{}{}]", brws, mt,
