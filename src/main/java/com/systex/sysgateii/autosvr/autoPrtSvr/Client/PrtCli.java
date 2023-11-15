@@ -3090,21 +3090,66 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				try {
 					tital.setValue("brno", this.brws.substring(0, 3));
 					tital.setValue("wsno", this.brws.substring(3));
-					try {
-						this.setSeqNo = Integer
-								.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 1;
-						//20210630 MatsudairaSyuMe make sure seqno Exceed the maximum 
-						if (this.setSeqNo > 99999999) //20221123 99999->99999999
-							this.setSeqNo = 1;
-						FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
-								Charset.defaultCharset());
-					} catch (Exception e) {
-						log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
-						 //20220708 MatsudairaSyuMe
-						FileUtils.writeStringToFile(this.seqNoFile, "0",	Charset.defaultCharset());
-						this.setSeqNo = 0;
-						//----
+					//20231115 MatsudairaSyuMe try read again after write to SEQNO file for making sure the new seq. number has been update
+					String[] testTime = {"1", "2", "3"};
+					int tmpSetSeqNo = 0;
+					for (String t : testTime) {
+						try {
+							tmpSetSeqNo = 1 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+							if (tmpSetSeqNo > 99999999) //20221123 99999->99999999
+								tmpSetSeqNo = 1;
+							FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+							//20231115 make sure buffer flushed
+							System.gc();
+							//--20231115-- 
+							//read new seqNo from seqNoFile for check
+							this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+							//log.debug("test setSeqNo={} tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
+							if (this.setSeqNo == tmpSetSeqNo)
+								break;
+							else
+								log.error("ERROR !!! setSeqNo={} != tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
+							//this.setSeqNo = Integer
+							//		.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 1;
+							//20210630 MatsudairaSyuMe make sure seqno Exceed the maximum 
+							//if (this.setSeqNo > 99999999) //20221123 99999->99999999
+							//	this.setSeqNo = 1;
+							//FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
+							//		Charset.defaultCharset());
+						} catch (Exception e) {
+							log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+							//20231115 MatsudairaSyuMe delete file firstly
+							FileUtils.deleteQuietly(this.seqNoFile);
+							try {
+								this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort())));
+								log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
+								if (seqNoFile.exists() == false) {
+									File parent = seqNoFile.getParentFile();
+									if (parent.exists() == false) {
+										parent.mkdirs();
+									}
+									this.seqNoFile.createNewFile();
+									FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
+									this.setSeqNo = 0;
+								}
+							} catch (IOException er) {
+								er.printStackTrace();
+								log.error("error!!! create or open seqno file SEQNO_ error");
+							}
+							break;
+							//--20231115-- 
+							/*----
+							//20220708 MatsudairaSyuMe
+							FileUtils.writeStringToFile(this.seqNoFile, "0",	Charset.defaultCharset());
+							this.setSeqNo = 0;
+							*/
+						}
+						tmpSetSeqNo = 0;
 					}
+					if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0) {
+						log.error("error!!! can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
+					}
+					//----20231115 MatsudairaSyuMe end try read again after write to SEQNO file for making sure the new seq. number has been update
 					tital.setValueRtoLfill("txseq", String.format("%d", this.setSeqNo), (byte) '0');
 					tital.setValue("trancd", "CB");
 					tital.setValue("wstype", "0");
@@ -3460,21 +3505,54 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 												mt, mnostr, cMsg);
 									}
 									amlog.info("[{}][{}][{}]:53[{}{}]{}！", brws, pasname, this.account,mt,mnostr, charcnv.BIG5UTF8str(cMsg));  //20200714 change 52 to 53
-									//20231026 add check for duplicate seq. no. if mt + mnostr == "E692" then increment 10 to setSeq and save toe locale reg. file
+									//20231115 add check for duplicate seq. no. if mt + mnostr == "E692" then increment 10 to setSeq and save toe locale reg. file
 									if (new String(mt + mnostr).equals("E692")) {
-										try {
-											this.setSeqNo = Integer
-													.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset())) + 10;
-											if (this.setSeqNo > 99999999)
-												this.setSeqNo = 1;
-											FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
-													Charset.defaultCharset());
-										} catch (Exception e) {
-											log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
-											FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
-											this.setSeqNo = 0;
+										String[] testTime = {"1", "2", "3"};
+										int tmpSetSeqNo = 0;
+										for (String t : testTime) {
+											try {
+												tmpSetSeqNo = 10 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+												if (tmpSetSeqNo > 99999999) //20221123 99999->99999999
+													tmpSetSeqNo = 1;
+												FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+												//20231115 make sure buffer flushed
+												System.gc();
+												//--20231115-- 
+												//read new seqNo from seqNoFile for check
+												this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+												//log.debug("test setSeqNo={} tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
+												if (this.setSeqNo == tmpSetSeqNo)
+													break;
+												else
+													log.error("ERROR !!! setSeqNo={} != tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
+											} catch (Exception e) {
+												log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+												//20231115 MatsudairaSyuMe delete file firstly
+												FileUtils.deleteQuietly(this.seqNoFile);
+												try {
+													this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort())));
+													log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
+													if (seqNoFile.exists() == false) {
+														File parent = seqNoFile.getParentFile();
+														if (parent.exists() == false) {
+															parent.mkdirs();
+														}
+														this.seqNoFile.createNewFile();
+														FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
+														this.setSeqNo = 0;
+													}
+												} catch (IOException er) {
+													er.printStackTrace();
+													log.error("error!!! create or open seqno file SEQNO_ error");
+												}
+												break;
+											}
+											tmpSetSeqNo = 0;
 										}
-										log.debug("debug!!! E692 change setSeqNo to {}", this.setSeqNo);
+										if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0)
+											log.error("error!!! E692 can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
+										else
+											log.info("debug!!! E692 change setSeqNo to {}", this.setSeqNo);
 									}
 									//----
 								}
