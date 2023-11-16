@@ -1199,6 +1199,9 @@ public class CS5240Impl implements Printer {
 		log.debug("3 ===<><>{} chkChkState {}", this.curState, this.curChkState);
 		if (curState == Eject_FINISH) {
 			amlog.info("[{}][{}][{}]:06存摺退出成功！", brws, "        ", "            ");
+			//20231116
+			pc.InsertAMStatus(brws, "", "", "06存摺退出成功");
+			//----
 			return true;
 		} else
 			return false;
@@ -1424,6 +1427,9 @@ public class CS5240Impl implements Printer {
 
 				if (data[2] == (byte)'P') {
 					amlog.info("[{}][{}][{}]:01偵測到存摺插入！", brws, "        ", "            ");
+					//20231116
+					pc.InsertAMStatus(brws, "", "", "01偵測到存摺插入！");
+					//----
 					this.curState = DetectPaper_FINISH;
 					return true;
 				} else if (data[2] == (byte)'A' || data[2] == (byte)'0') {  //20230322 MatsudairaSyuMe add for ESC r 0 0 0 accept normalcy data

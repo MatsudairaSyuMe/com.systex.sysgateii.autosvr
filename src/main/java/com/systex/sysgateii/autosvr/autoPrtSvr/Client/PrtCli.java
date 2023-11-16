@@ -1291,6 +1291,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		if (!chk_Account(cussrc)) {
 			rtn = false;
 			amlog.info("[{}][{}][{}]:13存摺帳號錯誤！", brws, "        ", this.account);
+			//20231116
+			InsertAMStatus(brws, " ", this.account, "13存摺帳號錯誤！");
+			//----
 			
 			SetSignal(firstOpenConn, !firstOpenConn, "0000000000", "0000000001");
 			return rtn;
@@ -1301,6 +1304,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//20200611, 20220914 MatsudairaSyuMe add differential message
 			if (!new String(cussrc, 0, TXP.ACTNO_LEN).equals(this.account)) {
 				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！翻頁後應置入帳號 [{}]", brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN), this.account);
+				//20231116
+				InsertAMStatus(brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN), "13存摺帳號錯誤！");
+				//----
+
 				rtn = false;
 				return rtn;
 			}
@@ -1358,6 +1365,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			break;
 		default:
 			amlog.info("[{}][{}][{}]:13存摺帳號錯誤！[{}](非台幣/外幣/黃金存摺)", brws, pasname, this.account);
+                	//20231116
+                	InsertAMStatus(brws, pasname, this.account, "13存摺帳號錯誤！(非台幣/外幣/黃金存摺)");
+                	//----
 			atlog.info("ERROR！！ PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, "", "", cline, cpage, bkseq);
 			iFig = 0;
 			rtn = false;
@@ -1370,6 +1380,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		} catch (Exception e) {
 			e.printStackTrace();
 			amlog.info("[{}][{}][{}]:13存摺格式錯誤！", brws, "        ", this.account);
+			//20231116
+                	InsertAMStatus(brws, " ", this.account, "13存摺格式錯誤！");
+                	//----
 			atlog.info("MSR format ERROR！！[{}]", account);
 			iFig = 0;
 			rtn = false;
@@ -2813,6 +2826,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						SetSignal(firstOpenConn, !firstOpenConn, "0000000000","0000000001");
 						Sleep(1000);
 						amlog.info("[{}][{}][{}]:54全部未登摺之資料筆數[{}] > 存摺總剩餘可列印之資料筆數[{}]！", brws, pasname, this.account, con, this.pbavCnt);
+                                		//20231116
+                                		InsertAMStatus(brws, pasname, this.account, "54全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數");
+                                		//----
 						rtn = new byte[0];
 					} else {
 						int nCnt = Integer.parseInt(new String(p0080text.getHeadValue("nbdelcnt")));
@@ -2869,6 +2885,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						SetSignal(firstOpenConn, !firstOpenConn, "0000000000","0000000001");
 						Sleep(1000);
 						amlog.info("[{}][{}][{}]:54全部未登摺之資料筆數[{}] > 存摺總剩餘可列印之資料筆數[{}]！", brws, pasname, this.account, con, this.pbavCnt);
+                                		//20231116
+                                		InsertAMStatus(brws, pasname, this.account, "54全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數");
+                                		//----
 						rtn = new byte[0];
 					} else {
 						totCnt = Integer.parseInt(con);
@@ -2954,6 +2973,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						SetSignal(firstOpenConn, !firstOpenConn, "0000000000","0000000001");
 						Sleep(1000);
 						amlog.info("[{}][{}][{}]:54全部未登摺之資料筆數[{}] > 存摺總剩餘可列印之資料筆數[{}]！", brws, pasname, this.account, con, this.pbavCnt);
+                                		//20231116
+                                		InsertAMStatus(brws, pasname, this.account, "54全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數");
+                                		//----
 						rtn = new byte[0];
 					} else {
 						totCnt = Integer.parseInt(con);
@@ -3184,6 +3206,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						if (resultmsg == null || resultmsg.length == 0) {
 							atlog.info("iMsgLen = 0");
 							amlog.info("[{}][{}][{}]:31傳送之訊息長度為０！", brws, pasname, this.account);							
+                                			//20231116
+                                			InsertAMStatus(brws, pasname, this.account, "31傳送之訊息長度為０！");
+                                			//----
 							rtn = -1;
 						}
 					} else {
@@ -3196,6 +3221,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						if (resultmsg == null || resultmsg.length == 0) {
 							atlog.info("iMsgLen = 0");
 							amlog.info("[{}][{}][{}]:31傳送之訊息長度為０！", brws, pasname, this.account);							
+                                			//20231116
+                                			InsertAMStatus(brws, pasname, this.account, "31傳送之訊息長度為０！");
+                                			//----
 							rtn = -1;
 						}
 					}
@@ -3311,6 +3339,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 								//received TITA/TOTA transaction sequence no. not equals
 								log.error("TITA/TOTA  transaction sequence no not equal TITA=[{}] TOTA=[{}]", this.telegramKey, recvTelegramKey);
 								amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文傳輸編號錯誤錯誤 TITA[{}] TOTA [{}]", brws, pasname, this.account, this.telegramKey, recvTelegramKey);
+	                                			//20231116
+	                                			InsertAMStatus(brws, pasname, this.account, "05中心存摺補登資料接收電文傳輸編號錯誤錯誤");
+	                                			//----
 								this.rtelem = null;
 								this.resultmsg = null;
 								SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
@@ -3337,6 +3368,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							//received telegram error
 							log.error("received TOTA message format error");
 							amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文格式錯誤！！", brws, pasname, this.account);
+                                			//20231116
+                                			InsertAMStatus(brws, pasname, this.account, "05中心存摺補登資料接收電文格式錯誤");
+                                			//----
 							this.rtelem = null;
 							this.resultmsg = null;
 							SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
@@ -3484,7 +3518,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 												mt, mnostr, cMsg);
 									}
 									amlog.info("[{}][{}][{}]:52[{}{}]{}！", brws, pasname, this.account,mt,mnostr, cMsg);
-
+		                                			//20231116
+		                                			InsertAMStatus(brws, pasname, this.account, "52" + charcnv.BIG5UTF8str(cMsg));
+		                                			//----
 								}
 								// E194 , 補登資料超過可印行數, 應至服務台換摺
 								else if (mno == 194) {
@@ -3505,6 +3541,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 												mt, mnostr, cMsg);
 									}
 									amlog.info("[{}][{}][{}]:53[{}{}]{}！", brws, pasname, this.account,mt,mnostr, charcnv.BIG5UTF8str(cMsg));  //20200714 change 52 to 53
+                           			//20231116
+//20231116mark                        			InsertAMStatus(brws, pasname, this.account, "53" + charcnv.BIG5UTF8str(cMsg));
+                           			//----
 									//20231115 add check for duplicate seq. no. if mt + mnostr == "E692" then increment 10 to setSeq and save toe locale reg. file
 									if (new String(mt + mnostr).equals("E692")) {
 										String[] testTime = {"1", "2", "3"};
@@ -3579,6 +3618,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 								if (resultmsg == null || resultmsg.length == 0) {
 									if (SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001")) {
 										amlog.info("[{}][{}][{}]:34接收資料錯誤！", brws, pasname, this.account);
+			                                                    	//20231116
+			                                                    	InsertAMStatus(brws, pasname, this.account, "34接收資料錯誤！");
+			                                                    	//----
 									} else {
 										log.debug("{} {} {} AutoPrnCls : --change ", brws, catagory, account);
 									}
@@ -3633,6 +3675,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							//20211126 MatsudairaSyuMe change AMlog timeout message 20211209 add colon word
 //							amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]接電文逾時{}", brws, pasname, this.account, rpage, responseTimeout);
 							amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時{}", brws, pasname, this.account, responseTimeout);
+                                                    	//20231116
+                                                    	InsertAMStatus(brws, pasname, this.account, "05中心存摺補登資料接收電文逾時");
+                                                    	//----
 							//20220819 MAtsudairaSyuMe cancel the Constants.outgoingTelegramKeyMap on RouteServerHandler
 							clientSession.sendCANCEL(this.telegramKey.getBytes());
 							//20220819 MAtsudairaSyuMe
@@ -3672,6 +3717,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					this.curState = EJECTAFTERPAGEERROR;
 					log.error("2 ERROR!!! received data from host timeout {}", responseTimeout);
 					amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時2 {}", brws, pasname, this.account, responseTimeout);
+                                       	//20231116
+                                       	InsertAMStatus(brws, pasname, this.account, "05中心存摺補登資料接收電文逾時2");
+                                       	//----
 					clientSession.sendCANCEL(this.telegramKey.getBytes());
 					trace.error("中心存摺{}資料接收電文逾時2 {} sendCANCEL {} to RouteServer", (ifun == TXP.INQ) ? "補登" : "刪除", responseTimeout, this.telegramKey);
 					SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
@@ -4167,7 +4215,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					Sleep(2 * 1000); //20220914 MatsudairaSyuMe for signal delay
 					amlog.info("[{}][{}][{}]:11磁條讀取失敗！", brws, "        ", "            ");
 					//20201119
-					InsertAMStatus(brws, "", "", "11磁條讀取失敗！");
+					InsertAMStatus(brws, " ", " ", "11磁條讀取失敗！");
 					//----
 					log.debug("{} {} {} AutoPrnCls : read MSR ERROR", brws);
 				} else {
@@ -4213,7 +4261,6 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							this.rpage, this.npage);
 					if (npage == rpage) {
 						amlog.info("[{}][{}][{}]:02檢查存摺頁次正確...正確頁次={} 插入頁次={} 行次={}", brws, pasname, account, npage, rpage, nline);
-
 						if (SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0010000000")) {
 							//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 							this.curState = SNDANDRCVTLM;this.setTITA_TOTA_START(false);//20210108
@@ -4226,7 +4273,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						}
 					} else {
 						amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]", brws, pasname, account, rpage);
-						
+	                                        //20231116
+	                                        InsertAMStatus(brws, pasname, account, "21存摺頁次錯誤！");
+	                                        //----				
 						if (SetSignal(firstOpenConn, firstOpenConn, "0000000000","0000100000")) {
 							this.curState = SETSIGAFTERCHKBARCODE;
 							log.debug(
@@ -4327,6 +4376,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 //				amlog.info("[{}][{}][{}]:22存摺頁次不符...正確頁次={} 插入頁次={}", brws, pasname, account, npage, rpage);
 				if (SetSignal(!firstOpenConn, firstOpenConn, "0000000000","0000100000")) {
 					amlog.info("[{}][{}][{}]:22存摺頁次不符...正確頁次={} 插入頁次={}", brws, pasname, account, npage, rpage);
+                                        //20231116
+                                        InsertAMStatus(brws, pasname, account, "22存摺頁次不符");
+                                        //----				
 					atlog.info(" -- Error Page!! Correct Page=[{}] Insert Page=[{}]", npage, rpage);
 					this.curState = EJECTAFTERPAGEERROR;
 					log.debug(
@@ -4338,6 +4390,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				SetSignal(!firstOpenConn, firstOpenConn, "0000000000","0000100000");
 				this.curState = SESSIONBREAK;
 				amlog.info("[{}][{}][{}]:21存摺頁次錯誤！[{}]", brws, pasname, account, rpage);
+                                //20231116
+                                InsertAMStatus(brws, pasname, account, "21存摺頁次錯誤！");
+                                //----				
 				close();
 			}
 			//20200718
@@ -4383,6 +4438,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				if (r < 0 && r != -2 && r != -1 && r != -3) {
 					this.curState = SESSIONBREAK;
 					amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
+	                                //20231116
+	                                InsertAMStatus(brws, pasname, account, "61存摺資料補登失敗！");
+	                                //----				
 				}
 			}
 			switch (this.iFig) {
@@ -4421,6 +4479,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					if ((r < 0 && r != -2 && r != -1 && r != -3)) {
 						this.curState = SESSIONBREAK;
 						amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
+		                                //20231116
+		                                InsertAMStatus(brws, pasname, account, "61存摺資料補登失敗！");
+		                                //----				
 					}
 				} else {
 					//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
@@ -4435,11 +4496,17 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							if (this.curState == EJECTAFTERPAGEERROR) {
 								log.error("ERROR!!! received data from host timeout {} can't get connection!!!!", responseTimeout);
 								amlog.info("[{}][{}][{}]:62存摺資料補登失敗！與中心連線逾時", brws, pasname, this.account);
+				                                //20231116
+				                                InsertAMStatus(brws, pasname, account, "61存摺資料補登失敗！與中心連線逾時");
+				                                //----				
 							} else {
 								log.error("ERROR!!! received data from host timeout {} release connection!!!!", responseTimeout);
 								this.curState = EJECTAFTERPAGEERROR;
 								amlog.info("[{}][{}][{}]:62存摺資料補登失敗！[{}]接電文逾時", brws, pasname, this.account,
 									responseTimeout);
+				                                //20231116
+				                                InsertAMStatus(brws, pasname, account, "61存摺資料補登失敗！接電文逾時");
+				                                //----				
 								//20210112
 								//20210116 MAtsudairaSyuMe this.dispatcher.releaseConn();
 								//----
@@ -4466,6 +4533,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						this.curState = SESSIONBREAK;
 //						amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
 						amlog.info("[{}][{}][{}]:61存摺資料刪除失敗！", brws, pasname, account);
+		                                //20231116
+		                                InsertAMStatus(brws, pasname, account, "61存摺資料刪除失敗！");
+		                                //----				
 					} else {
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 						if ((r == 0 && this.isTITA_TOTA_START() == false && this.alreadySendTelegram == false)
@@ -4484,9 +4554,15 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 								    log.error("ERROR!!! received data from host timeout {}", responseTimeout);
 								    amlog.info("[{}][{}][{}]:62存摺刪除補登資料失敗！[{}]接電文逾時", brws, pasname, this.account,
 										responseTimeout);
+								    //20231116
+								    InsertAMStatus(brws, pasname, account, "61存摺刪除補登資料失敗！接電文逾時");
+								    //----				
 								} else {
 								    log.error("ERROR!!! received data from host error");
 								    amlog.info("[{}][{}][{}]:62存摺刪除補登資料失敗！", brws, pasname, this.account);									
+								    //20231116
+								    InsertAMStatus(brws, pasname, account, "61存摺刪除補登資料失敗！");
+								    //----				
 								}
 								SetSignal(firstOpenConn, firstOpenConn, "0000000000", "0000000001");
 								// ----
@@ -4608,6 +4684,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		case FORMATPRTDATAERROR:
 			log.debug("{} {} {} ORMATPRTDATAERROR :AutoPrnCls : XXDataFormat() -- Print Data Error!", brws, catagory, account);
 			amlog.info("[{}][{}][{}]:61存摺資料補登失敗！", brws, pasname, account);
+			//20231116
+                        InsertAMStatus(brws, pasname, account, "61存摺資料補登失敗！");
+                        //----				
 			SetSignal(firstOpenConn, firstOpenConn, "0000000000","0000000001");
 			prt.Eject(firstOpenConn);
 			Sleep(2 * 1000);
@@ -4798,6 +4877,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 
 					this.curState = SESSIONBREAK;resetPassBook();//20220914 MatsudairaSyuMe
 					amlog.info("[{}][{}][{}]:73存摺資料補登刪除失敗！", brws, pasname, account);				
+                                        //20231116
+                                        InsertAMStatus(brws, pasname, account, "73存摺資料補登刪除失敗！");
+                                        //----              
 				}
 			}
 			log.debug("SNDANDRCVDELTLM r = {} pb_arr.size()=>{}=====check prtcliFSM", r, pb_arr.size());
@@ -5340,3 +5422,4 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		}
 	}
 }
+
