@@ -330,7 +330,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//----
 	// 20230522 MasudairaSyuMe register last time read data from pass book print
 	private long lastTimeFromPrt = 0l;
-
+    private boolean alreadyWrite = false; //20231212 MatsudairaSyuMe flag for last time data insert to AMLIG table default false
 	public List<ActorStatusListener> getActorStatusListeners() {
 		return actorStatusListeners;
 	}
@@ -3781,6 +3781,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		log.debug("{}=====resetPassBook prtcliFSM", this.curState);
 		// 20230522 MasudairaSyuMe register last time read data from pass book print
 		this.lastTimeFromPrt = 0l;
+		//20231212
+		this.alreadyWrite = false;
+		//----
 		return;
 	}
 
@@ -3810,6 +3813,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			//----
 			// 20230522 MasudairaSyuMe register last time read data from pass book print
 			this.lastTimeFromPrt = 0l;
+			//20231212
+			this.alreadyWrite = false;
+			//20231212----
 			return;
 		}
         //20200616 add this.lastState and check duration time
@@ -5274,26 +5280,41 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 
 	//20201119 insert AM error status data
 	public void InsertAMStatus(String brws, String passname, String act, String desc) {
-		try {
-			if (amtbcon == null)
-				amtbcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-			String t = sdf.format(new java.util.Date());
-			//20211028 MatsudairaSyuMe change field position
-			String fldam = String.format(amstatusptrn, t, brws, passname, act, desc);
-			String[] rsno = amtbcon.INSSELChoiceKey(PrnSvr.devamtbname, PrnSvr.devamtbfields, fldam, PrnSvr.devamtbsearkey, "-1", false, false);
-			if (rsno != null) {
-				for (int i = 0; i < rsno.length; i++)
-					log.debug("update =======> rsno[{}]=[{}]",i,rsno[i]);
-			} else
-				log.error("rsno null");
-			amtbcon.CloseConnect();
-			amtbcon = null;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.debug("insert am error status table error e:[{}]", e.toString());
+		//20231212 MatsudairaSyuMe check if need to write AU_AMlog or reset to false
+		if (desc != null && desc.trim().length() > 1  && (desc.trim().substring(0, 2).equals("52") || desc.trim().substring(0, 2).equals("01"))) {
+			this.alreadyWrite = false;
+			return;
+		} else {
+			if (!this.alreadyWrite && (desc != null)) {
+		//20231212----
+				try {
+					if (amtbcon == null)
+						amtbcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+					String t = sdf.format(new java.util.Date());
+					//20211028 MatsudairaSyuMe change field position
+					String fldam = String.format(amstatusptrn, t, brws, passname, act, desc);
+					String[] rsno = amtbcon.INSSELChoiceKey(PrnSvr.devamtbname, PrnSvr.devamtbfields, fldam, PrnSvr.devamtbsearkey, "-1", false, false);
+					if (rsno != null) {
+						for (int i = 0; i < rsno.length; i++)
+							log.debug("update =======> rsno[{}]=[{}]",i,rsno[i]);
+					} else
+						log.error("rsno null");
+					amtbcon.CloseConnect();
+					amtbcon = null;
+					//20231212
+					if (!desc.trim().substring(0, 2).equals("06"))
+						this.alreadyWrite = true;
+					//20231212----
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					log.debug("insert am error status table error e:[{}]", e.toString());
+				}
+		//20231212
+			}
 		}
+		//20231212----
 	}
 	//----
 	//20210112
