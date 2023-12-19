@@ -3589,8 +3589,11 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 											tmpSetSeqNo = 0;
 										}
 										if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0)
+										//20231219 send warning message to OSM
+										{
 											log.error("error!!! E692 can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
-										else
+											prtAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws); //send OSM and restart this passbook printer thread
+										} else
 											log.info("debug!!! E692 change setSeqNo to {}", this.setSeqNo);
 									}
 									//----
