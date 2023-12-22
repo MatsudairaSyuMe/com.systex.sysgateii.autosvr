@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -3139,7 +3140,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							//FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
 							//		Charset.defaultCharset());
 						} catch (Exception e) {
-							log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+							log.error("ERROR!!! update new seq number string {} tmpSetSeqNo={} error {}", this.setSeqNo, tmpSetSeqNo, e.getMessage());
 							//20231115 MatsudairaSyuMe delete file firstly
 							FileUtils.deleteQuietly(this.seqNoFile);
 							try {
@@ -3150,9 +3151,16 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 									if (parent.exists() == false) {
 										parent.mkdirs();
 									}
+									//20231222 MatsudairaSyuMe use random number
+									Random rand = new Random();
+									tmpSetSeqNo = rand.nextInt(99999998);
+									if (this.setSeqNo == tmpSetSeqNo)
+										tmpSetSeqNo += 1; // if random number the same as original num then add one
+									//----
 									this.seqNoFile.createNewFile();
-									FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
-									this.setSeqNo = 0;
+									FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+									//20231222 change to use random numberthis.setSeqNo = 0;
+									this.setSeqNo = tmpSetSeqNo;
 								}
 							} catch (IOException er) {
 								er.printStackTrace();
@@ -3169,7 +3177,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						tmpSetSeqNo = 0;
 					}
 					if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0) {
-						log.error("error!!! can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
+						log.error("error!!! can not update new SEQNO file {} current setSeqNo={} tmpSetSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo, tmpSetSeqNo);
 					}
 					//----20231115 MatsudairaSyuMe end try read again after write to SEQNO file for making sure the new seq. number has been update
 					tital.setValueRtoLfill("txseq", String.format("%d", this.setSeqNo), (byte) '0');
@@ -3565,7 +3573,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 												else
 													log.error("ERROR !!! setSeqNo={} != tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
 											} catch (Exception e) {
-												log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+												log.error("ERROR!!! update new seq number string {} tmpSetSeqNo={} error {}", this.setSeqNo, tmpSetSeqNo, e.getMessage());
 												//20231115 MatsudairaSyuMe delete file firstly
 												FileUtils.deleteQuietly(this.seqNoFile);
 												try {
@@ -3577,8 +3585,16 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 															parent.mkdirs();
 														}
 														this.seqNoFile.createNewFile();
-														FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
-														this.setSeqNo = 0;
+														//20231222 MatsudairaSyuMe use random number
+														Random rand = new Random();
+														tmpSetSeqNo = rand.nextInt(99999998);
+														if (this.setSeqNo == tmpSetSeqNo)
+															tmpSetSeqNo += 1; // if random number the same as original num then add one
+														//----
+														this.seqNoFile.createNewFile();
+														FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+														//20231222 change to use random numberthis.setSeqNo = 0;
+														this.setSeqNo = tmpSetSeqNo;
 													}
 												} catch (IOException er) {
 													er.printStackTrace();
@@ -5419,7 +5435,16 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					}
 				} catch (Exception e) {
 					log.error("ERROR!!! check alart file  error {}", e.getMessage());
-					FileUtils.writeStringToFile(alartf, "0",	Charset.defaultCharset());
+					//20231222 MatsudairaSyuMe use random number
+					Random rand = new Random();
+					int tmpSetSeqNo = rand.nextInt(99999998);
+					if (this.setSeqNo == tmpSetSeqNo)
+						tmpSetSeqNo += 1; // if random number the same as original num then add one
+					//----
+					this.seqNoFile.createNewFile();
+					FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+					//20231222 change to use random numberthis.setSeqNo = 0;
+					this.setSeqNo = tmpSetSeqNo;
 				}
 			}
 
