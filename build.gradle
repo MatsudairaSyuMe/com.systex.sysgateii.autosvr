@@ -52,15 +52,15 @@ dependencies {
     implementation 'com.google.guava:guava:28.0-jre'
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.12'
+    //testImplementation 'junit:junit:4.12'
     //before gradle 7.xx compile fileTree(dir: 'libs', include: ['*.jar'])
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     //before gradle 7.xx change testCompile to testImplementation
-    testImplementation(
-		"junit:junit:4.12",
-	)
-    
+    //testImplementation(
+	//	"junit:junit:4.12",
+	//)
+ 
 }
 
 test {

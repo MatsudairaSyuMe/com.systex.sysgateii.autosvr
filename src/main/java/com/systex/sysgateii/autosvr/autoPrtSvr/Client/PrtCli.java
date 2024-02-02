@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
+//20240201 Use SecureRandom //import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -3152,8 +3152,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 										parent.mkdirs();
 									}
 									//20231222 MatsudairaSyuMe use random number
-									Random rand = new Random();
-									tmpSetSeqNo = rand.nextInt(99999998);
+									//20240201 Use SecureRandom  //Random rand = new Random();
+									tmpSetSeqNo = genRanSeq();   //20240201 Use SecureRandom //tmpSetSeqNo = rand.nextInt(99999998);
 									if (this.setSeqNo == tmpSetSeqNo)
 										tmpSetSeqNo += 1; // if random number the same as original num then add one
 									//----
@@ -3586,8 +3586,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 														}
 														this.seqNoFile.createNewFile();
 														//20231222 MatsudairaSyuMe use random number
-														Random rand = new Random();
-														tmpSetSeqNo = rand.nextInt(99999998);
+														//20240201 Use SecureRandom //Random rand = new Random();
+														tmpSetSeqNo = genRanSeq();//20240201 Use SecureRandom //rand.nextInt(99999998);
 														if (this.setSeqNo == tmpSetSeqNo)
 															tmpSetSeqNo += 1; // if random number the same as original num then add one
 														//----
@@ -5436,8 +5436,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				} catch (Exception e) {
 					log.error("ERROR!!! check alart file  error {}", e.getMessage());
 					//20231222 MatsudairaSyuMe use random number
-					Random rand = new Random();
-					int tmpSetSeqNo = rand.nextInt(99999998);
+					//20240201 Use SecureRandom //Random rand = new Random();
+					int tmpSetSeqNo = genRanSeq(); //20240201 Use SecureRandom //rand.nextInt(99999998);
 					if (this.setSeqNo == tmpSetSeqNo)
 						tmpSetSeqNo += 1; // if random number the same as original num then add one
 					//----
@@ -5469,6 +5469,23 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			e.printStackTrace();
 			log.error("error!!! delete brws alart file error");
 		}
+	}
+
+	private int genRanSeq() {
+		SecureRandom secureRandomGenerator = null;
+		int rtnSeq = 0;
+		try {
+			secureRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
+			rtnSeq = secureRandomGenerator.nextInt(99999998);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			log.error("SecureRandom error:NoSuchAlgorithmException");
+		} finally {
+			if (rtnSeq == 0)
+				rtnSeq = 1;
+		}
+		return rtnSeq;
 	}
 }
 

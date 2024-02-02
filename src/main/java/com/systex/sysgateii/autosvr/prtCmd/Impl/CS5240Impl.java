@@ -1445,7 +1445,7 @@ public class CS5240Impl implements Printer {
 					//20201216
 					if (data.length >= 5 && data[3] == (byte)'2' && data[4] == (byte)'1') {
 						String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
-						pc.InsertAMStatus(brws, "", "", s);
+						//20240110 mark pc.InsertAMStatus(brws, "", "", s);
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ",
 								new String(data, 1, data.length - 1));
 						Send_hData(S5240_CANCEL); // special for S5020
@@ -1912,7 +1912,7 @@ public class CS5240Impl implements Printer {
 				} else if (data[2] == (byte) 's') {
 					amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSW)", brws, pasname, account);
 					//20201119
-					pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSW)");
+					//20240110 mark pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSW)");
 					//----
 					//20211203 MatsudairaSyuMe
 					amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
@@ -1935,7 +1935,7 @@ public class CS5240Impl implements Printer {
 //						data = Rcv_Data(5);
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3(MSW)[{}]", brws, pasname, account, new String(data));
 						//20201119
-						pc.InsertAMStatus(brws, pasname, account, "95硬體錯誤代碼3(MSW)"+new String(data));
+						//20240110 mark pc.InsertAMStatus(brws, pasname, account, "95硬體錯誤代碼3(MSW)"+new String(data));
 						//----
 						//20211203 MatsudairaSyuMe
 						amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
@@ -1953,7 +1953,7 @@ public class CS5240Impl implements Printer {
 						data = Rcv_Data(5);
 						amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSW) ERROR:[{}]", brws, pasname, account, data);
 						//20201119
-						pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSW) ERROR:"+new String(data));
+						//20240110 mark pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSW) ERROR:"+new String(data));
 						//----
 						// 20060706 , if write eorror , retry 3 times
 						/*
@@ -1971,7 +1971,7 @@ public class CS5240Impl implements Printer {
 					case (byte) '8':
 						amlog.info("[{}][{}][{}]:94補摺機指令錯誤！(MSW)", brws, pasname, account);
 						//20201119
-						pc.InsertAMStatus(brws, pasname, account, "94補摺機指令錯誤！(MSW)");
+						//20240110 pc.InsertAMStatus(brws, pasname, account, "94補摺機指令錯誤！(MSW)");
 						//----
 						//20211203 MatsudairaSyuMe
 						amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
@@ -2006,7 +2006,7 @@ public class CS5240Impl implements Printer {
 				} else if (iCnt > 40) {
 					amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-2)", brws, pasname, account);
 					//20201119
-					pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSR-2)");
+					//20240110 mark pc.InsertAMStatus(brws, pasname, account, "94補摺機狀態錯誤！(MSR-2)");
 					//----
 					//20211203 MatsudairaSyuMe
 					amlog.info("[{}][{}][{}]:71存摺磁條寫入失敗！", brws, pasname, account);
@@ -2163,7 +2163,7 @@ public class CS5240Impl implements Printer {
 				this.curChkState = CheckStatus_START;
 				//20201216
 				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
-				pc.InsertAMStatus(brws, "", "", s);
+				//20240110 mark pc.InsertAMStatus(brws, "", "", s);
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
 //				Send_hData(S5240_CANCEL);  //special for S5020
 				//----
@@ -2358,7 +2358,7 @@ public class CS5240Impl implements Printer {
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ",
 						new String(data, 1, data.length - 1));
 				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
-				pc.InsertAMStatus(brws, "", "", s);
+				//20240110 mark pc.InsertAMStatus(brws, "", "", s);
 				//20201216
 				Send_hData(S5240_CANCEL);  //special for S5020
 				amlog.info("[{}][{}][{}]:00補摺機重置中...", brws, "        ", "            ");		
