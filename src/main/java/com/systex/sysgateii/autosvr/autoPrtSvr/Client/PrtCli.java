@@ -5487,5 +5487,18 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		}
 		return rtnSeq;
 	}
+	//20240205 MatsudairaSyuMe save SeqNo
+	public void saveSeqFile(String nid) {
+		try {
+			if (this.seqNoFile.exists() == true) {
+				FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo), Charset.defaultCharset());
+				log.info("{} back up seq file {} seqno={}", nid, this.seqNoFile.getName(), Integer.toString(this.setSeqNo));
+			} else
+				log.error("error!!! write seqno file SEQNO_ error {}", nid);
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("error!!! create or open seqno file SEQNO_ error {}", nid);
+		}
+	}
 }
 

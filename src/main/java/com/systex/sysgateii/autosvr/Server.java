@@ -283,7 +283,7 @@ public class Server {
 				// 20201119 add conduction functoon
 				setIsShouldShutDown(true);
 				if (!isConductor.get()) {
-//					PrnSvr.stopServer();
+					PrnSvr.stopServer();  //20240205
 //            	WebServer.stopServer();
 					// 20200926
 					try {
