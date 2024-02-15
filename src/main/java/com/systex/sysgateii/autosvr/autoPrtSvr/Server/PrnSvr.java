@@ -148,7 +148,6 @@ public class PrnSvr implements MessageListener<byte[]> {
 	public void stop()
 	{
 		log.debug("Enter stop");
-		closeEachNodes(); //20240205
 	}
 
 	//20200901
@@ -213,6 +212,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 					log.info("thread [{}] start", t.getName());
 				}
 			}
+			//20240205 MatsudairaSyuMe add closeEachNodesDaemonShutdownHook
+			closeEachNodesDaemonShutdownHook();
+			//--
 			//----
 			monitorThread = new Thread(new Runnable() {
 				@Override
@@ -810,13 +812,18 @@ public class PrnSvr implements MessageListener<byte[]> {
 	//-----
 
 	//20240205 stop each node
-	public static int closeEachNodes() {
-		int total = getMe().nodeList.size();
-		for (Map.Entry<String, PrtCli> entry : getMe().nodeList.entrySet()) {
-			if (getMe().nodeList.get( entry.getKey()).getCurState() != -1)
-				getMe().nodeList.get( entry.getKey()).saveSeqFile(getMe().nodeList.get( entry.getKey()).getId());
-		}
-		return total;
+	private void closeEachNodesDaemonShutdownHook() {
+		log.debug("add closeEachNodesDaemonShutdownHook");
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				log.debug("closeEachNodesDaemonShutdownHook run!!!");
+				for (Map.Entry<String, PrtCli> entry : getMe().nodeList.entrySet()) {
+					if (getMe().nodeList.get( entry.getKey()).getCurState() != -1)
+						getMe().nodeList.get( entry.getKey()).saveSeqFile(getMe().nodeList.get( entry.getKey()).getId());
+				}
+			}
+		});
 	}
+
 	//----
 }
