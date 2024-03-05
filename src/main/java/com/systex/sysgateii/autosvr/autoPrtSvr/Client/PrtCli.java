@@ -1544,11 +1544,23 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				atlog.info("crdb=1 pbpr_dscpt[16]=[{}]", String.format("%x",(int)(dsptb[16] & 0xff)));
 				//----
 				if (crdb[0] == (byte)'0') {
+					//20240305 MatsudairaSyuMe check the last BIG5 characther
+					if (lastByteNeedMark(dsptb, 12)) {
+						log.debug("withdrawal desp 12th byte hi-bit on convert to space");
+						dsptbsnd[11] = (byte)' ';
+					}
+					//----20240305
 					pbpr_crdb = String.format("%12s", new String(dsptb, "BIG5"));
 //					pbpr_crdblog = String.format("%12s", new String(dsptb));
 					pbpr_crdblog = String.format("%12s", new String(dsptb, "BIG5"));
 					dsptblen = 12;  //20220630 MatsudairaSyuMe dsptblen
 				} else {
+					//20240305 MatsudairaSyuMe check the last BIG5 characther
+					if (lastByteNeedMark(dsptb, 17)) {
+						log.debug("deposit desp 17th byte hi-bit on convert to space");
+						dsptbsnd[16] = (byte)' ';
+					}
+					//----20240305
 					pbpr_crdb = String.format("%17s", new String(dsptb, "BIG5"));
 //					pbpr_crdblog = String.format("%17s", new String(dsptb));
 					pbpr_crdblog = String.format("%17s", new String(dsptb, "BIG5"));
@@ -5599,6 +5611,19 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			log.error("error!!! create or open seqno file SEQNO_ error {}", nid);
 		}
 	}
-
+    //20240305 MatsudairaSyuMe check if last one byte of Big5 message need to be marked
+    private boolean lastByteNeedMark(byte[] b, int l) {
+        boolean mark = false;
+        for (int i = 0; i < l; i++) {
+            if ((int)(b[i] & 0x80) == (int)0x80) {
+                mark = true;
+                if (i <= (l - 2)) {
+                    mark = false;
+                    i += 1;
+                }
+            }
+        }
+        return mark;
+    }
 }
 
