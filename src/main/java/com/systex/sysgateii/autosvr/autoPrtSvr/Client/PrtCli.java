@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+//20240201 Use SecureRandom //import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
+//20240211 MatsudairaSyuMe com.systex.sysgateii.autosvr.util
+//import org.apache.commons.io.FileUtils;
+import com.systex.sysgateii.autosvr.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -84,7 +87,7 @@ import io.netty.util.ReferenceCountUtil;
 //20210627 MatsudairaSyuMe add Majordomo Protocol processing
 import org.zeromq.ZMsg;
 //----
-@Sharable // 因為通道只有一組 handler instance 只有一個，所以可以 share
+@Sharable 
 public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListener {
 	private static Logger log = LoggerFactory.getLogger(PrtCli.class);
 	//20220819 add trace log
@@ -131,8 +134,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private String type = null;      // printer type from set up XML file
 	private String autoturnpage = null;
 	private String getSeqStr = "";
-	private int setSeqNo = 0;
-	private File seqNoFile;
+//20240219 改用LONG型態
+//	private int setSeqNo = 0;
+	private Long setSeqNo = 0L;
+//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+//	private File seqNoFile;
+	private String seqNoFile = "";
 
 	private Printer prt = null;
 	private int bufferSize = Integer.parseInt(System.getProperty("bufferSize", Constants.DEF_CHANNEL_BUFFER_SIZE + ""));
@@ -330,7 +337,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//----
 	// 20230522 MasudairaSyuMe register last time read data from pass book print
 	private long lastTimeFromPrt = 0l;
-
+    private boolean alreadyWrite = false; //20231212 MatsudairaSyuMe flag for last time data insert to AMLIG table default false
 	public List<ActorStatusListener> getActorStatusListeners() {
 		return actorStatusListeners;
 	}
@@ -492,11 +499,17 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String result = cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort());;
 		log.debug("==>remote seqno result=[{}]", result);
 		//20210324 MatsudairaSyume initialize sequence no. from 0 at first time build
+		//20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
+		this.seqNoFile = "SEQNO" + File.separator + StrUtil.cleanString("SEQNO" + result);
 		try {
 			//20210723 MatsudairaSyuMe Manipulation
-			this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + result));
+//			this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + result));
 			//----
-			log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
+//			log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
+			//20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
+			File tmpSeqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + result));
+			log.debug("seqNoFile local=" + tmpSeqNoFile.getAbsolutePath());
+			/*20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
 			if (seqNoFile.exists() == false) {
 				File parent = seqNoFile.getParentFile();
 				if (parent.exists() == false) {
@@ -505,6 +518,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.seqNoFile.createNewFile();
 				FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
 				this.setSeqNo = 0;  //202207089 MatsudairasyuMe
+			}*/
+
+			if (tmpSeqNoFile.exists() == false) {
+				File parent = tmpSeqNoFile.getParentFile();
+				if (parent.exists() == false) {
+					parent.mkdirs();
+				}
+				tmpSeqNoFile.createNewFile();
+				//20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
+				FileUtils.writeStringToFile(this.seqNoFile, "0");
+				//20240219 改用LONG型態
+//				this.setSeqNo = 0;  //202207089 MatsudairasyuMe
+				this.setSeqNo = 0L;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1518,11 +1544,23 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				atlog.info("crdb=1 pbpr_dscpt[16]=[{}]", String.format("%x",(int)(dsptb[16] & 0xff)));
 				//----
 				if (crdb[0] == (byte)'0') {
+					//20240305 MatsudairaSyuMe check the last BIG5 characther
+					if (lastByteNeedMark(dsptb, 12)) {
+						log.debug("withdrawal desp 12th byte hi-bit on convert to space");
+						dsptbsnd[11] = (byte)' ';
+					}
+					//----20240305
 					pbpr_crdb = String.format("%12s", new String(dsptb, "BIG5"));
 //					pbpr_crdblog = String.format("%12s", new String(dsptb));
 					pbpr_crdblog = String.format("%12s", new String(dsptb, "BIG5"));
 					dsptblen = 12;  //20220630 MatsudairaSyuMe dsptblen
 				} else {
+					//20240305 MatsudairaSyuMe check the last BIG5 characther
+					if (lastByteNeedMark(dsptb, 17)) {
+						log.debug("deposit desp 17th byte hi-bit on convert to space");
+						dsptbsnd[16] = (byte)' ';
+					}
+					//----20240305
 					pbpr_crdb = String.format("%17s", new String(dsptb, "BIG5"));
 //					pbpr_crdblog = String.format("%17s", new String(dsptb));
 					pbpr_crdblog = String.format("%17s", new String(dsptb, "BIG5"));
@@ -1619,13 +1657,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//20200826
 				// 20210723 MatsudairaSyuMe Log Forging, 20210802
 				//String chkpr_datalog = "";
+				/*20240226 mark
 				try {
 					atlog.info(": PbDataFormat() -- All Data=[{}]",StrUtil.convertValidLog(pr_datalog));
 				} catch (Exception ce) {
 					ce.printStackTrace();
 					log.error(": PbDataFormat() -- error",ce.toString()); //20210730 add
 					atlog.info(": PbDataFormat() -- All Data=[]"); //20210730 add
-				}
+				}*/
 				//----
 				//Print Data
 				//20200915
@@ -3114,20 +3153,32 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					tital.setValue("wsno", this.brws.substring(3));
 					//20231115 MatsudairaSyuMe try read again after write to SEQNO file for making sure the new seq. number has been update
 					String[] testTime = {"1", "2", "3"};
-					int tmpSetSeqNo = 0;
+					//20240219 改用LONG型態
+//					int tmpSetSeqNo = 0;
+					Long tmpSetSeqNo = 0L;
 					for (String t : testTime) {
 						try {
-							tmpSetSeqNo = 1 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+							//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+//							tmpSetSeqNo = 1 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+							//20240219 改用LONG型態
+//							tmpSetSeqNo = 1 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, "UTF-8"));
+							tmpSetSeqNo = 1L + Long.parseLong(FileUtils.readFileToString(this.seqNoFile, "UTF-8"));
 							if (tmpSetSeqNo > 99999999) //20221123 99999->99999999
-								tmpSetSeqNo = 1;
-							FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+//								tmpSetSeqNo = 1;
+								tmpSetSeqNo = 1L;
+								//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+//							FileUtils.writeStringToFile(this.seqNoFile, Charset.defaultCharset());
+//							FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo));
+							FileUtils.writeStringToFile(this.seqNoFile, Long.toString(tmpSetSeqNo));
 							//20231115 make sure buffer flushed
 							System.gc();
 							//--20231115-- 
 							//read new seqNo from seqNoFile for check
-							this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
-							//log.debug("test setSeqNo={} tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
-							if (this.setSeqNo == tmpSetSeqNo)
+//							this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, "UTF-8"));
+							this.setSeqNo = Long.parseLong(FileUtils.readFileToString(this.seqNoFile, "UTF-8"));
+							log.debug("test setSeqNo={} tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
+//							if (this.setSeqNo == tmpSetSeqNo)
+							if (this.setSeqNo.equals(tmpSetSeqNo))
 								break;
 							else
 								log.error("ERROR !!! setSeqNo={} != tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
@@ -3139,21 +3190,41 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							//FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo),
 							//		Charset.defaultCharset());
 						} catch (Exception e) {
-							log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+							log.error("ERROR!!! update new seq number string {} tmpSetSeqNo={} error {}", this.setSeqNo, tmpSetSeqNo, e.getMessage());
 							//20231115 MatsudairaSyuMe delete file firstly
-							FileUtils.deleteQuietly(this.seqNoFile);
+							//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+							//FileUtils.deleteQuietly(this.seqNoFile);
 							try {
-								this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort())));
-								log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
-								if (seqNoFile.exists() == false) {
-									File parent = seqNoFile.getParentFile();
-									if (parent.exists() == false) {
-										parent.mkdirs();
-									}
-									this.seqNoFile.createNewFile();
-									FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
-									this.setSeqNo = 0;
-								}
+								//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+//								this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort())));
+//								log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
+//								if (seqNoFile.exists() == false) {
+//									File parent = seqNoFile.getParentFile();
+//									if (parent.exists() == false) {
+//										parent.mkdirs();
+//									}
+//									//20231222 MatsudairaSyuMe use random number
+//									//20240201 Use SecureRandom  //Random rand = new Random();
+//									tmpSetSeqNo = genRanSeq();   //20240201 Use SecureRandom //tmpSetSeqNo = rand.nextInt(99999998);
+//									if (this.setSeqNo == tmpSetSeqNo)
+//										tmpSetSeqNo += 1; // if random number the same as original num then add one
+//									//----
+//									this.seqNoFile.createNewFile();
+//									FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+//									//20231222 change to use random numberthis.setSeqNo = 0;
+//									this.setSeqNo = tmpSetSeqNo;
+//								}
+								//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+								//20240219 改用LONG型態
+//								tmpSetSeqNo = genRanSeq();
+								tmpSetSeqNo = (long) genRanSeq();
+//	                        if (this.setSeqNo == tmpSetSeqNo)
+							if (this.setSeqNo.equals(tmpSetSeqNo))
+	                            tmpSetSeqNo += 1L; // if random number the same as original num then add one
+//	                        FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo));
+	                        FileUtils.writeStringToFile(this.seqNoFile, Long.toString(tmpSetSeqNo));
+	                        this.setSeqNo = tmpSetSeqNo;
+	                        //----
 							} catch (IOException er) {
 								er.printStackTrace();
 								log.error("error!!! create or open seqno file SEQNO_ error");
@@ -3166,10 +3237,14 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							this.setSeqNo = 0;
 							*/
 						}
-						tmpSetSeqNo = 0;
+//						tmpSetSeqNo = 0;
+						tmpSetSeqNo = 0L;
 					}
-					if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0) {
-						log.error("error!!! can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
+//					if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0) {
+					if (!tmpSetSeqNo.equals(this.setSeqNo) || tmpSetSeqNo.equals(0L)) {
+						//20240211 MatsudairaSyuMe 	change to use com.systex.sysgateii.autosvr.util.FileUtil
+//						log.error("error!!! can not update new SEQNO file {} current setSeqNo={} tmpSetSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo, tmpSetSeqNo);
+						log.error("error!!! can not update new SEQNO file {} current setSeqNo={} tmpSetSeqNo={} !!!!!",this.seqNoFile, this.setSeqNo, tmpSetSeqNo);
 					}
 					//----20231115 MatsudairaSyuMe end try read again after write to SEQNO file for making sure the new seq. number has been update
 					tital.setValueRtoLfill("txseq", String.format("%d", this.setSeqNo), (byte) '0');
@@ -3547,50 +3622,89 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 									//20231115 add check for duplicate seq. no. if mt + mnostr == "E692" then increment 10 to setSeq and save toe locale reg. file
 									if (new String(mt + mnostr).equals("E692")) {
 										String[] testTime = {"1", "2", "3"};
-										int tmpSetSeqNo = 0;
+										//20240219 改用LONG型態
+//										int tmpSetSeqNo = 0;
+										Long tmpSetSeqNo = 0L;
 										for (String t : testTime) {
 											try {
-												tmpSetSeqNo = 10 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+//20240211 MatsudairaSyuMe chnge to use com.systex.sysgateii.autosvr.util.FileUtils												
+//												tmpSetSeqNo = 10 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+												//20240219 改用LONG型態
+//												tmpSetSeqNo = 10 + Integer.parseInt(FileUtils.readFileToString(this.seqNoFile,  "UTF-8"));
+												tmpSetSeqNo = 10 + Long.parseLong(FileUtils.readFileToString(this.seqNoFile,  "UTF-8"));
 												if (tmpSetSeqNo > 99999999) //20221123 99999->99999999
-													tmpSetSeqNo = 1;
-												FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+//													tmpSetSeqNo = 1;
+													tmpSetSeqNo = 1L;
+												//20240211 MatsudairaSyuMe chnge to use com.systex.sysgateii.autosvr.util.FileUtils												
+//												FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+//												FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo));
+												FileUtils.writeStringToFile(this.seqNoFile, Long.toString(tmpSetSeqNo));
 												//20231115 make sure buffer flushed
 												System.gc();
 												//--20231115-- 
 												//read new seqNo from seqNoFile for check
-												this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+												//20240211 MatsudairaSyuMe chnge to use com.systex.sysgateii.autosvr.util.FileUtils												
+//												this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile, Charset.defaultCharset()));
+												//20240219 改用LONG型態
+//												this.setSeqNo = Integer.parseInt(FileUtils.readFileToString(this.seqNoFile,"UTF-8"));
+												this.setSeqNo = Long.parseLong(FileUtils.readFileToString(this.seqNoFile,"UTF-8"));
 												//log.debug("test setSeqNo={} tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
-												if (this.setSeqNo == tmpSetSeqNo)
+//												if (this.setSeqNo == tmpSetSeqNo)
+												if (this.setSeqNo.equals(tmpSetSeqNo))
 													break;
 												else
 													log.error("ERROR !!! setSeqNo={} != tmpSetSeqNo={}", this.setSeqNo, tmpSetSeqNo);
 											} catch (Exception e) {
-												log.error("ERROR!!! update new seq number string {} error {}", this.setSeqNo, e.getMessage());
+												log.error("ERROR!!! update new seq number string {} tmpSetSeqNo={} error {}", this.setSeqNo, tmpSetSeqNo, e.getMessage());
 												//20231115 MatsudairaSyuMe delete file firstly
-												FileUtils.deleteQuietly(this.seqNoFile);
+												//20240211 MatsudairaSyuMe chnge to use com.systex.sysgateii.autosvr.util.FileUtils												
+											//	FileUtils.deleteQuietly(this.seqNoFile);
 												try {
-													this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort())));
-													log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
-													if (seqNoFile.exists() == false) {
-														File parent = seqNoFile.getParentFile();
-														if (parent.exists() == false) {
-															parent.mkdirs();
-														}
-														this.seqNoFile.createNewFile();
-														FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
-														this.setSeqNo = 0;
-													}
+//													this.seqNoFile = new File("SEQNO", StrUtil.cleanString("SEQNO" + cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort())));
+//													log.debug("seqNoFile local=" + this.seqNoFile.getAbsolutePath());
+//													if (seqNoFile.exists() == false) {
+//														File parent = seqNoFile.getParentFile();
+//														if (parent.exists() == false) {
+//															parent.mkdirs();
+//														}
+//														this.seqNoFile.createNewFile();
+														//20231222 MatsudairaSyuMe use random number
+														//20240201 Use SecureRandom //Random rand = new Random();
+//														tmpSetSeqNo = genRanSeq();//20240201 Use SecureRandom //rand.nextInt(99999998);
+//													if (this.setSeqNo == tmpSetSeqNo)
+//															tmpSetSeqNo += 1; // if random number the same as original num then add one
+														//----
+//														this.seqNoFile.createNewFile();
+//														FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+//														//20231222 change to use random numberthis.setSeqNo = 0;
+//														this.setSeqNo = tmpSetSeqNo;
+												//20240219 改用LONG型態	
+//								                  tmpSetSeqNo = genRanSeq();
+												  tmpSetSeqNo = (long)genRanSeq();
+//							                      if (this.setSeqNo == tmpSetSeqNo)
+												  if (this.setSeqNo.equals(tmpSetSeqNo))
+								                     tmpSetSeqNo += 1L; // if random number the same as original num then add one
+//								                  FileUtils.writeStringToFile(seqNoFile, Integer.toString(tmpSetSeqNo));
+								                  FileUtils.writeStringToFile(seqNoFile, Long.toString(tmpSetSeqNo));
+								                  setSeqNo = tmpSetSeqNo;
 												} catch (IOException er) {
 													er.printStackTrace();
 													log.error("error!!! create or open seqno file SEQNO_ error");
 												}
 												break;
 											}
-											tmpSetSeqNo = 0;
+//											tmpSetSeqNo = 0;
+											tmpSetSeqNo = 0L;
 										}
-										if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0)
-											log.error("error!!! E692 can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
-										else
+//										if (tmpSetSeqNo != this.setSeqNo || tmpSetSeqNo == 0)
+										if (!tmpSetSeqNo.equals(this.setSeqNo) || tmpSetSeqNo.equals(0L))
+										//20231219 send warning message to OSM
+										{
+											//20240211 MatsudairaSyuMe chnge to use com.systex.sysgateii.autosvr.util.FileUtils												
+//											log.error("error!!! E692 can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile.getAbsolutePath(), this.setSeqNo);
+											log.error("error!!! E692 can not update new SEQNO file {} current setSeqNo={} !!!!!",this.seqNoFile, this.setSeqNo);
+											prtAbNomalAlart(PrnSvr.svrid.trim() + "_" + this.brws); //send OSM and restart this passbook printer thread
+										} else
 											log.info("debug!!! E692 change setSeqNo to {}", this.setSeqNo);
 									}
 									//----
@@ -3781,6 +3895,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		log.debug("{}=====resetPassBook prtcliFSM", this.curState);
 		// 20230522 MasudairaSyuMe register last time read data from pass book print
 		this.lastTimeFromPrt = 0l;
+		//20231212
+		this.alreadyWrite = false;
+		//----
 		return;
 	}
 
@@ -3810,6 +3927,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			//----
 			// 20230522 MasudairaSyuMe register last time read data from pass book print
 			this.lastTimeFromPrt = 0l;
+			//20231212
+			this.alreadyWrite = false;
+			//20231212----
 			return;
 		}
         //20200616 add this.lastState and check duration time
@@ -5274,26 +5394,41 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 
 	//20201119 insert AM error status data
 	public void InsertAMStatus(String brws, String passname, String act, String desc) {
-		try {
-			if (amtbcon == null)
-				amtbcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-			String t = sdf.format(new java.util.Date());
-			//20211028 MatsudairaSyuMe change field position
-			String fldam = String.format(amstatusptrn, t, brws, passname, act, desc);
-			String[] rsno = amtbcon.INSSELChoiceKey(PrnSvr.devamtbname, PrnSvr.devamtbfields, fldam, PrnSvr.devamtbsearkey, "-1", false, false);
-			if (rsno != null) {
-				for (int i = 0; i < rsno.length; i++)
-					log.debug("update =======> rsno[{}]=[{}]",i,rsno[i]);
-			} else
-				log.error("rsno null");
-			amtbcon.CloseConnect();
-			amtbcon = null;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.debug("insert am error status table error e:[{}]", e.toString());
+		//20231212 MatsudairaSyuMe check if need to write AU_AMlog or reset to false
+		if (desc != null && desc.trim().length() > 1  && (desc.trim().substring(0, 2).equals("52") || desc.trim().substring(0, 2).equals("01"))) {
+			this.alreadyWrite = false;
+			return;
+		} else {
+			if (!this.alreadyWrite && (desc != null)) {
+		//20231212----
+				try {
+					if (amtbcon == null)
+						amtbcon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+					String t = sdf.format(new java.util.Date());
+					//20211028 MatsudairaSyuMe change field position
+					String fldam = String.format(amstatusptrn, t, brws, passname, act, desc);
+					String[] rsno = amtbcon.INSSELChoiceKey(PrnSvr.devamtbname, PrnSvr.devamtbfields, fldam, PrnSvr.devamtbsearkey, "-1", false, false);
+					if (rsno != null) {
+						for (int i = 0; i < rsno.length; i++)
+							log.debug("update =======> rsno[{}]=[{}]",i,rsno[i]);
+					} else
+						log.error("rsno null");
+					amtbcon.CloseConnect();
+					amtbcon = null;
+					//20231212
+					if (!desc.trim().substring(0, 2).equals("06"))
+						this.alreadyWrite = true;
+					//20231212----
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					log.debug("insert am error status table error e:[{}]", e.toString());
+				}
+		//20231212
+			}
 		}
+		//20231212----
 	}
 	//----
 	//20210112
@@ -5372,19 +5507,23 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			File alartf = new File("Mon", StrUtil.cleanString(brws + "_alt"));
 			//og.debug("alart file=[{}]", alartf.getAbsolutePath());
 			if (alartf.exists() == false) {
-				File parent = alartf.getParentFile();
-				if (alartf.exists() == false) {
-					parent.mkdirs();
-				}
-				alartf.createNewFile();
-				FileUtils.writeStringToFile(alartf, "0", Charset.defaultCharset());
+//				File parent = alartf.getParentFile();
+//				if (alartf.exists() == false) {
+//					parent.mkdirs();
+//				}
+//				alartf.createNewFile();
+				//20240211 MatsudairaSyuMe change to use com.systex.sysgateii.autosvr.util.fileUtils
+//				FileUtils.writeStringToFile(alartf, "0", Charset.defaultCharset());
+				FileUtils.writeStringToFile("Mon" + File.separator + StrUtil.cleanString(brws + "_alt"), "0");
 				log.debug("create alart file=[{}] seq=0", alartf.getAbsolutePath());
 				log.info("stable already trigger OSM please restart [{}] asap!!!", this.brws);
 				amlog.info("[{}][{}][{}]:97補摺機太久無回應，開始嘗試重啟連線", brws, "        ", "            ");									
 				close();
 			} else {
 				try {
-					String f = FileUtils.readFileToString(alartf, Charset.defaultCharset());
+					//20240211 MatsudairaSyuMe change to use com.systex.sysgateii.autosvr.util.fileUtils
+//					String f = FileUtils.readFileToString(alartf, Charset.defaultCharset());
+					String f = FileUtils.readFileToString("Mon" + File.separator + StrUtil.cleanString(brws + "_alt"), "UTF-8");
 					log.debug("alart file=[{}] flag=[{}]", alartf.getAbsolutePath(), f);
 					if (f != null && f.trim().length() > 0 && f.charAt(0) == (char) '0') {
 						log.warn("stable still not trigger OSM please check stable and restart [{}]", this.brws);
@@ -5395,7 +5534,22 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					}
 				} catch (Exception e) {
 					log.error("ERROR!!! check alart file  error {}", e.getMessage());
-					FileUtils.writeStringToFile(alartf, "0",	Charset.defaultCharset());
+					//20231222 MatsudairaSyuMe use random number
+					//20240201 Use SecureRandom //Random rand = new Random();
+					//20240219 改用LONG型態
+//					int tmpSetSeqNo = genRanSeq(); //20240201 Use SecureRandom //rand.nextInt(99999998);
+					long tmpSetSeqNo = genRanSeq();
+//					if (this.setSeqNo == tmpSetSeqNo)
+					if (this.setSeqNo.equals(tmpSetSeqNo))
+						tmpSetSeqNo += 1L; // if random number the same as original num then add one
+					//----
+					//20240211 MatsudairaSyuMe change to use com.systex.sysgateii.autosvr.util.fileUtils
+//					this.seqNoFile.createNewFile();
+//					FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo), Charset.defaultCharset());
+//					FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(tmpSetSeqNo));
+					FileUtils.writeStringToFile(this.seqNoFile, Long.toString(tmpSetSeqNo));
+					//20231222 change to use random numberthis.setSeqNo = 0;
+					this.setSeqNo = tmpSetSeqNo;
 				}
 			}
 
@@ -5421,5 +5575,55 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			log.error("error!!! delete brws alart file error");
 		}
 	}
+
+	private int genRanSeq() {
+		SecureRandom secureRandomGenerator = null;
+		int rtnSeq = 0;
+		try {
+			secureRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
+			rtnSeq = secureRandomGenerator.nextInt(99999998);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			log.error("SecureRandom error:NoSuchAlgorithmException");
+		} finally {
+			if (rtnSeq == 0)
+				rtnSeq = 1;
+		}
+		return rtnSeq;
+	}
+	//20240205 MatsudairaSyuMe save SeqNo
+	public void saveSeqFile(String nid) {
+		try {
+			//20240211 MatsudairaSyuMe change to use com.systex.sysgateii.autosvr.util.fileUtils
+//			if (this.seqNoFile.exists() == true) {
+//				FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo), Charset.defaultCharset());
+//				log.info("{} back up seq file {} seqno={}", nid, this.seqNoFile.getName(), Integer.toString(this.setSeqNo));
+//			} else
+//				log.error("error!!! write seqno file SEQNO_ error {}", nid);
+			//20240219 改用LONG型態
+//			FileUtils.writeStringToFile(this.seqNoFile, Integer.toString(this.setSeqNo));
+//			log.info("{} back up seq file {} seqno={}", nid, this.seqNoFile, Integer.toString(this.setSeqNo));
+			FileUtils.writeStringToFile(this.seqNoFile, Long.toString(this.setSeqNo));
+			log.info("{} back up seq file {} seqno={}", nid, this.seqNoFile, Long.toString(this.setSeqNo));
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("error!!! create or open seqno file SEQNO_ error {}", nid);
+		}
+	}
+    //20240305 MatsudairaSyuMe check if last one byte of Big5 message need to be marked
+    private boolean lastByteNeedMark(byte[] b, int l) {
+        boolean mark = false;
+        for (int i = 0; i < l; i++) {
+            if ((int)(b[i] & 0x80) == (int)0x80) {
+                mark = true;
+                if (i <= (l - 2)) {
+                    mark = false;
+                    i += 1;
+                }
+            }
+        }
+        return mark;
+    }
 }
 

@@ -31,6 +31,9 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.rolling.TimeBasedFileNamingAndTriggeringPolicy;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import ch.qos.logback.core.spi.AppenderAttachable;
+//20240131 MatsudairaSyuMe add for OptionHelper.substVars ScanException
+import ch.qos.logback.core.spi.ScanException;
+//----
 import ch.qos.logback.core.util.FileSize;
 import ch.qos.logback.core.util.OptionHelper;
 import ch.qos.logback.core.util.StatusPrinter;
@@ -189,52 +192,59 @@ public class LogUtil {
 			fpn = "." + File.separator + "archive" + File.separator + logName + ".%d{yyyy-MM-dd}.%i.log.zip";
 			*/
 		rollingPolicy.setMaxHistory(30);
-		rollingPolicy.setFileNamePattern(OptionHelper.substVars(fpn, loggerContext));
-		rollingPolicy.setCleanHistoryOnStart(true);
-		rollingPolicy.setContext(loggerContext);
-		rollingPolicy.setParent(rfAppender);
-		// Also impose a max size per file policy.
-		SizeAndTimeBasedFNATP<ILoggingEvent> fnatp = new SizeAndTimeBasedFNATP<ILoggingEvent>();
-		fnatp.setContext(loggerContext);
-		fnatp.setTimeBasedRollingPolicy(rollingPolicy);
-		fnatp.setMaxFileSize(FileSize.valueOf(String.format("%sMB", 30l)));
-		
-		rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(fnatp);
-		rfAppender.setRollingPolicy(rollingPolicy);
-		rfAppender.setTriggeringPolicy(rollingPolicy);
-		logbackLogger = loggerContext.getLogger(logName);
-		logbackLogger.addAppender(rfAppender);
-		if (level.equalsIgnoreCase("debug"))
-		{
-			logbackLogger.setLevel(Level.DEBUG);			
-		}
-		else if (level.equalsIgnoreCase("info"))
-		{
-			logbackLogger.setLevel(Level.INFO);						
-		}
-		else if (level.equalsIgnoreCase("error"))
-		{
-			logbackLogger.setLevel(Level.ERROR);						
-		}
-		else
-		{
-			logbackLogger.setLevel(Level.ALL);												
-		}
-		rfAppender.setEncoder(encoder);
-		//rfAppender.setRollingPolicy(rollingPolicy);
+		//20240131 MAtsudairaSyuMe add ScanException
+		try {
+			rollingPolicy.setFileNamePattern(OptionHelper.substVars(fpn, loggerContext));
+			rollingPolicy.setCleanHistoryOnStart(true);
+			rollingPolicy.setContext(loggerContext);
+			rollingPolicy.setParent(rfAppender);
+			// Also impose a max size per file policy.
+			SizeAndTimeBasedFNATP<ILoggingEvent> fnatp = new SizeAndTimeBasedFNATP<ILoggingEvent>();
+			fnatp.setContext(loggerContext);
+			fnatp.setTimeBasedRollingPolicy(rollingPolicy);
+			fnatp.setMaxFileSize(FileSize.valueOf(String.format("%sMB", 30l)));
 
-		// attach the rolling file appender to the logger of your choice
-		if (encoder.isStarted())
-			encoder.stop();
-		encoder.start();
-		if (rollingPolicy.isStarted())
-			rollingPolicy.stop();
-		rollingPolicy.start();
-		if (rfAppender.isStarted())
-			rfAppender.stop();
-		rfAppender.start();
+			rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(fnatp);
+			rfAppender.setRollingPolicy(rollingPolicy);
+			rfAppender.setTriggeringPolicy(rollingPolicy);
+			logbackLogger = loggerContext.getLogger(logName);
+			logbackLogger.addAppender(rfAppender);
+			if (level.equalsIgnoreCase("debug"))
+			{
+				logbackLogger.setLevel(Level.DEBUG);			
+			}
+			else if (level.equalsIgnoreCase("info"))
+			{
+				logbackLogger.setLevel(Level.INFO);						
+			}
+			else if (level.equalsIgnoreCase("error"))
+			{
+				logbackLogger.setLevel(Level.ERROR);						
+			}
+			else
+			{
+				logbackLogger.setLevel(Level.ALL);												
+			}
+			rfAppender.setEncoder(encoder);
+			//rfAppender.setRollingPolicy(rollingPolicy);
 
-		return logbackLogger;
+			// attach the rolling file appender to the logger of your choice
+			if (encoder.isStarted())
+				encoder.stop();
+			encoder.start();
+			if (rollingPolicy.isStarted())
+				rollingPolicy.stop();
+			rollingPolicy.start();
+			if (rfAppender.isStarted())
+				rfAppender.stop();
+			rfAppender.start();
+
+			return logbackLogger;
+		}
+		catch (ScanException ex) {
+			throw new RuntimeException(ex);
+		}
+
 	}
 
 	public static void stopLog(Logger tarLog) {

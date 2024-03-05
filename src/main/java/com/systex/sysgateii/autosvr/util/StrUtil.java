@@ -10,8 +10,9 @@ import java.util.Arrays;
 //20210702 MatsudairasyuMe import for Log Forging
 import java.util.List;
 //20210802 MatsudairaSyuMe import for Log forging
-import org.owasp.esapi.ESAPI;
-
+//20240223 MatsudairaSyuMe mark up don't use OWASP ESAPI
+//import org.owasp.esapi.ESAPI;
+//----
 public class StrUtil {
 	public static boolean isNotEmpty(String s) {
 		if (s == null || s.isEmpty()) {
@@ -103,14 +104,19 @@ public class StrUtil {
         return encode;
     }*/
 	//20210803 MatsudairaSyuMe function use ESPI for Log Forging
+	//20240223 MatsudairaSyuMe change to use 
+	@SuppressWarnings("deprecation")
 	public static String convertValidLog(String message){
 		message = message.replace('\n', '_').replace('\r', '_').replace('\t', '_');
+		/*
 		try {
-			message = ESAPI.encoder().encodeForHTML(message);
-		} catch (Exception e) {
+			//message = ESAPI.encoder().encodeForHTML(message);
+		} catch(Exception e) {
 			;//e.printStackTrace();
 		}
 		return message;
+		*/
+		return org.apache.commons.lang3.StringEscapeUtils.escapeXml(message);
     }
 	//----
     //20210723 MatshdairaSyuMe add for Path Manipulation
