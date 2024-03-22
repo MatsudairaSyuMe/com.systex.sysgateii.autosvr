@@ -13,7 +13,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-import static org.junit.Assert.assertEquals;
 import java.io.Closeable;
 import java.io.File;
 import java.net.ConnectException;

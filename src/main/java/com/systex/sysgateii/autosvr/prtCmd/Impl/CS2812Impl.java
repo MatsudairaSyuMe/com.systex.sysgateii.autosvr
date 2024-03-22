@@ -387,11 +387,14 @@ public class CS2812Impl implements Printer {
 		return false;
 	}
 
+	/* 20240311 MatsudairaSyuMe mark up
 	@Override
 	public boolean Prt_Text(byte[] skipbuff, byte[] buff) {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	*/
+	
 	@Override
 	public boolean ChkAddFont(int fontno) {
 		// TODO Auto-generated method stub
@@ -699,7 +702,7 @@ public class CS2812Impl implements Printer {
 	}
 
 	@Override
-	public boolean CheckPaper() {
+	public boolean CheckPaper(boolean startDetect, int iTimeout) {
 		// TODO Auto-generated method stub
 		return false;
 	}
