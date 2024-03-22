@@ -62,7 +62,7 @@ public interface Printer {
 	*	Prt_Text : Print the text data			         *
 	*********************************************************************/
 	public boolean Prt_Text(byte[]  buff);
-	public boolean Prt_Text(byte[] skipline, byte[]  buff);
+	//20240311 MatsudairaSyuMe public boolean Prt_Text(byte[] skipline, byte[]  buff);
 	
 	/********************************************************************
 	*	ChkAddFont : Check the additional chinese char	*
@@ -212,7 +212,7 @@ public interface Printer {
 
 	public boolean AddExtFont(byte high,byte low);
 
-	public boolean CheckPaper();
+	public boolean CheckPaper(boolean startDetect, int iTimeout);
 
 	public boolean CheckError(byte[] data);
 

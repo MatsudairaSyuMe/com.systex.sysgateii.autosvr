@@ -784,309 +784,12 @@ public class CS5240Impl implements Printer {
 //		}
 		return true;
 	}
+	/* 20240311 MatsudairaSyuMe mark up
 	@Override
 	public boolean Prt_Text(byte[] skipbuff, byte[] buff) {
 		// TODO Auto-generated method stub
-		int i = 0, wlen = 0;
-		if (buff == null || buff.length == 0)
-			return (false);
-		int len = buff.length;
-		byte bcc = 0x0;
-		byte chrtmp = 0x0;
-		byte chrtmp1 = 0x0;
-		boolean dblword = false; // chinese character
-		byte[] data = null;
-		boolean bPrinterNoFont = false;
-
-		byte[] linefeed = null;
-		int j, offset = 0;
-		boolean bLineFeed;
-		boolean bHalf = false;
-		//20211012 MatsudiaraSyuMe extend size of hBuf from 600 to 1500
-		byte[] hBuf = new byte[1500];
-
-		// filter space 91.10.09
-		bLineFeed = false;
-
-		for (j = len - 1; j >= 0; j--) {
-			if (buff[j] != (byte)0x0a && buff[j] != (byte)0x0d)
-				break;
-			else
-				bLineFeed = true;
-		}
-/*		if (bLineFeed) {
-			linefeed = new byte[len - j - 1];
-			System.arraycopy(buff, j + 1, linefeed, 0, len - j - 1);
-			offset = j;
-			linefeed = new byte[offset + 1];
-			System.arraycopy(buff, 0, linefeed, 0, offset + 1);
-			buff = linefeed;
-		}*/
-		len = buff.length;
-		if (this.notSetCLPI.get() == true)
-		{
-			if (nCPI != 0)
-				SetCPI(true, nCPI);
-			else if (nLPI != 0)
-				SetLPI(true, nLPI);
-			notSetCLPI.set(false);
-		}
-		boolean bBeginRedSession=m_bColorRed.get();
-		boolean bBeginSISession=false;
-		this.curState = Prt_Text_START;
-//		while (i < len ) {
-//			chrtmp = buff[i];
-//			chrtmp1 = buff[i+1];
-/*			if((this.p_fun_flag.get() == true) && (int)(chrtmp & 0xff) >= (int)((byte)0x80 & 0xff))
-			{
-				log.debug("0 ===<><>{} Prt_Text check chinese Font chkChkState {} i={}", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-
-				if (ChkAddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff))) == true)
-				{
-					AddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff)));
-					log.debug("1 ===<><>{} Prt_Text enter S4625_PSI chkChkState {} i={} AddFont", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-					i+=2;
-					continue;
-				}
-				if (ChkExtFont((int)((chrtmp & 0x00ff)<<8)+((int)((chrtmp1 & 0xff)))) == true)
-				{
-					AddExtFont(chrtmp,chrtmp1);
-					log.debug("2 ===<><>{} Prt_Text enter S4625_PSI chkChkState {} i={} AddExtFont", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-					i+=2;
-					continue;
-				}
-			}*/
-//			log.debug("Prt_Text i={} len={}", i, len);
-/*			if ( len > 1 ) {
-				if ( buff[i] == (byte)0x0a &&
-					 buff[i-1] != (byte)0x0d )
-				{
-					Send_hData(S4625_PNON_PRINT_AREA);
-					Send_hData(S4625_PENLARGE_OD);
-					//20060906 if addfont is the last char and follows a 0x0a , then slip won't catch newline
-					if ( i == ( len -  1 ) )
-						Send_hData(S4625_PENLARGE_OA);
-					//Sleep(250);
-//					PurgeBuffer();
-					//see what happen in r8
-					if (this.curState == Prt_Text_START || this.curState == Prt_Text) {
-						if (this.curState == Prt_Text_START) {
-							this.curChkState = CheckStatus_START;
-							this.curState = Prt_Text;
-						}
-						data = CheckStatus();
-						log.debug("2 ===<><>{} Prt_Text chkChkState {} {}", this.curState, this.curChkState, data);
-						if (CheckDis(data) != 0) {
-							this.curState = ResetPrinterInit_START;
-							log.debug("{} {} {} {} 94補摺機狀態錯誤！", iCnt, brws, "", "");
-							return false;
-						}
-						if (!CheckError(data)) {
-							log.debug("{} {} {} {} 94存摺資料補登時發生錯誤！", iCnt, brws, "", "");
-							return false;
-						} else {
-							this.curState = Prt_Text_START;
-						}
-					}
-					i++;
-				}
-			}
-			else {
-				if ( buff[0] == (byte)0x0a ||
-					 buff[0] == (byte)0x0d )
-				{
-					Send_hData(S4625_PNON_PRINT_AREA);
-					Send_hData(S4625_PENLARGE_OD);
-					Send_hData(S4625_PENLARGE_OA);
-					//Sleep(250);
-//					PurgeBuffer();
-					//see what happen in r8
-					//data=CheckStatus();
-					//CheckError(data);
-					i++;
-				}
-			}*/
-/*			if (len > 1) {
-				if (buff[i] == (byte) 0x0a && buff[i - 1] != (byte) 0x0d) {
-					System.arraycopy(S4625_PNON_PRINT_AREA, 0, hBuf, wlen+3, S4625_PNON_PRINT_AREA.length);
-					wlen += S4625_PNON_PRINT_AREA.length;
-					System.arraycopy(S4625_PENLARGE_OD, 0, hBuf, wlen+3, S4625_PENLARGE_OD.length);
-					wlen += S4625_PENLARGE_OD.length;
-					System.arraycopy(S4625_PENLARGE_OA, 0, hBuf, wlen+3, S4625_PENLARGE_OA.length);
-					i++;
-					log.debug("2.1 ===<><>{} {} Prt_Text wlen={} i={}", this.curState, this.curChkState, wlen, i);
-				}
-			} else {
-				if (buff[0] == (byte) 0x0a || buff[0] == (byte) 0x0d) {
-					System.arraycopy(S4625_PNON_PRINT_AREA, 0, hBuf, wlen+3, S4625_PNON_PRINT_AREA.length);
-					wlen += S4625_PNON_PRINT_AREA.length;
-					System.arraycopy(S4625_PENLARGE_OD, 0, hBuf, wlen+3, S4625_PENLARGE_OD.length);
-					wlen += S4625_PENLARGE_OD.length;
-					System.arraycopy(S4625_PENLARGE_OA, 0, hBuf, wlen+3, S4625_PENLARGE_OA.length);
-					i++;
-					log.debug("2.2 ===<><>{} {} Prt_Text wlen={} i={}", this.curState, this.curChkState, wlen, i);
-				}
-			}*/
-			{
-				Arrays.fill(hBuf, (byte)0x0);
-				while (i < len)
-				{
-					if ( bBeginRedSession == true ) {
-						//set to red
-					}
-//					log.debug("3 ===<><>{} Prt_Text chkChkState {} wlen={} i={} len={} {} {} {}", this.curState, this.curChkState,wlen,i,len, (char)buff[i], Byte.toString(buff[i]), Byte.toString(buff[i+1]));
-					hBuf[wlen+3] = buff[i];
-					hBuf[wlen+4] = buff[i+1];
-					chrtmp = buff[i];
-					chrtmp1 = buff[i+1];
-//					log.debug("3 ===<><>Prt_Text chkChkState {} {}", (int)(chrtmp & 0xff), (int)(0x80 & 0xff));
-//20200729					if ( (int)(chrtmp & 0xff) >= (int)(0x80 & 0xff))
-					if((this.p_fun_flag.get() == true) && (int)(chrtmp & 0xff) >= (int)((byte)0x80 & 0xff))
-					{
-						dblword = true;
-						// check only , BNE 6319 , break
-	/*					if (ChkAddFont(((chrtmp<<8)+(chrtmp1))) == true)
-						{
-							dblword = false;
-							break;
-						}
-						if (ChkExtFont(((chrtmp<<8)+(chrtmp1))) == true)
-						{
-							dblword = false;
-							break;
-						}*/
-
-						log.debug("0 ===<><>{} {} Prt_Text check chinese Font i={} [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-
-						if (ChkAddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff))) == true)
-						{
-							log.debug("1 ===<><>{} {} Prt_Text i={} AddFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-							if (AddFont((int)((chrtmp & 0x00ff)<<8)+(int)((chrtmp1 & 0xff)))) {
-								//20230728 MatsudairaSyuMe check if PSI has been sent before and not yet send PSO, if it is the situation then send PSO firstly
-								if ( bBeginSISession == true ) {
-									log.debug("1.01 ===<><>{} {} Prt_Text leave S5240_PSO {} wlen={} i={}", this.curState, this.curChkState, wlen, i);
-									System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
-									wlen+=5;
-									hBuf[wlen+3] = buff[i];
-								}
-								//---- 20230728
-								System.arraycopy(this.command, 0, hBuf, wlen+3, this.command.length);
-								wlen+=this.command.length;
-								bBeginSISession=false;
-							} else
-								log.error("1 ===<><>{} {} Prt_Text i={} AddFont [{}] error", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));								
-							i+=2;
-							dblword = false;
-							continue;
-						}
-						if (ChkExtFont((int)((chrtmp & 0x00ff)<<8)+((int)((chrtmp1 & 0xff)))) == true)
-						{
-							log.debug("2 ===<><>{} {} Prt_Text i={} AddExtFont [{}]", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));
-							if (AddExtFont(chrtmp,chrtmp1)) {
-								//20230728 MatsudairaSyuMe check if PSI has been sent before and not yet send PSO, if it is the situation then send PSO firstly
-								if ( bBeginSISession == true ) {
-									log.debug("2.01 ===<><>{} {} Prt_Text leave S5240_PSO {} wlen={} i={}", this.curState, this.curChkState, wlen, i);
-									System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
-									wlen+=5;
-									hBuf[wlen+3] = buff[i];
-								}
-								//---- 20230728
-								System.arraycopy(this.command, 0, hBuf, wlen+3, this.command.length);
-								wlen+=this.command.length;
-								bBeginSISession=false;
-							} else
-								log.error("2.1 ===<><>{} {} Prt_Text i={} AddExtFont error [{}] ", this.curState, this.curChkState, i, String.format("0x%02x%02x", chrtmp, chrtmp1));								
-							i+=2;
-							dblword = false;
-							continue;
-						}
-
-//----
-						if ( bBeginSISession == false ) {
-							log.debug("4 ===<><>{} {} Prt_Text enter S5240_PSI wlen={} i={}", this.curState, this.curChkState, wlen, i);
-
-//							memcpy(&hBuf[wlen+3],S4625_PSI,5);
-							System.arraycopy(S5240_PSI, 0, hBuf, wlen+3, 5);
-							bBeginSISession=true;
-							wlen+=5;
-							hBuf[wlen+3] = buff[i];
-							hBuf[wlen+4] = buff[i+1];
-						}
-					}
-					if (dblword == true)
-					{
-						//bcc = bcc + buff[i] + buff[i+1];
-						i+=2;
-						wlen+=2;
-						dblword = false;
-					}
-					else
-					{
-						if ( bBeginSISession == true ) {
-							log.debug("5 ===<><>{} {} Prt_Text leave S5240_PSO wlen={} i={}", this.curState, this.curChkState, wlen, i);
-							System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
-							bBeginSISession=false;
-							wlen+=5;
-							hBuf[wlen+3] = buff[i];
-						}
-						if (((int)(buff[i] & 0xff) < (int)(0x20 & 0xff)) && buff[i] != (byte)0x0d && buff[i] != (byte)0x0a)
-						{
-							buff[i] = 0x20;
-							hBuf[wlen+3] = buff[i];
-						}
-						if ( buff[i] == (byte)0x0d &&
-							 buff[i+1] == (byte)0x0a )
-						{
-							i++;
-							System.arraycopy(S5240_PNON_PRINT_AREA, 0, hBuf, wlen+3, S5240_PNON_PRINT_AREA.length);
-							wlen += S5240_PNON_PRINT_AREA.length;
-							System.arraycopy(S5240_PENLARGE_OD, 0, hBuf, wlen+3, S5240_PENLARGE_OD.length);
-							wlen += S5240_PENLARGE_OD.length;
-							System.arraycopy(S5240_PENLARGE_OA, 0, hBuf, wlen+3, S5240_PENLARGE_OA.length);
-
-							log.debug("5.2 ===<><>{} {} Prt_Text wlen={} i={}", this.curState, this.curChkState, wlen, i);
-						}
-						if ( buff[i] == (byte)0x0a &&
-							 buff[i-1] != (byte)0x0d )
-						{
-							log.debug("5.3 ===<><>{} {} Prt_Text wlen={} i={}", this.curState, this.curChkState, wlen, i);
-							break;
-						}
-						if ( buff[i] == (byte)0x0d &&
-							 buff[i-1] != (byte)0x0a )
-						{
-							log.debug("5.4 ===<><>{} {} Prt_Text wlen={} i={}", this.curState, this.curChkState, wlen, i);
-							break;
-						}
-						i++;
-						wlen++;
-					}
-				}
-				log.debug("6 ===<><>{} {} Prt_Text leave S5240_PSO chkChkState wlen={} i={}", this.curState, this.curChkState, wlen, i);
-				if ( wlen > 0 ) {
-					hBuf[0]=hBuf[1]=hBuf[2]=' ';
-					if ( bBeginSISession == true ) {
-						log.debug("6.1 ===<><>{} {} Prt_Text leave S5240_PSO wlen={} i={}", this.curState, this.curChkState, wlen, i);
-						System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
-						bBeginSISession=false;
-						wlen+=5;
-					}
-					//20060905 , to compromise the bne at last digit, 0x0a set in upper logic
-					hBuf[wlen+3]=(byte)0x0;
-					//20060905
-//					wlen = 0;
-					byte[] sendhBuf = new byte[wlen];
-					System.arraycopy(hBuf, 3, sendhBuf, 0, sendhBuf.length);
-					byte[] sendhBuf2 = new byte[skipbuff.length + sendhBuf.length];
-					System.arraycopy(skipbuff, 0, sendhBuf2, 0, skipbuff.length);
-					System.arraycopy(sendhBuf, 0, sendhBuf2, skipbuff.length, sendhBuf.length);
-					Send_hData(sendhBuf2);
-					log.debug("6.2 ===<><>{} {} Prt_Text leave S5240_PSO wlen={} i={}", this.curState, this.curChkState, sendhBuf2, i);
-				}
-			}
-//		}
-		return true;
 	}
+*/
 
 
 	@Override
@@ -1455,9 +1158,13 @@ public class CS5240Impl implements Printer {
 						Sleep(500);
 						log.debug("{} {} reset printer", brws, wsno);
 						ResetPrinter();
+						////20240311 MatsudairaSyuMe TEST
+						/*
 						Sleep(500);
 						log.debug("{} {} close connection", brws, wsno);
 						pc.close();   //close
+						*/
+						//----20240311
 					}
 					//20230309 end
 					//----
@@ -2122,8 +1829,135 @@ public class CS5240Impl implements Printer {
 	}
 
 	@Override
-	public boolean CheckPaper() {
+	public boolean CheckPaper(boolean startDetect, int iTimeout) {
 		// TODO Auto-generated method stub
+		//20240311 MatsudairaSyuMe
+		long currentTime = 0;
+		if (startDetect) {
+			this.curState = DetectPaper_START;
+			if (iTimeout > 0) {
+				this.detectTimeout = iTimeout;
+				this.detectStartTimeout = System.currentTimeMillis();
+			} else {
+				this.detectTimeout = 0;
+				this.detectStartTimeout = 0;
+			}
+		}
+		log.debug("{} {} {} CheckPaper curState={} iCnt={}", brws, "", "", this.curState, this.iCnt);
+		if (this.curState == DetectPaper_START) {
+			PurgeBuffer();
+			log.debug("{} {} {} CheckPaper GetPaper curState={}", brws, "", "", this.curState);
+		}
+		byte[] data = null;
+		if (this.curState == DetectPaper_START || this.curState == DetectPaper) {
+			if (this.curState == DetectPaper_START) {
+				this.curState = DetectPaper;
+				this.curChkState = CheckStatus_START;
+			}
+			data = CheckStatus();
+			if (this.detectTimeout > 0) {
+				currentTime = System.currentTimeMillis();
+				if (((currentTime - this.detectStartTimeout) / 1000) > this.detectTimeout) {
+					log.info("[{}][{}][{}]:96超過時間尚未重新插入存摺！", brws, "        ", "            ");
+					this.curState = DetectPaper_FINISH;
+					return false;
+				}
+			}
+			if (!CheckError(data)) {
+				if (!pc.connectStatus()) {
+					log.debug("{} {} {} channel break", brws, "", "");
+					return false;
+				}
+				return true;
+			} else {
+				//20210409 MatsudairaSyuMe already gat response data reset detectStartTimeout
+				this.detectStartTimeout = System.currentTimeMillis();
+				log.debug("{} {} {} CheckPaper curState={} iCnt={}, reset detectStartTimeout", brws, "", "", this.curState, this.iCnt);
+				//----
+				//20060714 V116 , In p201/p101/p80 case , if read msr but the pr2-(e) replies '1' --> paper jame
+				// and Driver send ESC '0' to reset printer , but in vain.
+				// So after Open printer , if meed some errors like '1' -- paper jam , '8' -- command error, 'a' -- hw error ,
+				// show the related msg to warn teller to take some action.
+				// S4265
+				// ESC 'r' '2' --> DOCUMENT EMPTY nopaper
+				//         'P' --> paper in
+				//         '8' --> command error
+				//         '1' --> paper jam
+				//         '4' --> paper in chasis
+				//         'q' --> msr error
+				//         'r' --> blank msr
+				//         'X' --> print area out of paper
+				//         'a' --> Receive Error
+				//         0x90 --> hw error
+				//         0x80 --> S4265 can not operate
+				//         0xd0 --> S4265 , status not in initial config
+
+				if (data[2] == (byte)'P') {
+					log.info("[{}][{}][{}]:偵測到存摺插入！", brws, "        ", "            ");
+					this.curState = DetectPaper_FINISH;
+					return true;
+				} else if (data[2] == (byte)'A' || data[2] == (byte)'0') {  //20230322 MatsudairaSyuMe add for ESC r 0 0 0 accept normalcy data
+					this.curChkState = CheckStatus_START;
+					log.debug("{} {} {} get 'A' or '0' curState={} change to curChkState={} ", brws, wsno, "",this.curState,  this.curChkState);
+					this.iCnt = 0;
+				} else if (data[2] == (byte)'4') {
+					this.curChkState = CheckStatus_START;
+					PurgeBuffer();
+					log.debug("{} {} {} get '4' paper in chasis curState={}  curChkState={} ", brws, wsno, "",this.curState,  this.curChkState);
+					this.iCnt = 0;
+					log.debug("{} {} reset printer curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
+					ResetPrinter();
+					return true;		
+					//----20240311
+					//----
+				} else {
+					switch (data[2]) {
+					case (byte) '1': // 20060619 paper jam
+						amlog.info("[{}][{}][{}]:94請重試一下,否則有卡紙現象", brws, "        ", "            ");
+						this.curChkState = CheckStatus_START;
+						this.iCnt = 0;
+						break;
+					case (byte) '8':
+						amlog.info("[{}][{}][{}]:94指令錯誤", brws, "        ", "            ");
+						break;
+					case (byte) 'q':
+						amlog.info("[{}][{}][{}]:94寫磁條錯檢查磁頭", brws, "        ", "            ");
+						//20201119
+						pc.InsertAMStatus(brws, "", "", "94寫磁條錯檢查磁頭");
+						//----
+						break;
+					case (byte) 'r':
+						amlog.info("[{}][{}][{}]:94空白磁條,請重建磁條", brws, "        ", "            ");
+						//20201119
+						pc.InsertAMStatus(brws, "", "", "94空白磁條,請重建磁條");
+						//----
+						break;
+					case (byte) 'X':
+						//20240311 MatsudairasyuMe send 
+						PurgeBuffer();
+						Send_hData(S5240_PERRCODE_REQ);
+						log.debug("{} {} paper lower send perrcode_req curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
+						amlog.info("[{}][{}][{}]:94傳票稍短,超出可列印範圍", brws, "        ", "            ");
+						//----20240311
+						break;
+					case (byte) 'a':
+						log.debug("{} {} {} 94紙張插歪 或 錯誤資料格式", brws, wsno, "");
+						amlog.info("[{}][{}][{}]:94紙張插歪 或 錯誤資料格式", brws, "        ", "            ");
+						break;
+					case (byte) 0x90:
+						amlog.info("[{}][{}][{}]:94硬體媒介故障", brws, "        ", "            ");
+						break;
+					case (byte) 0x80:
+						amlog.info("[{}][{}][{}]:94補摺機無法運作", brws, "        ", "            ");
+						break;
+					default:
+						amlog.info("[{}][{}][{}]:94硬體故障", brws, "        ", "            ");
+						break;
+					}
+					atlog.info("first data is {}",new String(data));
+				}
+			}
+		}
 		return false;
 	}
 
@@ -2185,8 +2019,9 @@ public class CS5240Impl implements Printer {
 				this.curChkState = CheckStatus_START;
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
 			}  //20230309 MatsudairaSyuMe for ESC,r434
-//			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
-			else if (data.length > 3 && (data[2] == (byte) '4'))
+			//20240311 MAtsudairaSyuME TEST
+			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
+//			else if (data.length > 3 && (data[2] == (byte) '4'))
 			{
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
 				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] reset printer", brws, "        ", "            ", "r434");
@@ -2201,7 +2036,16 @@ public class CS5240Impl implements Printer {
 				pc.close();   //close
 				return false;		
 			}
-			//----20230309
+			//--20240311
+			//20240311 MatsudairaSyuME TEST
+			else if (data.length > 3 && (data[2] == (byte) '4') && (data[3] == ESQ) && (data[4] == (byte)'r') && (data[5] == (byte)'4')) {
+				//20240311
+				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] paper in printer purge buffer", brws, "        ", "            ", "r4.r4");
+				this.curChkState = CheckStatus_START;
+				PurgeBuffer();
+				//----2024031
+			}
+			
 			//----
 			return true;
 		//----
@@ -2276,14 +2120,22 @@ public class CS5240Impl implements Printer {
 			//----20230309 end
 			return false;
 		case (byte) 'X': // Warning , paper lower
+			//20240311 MatsudairaSyuMe TEST
+			PurgeBuffer();
 			Send_hData(S5240_PERRCODE_REQ);
-			Sleep(50);
-			data = Rcv_Data(5);
+			log.debug("{} {} paper lower send perrcode_req curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
+			amlog.info("[{}][{}][{}]:94傳票稍短,超出可列印範圍", brws, "        ", "            ");
+//			Send_hData(S5240_PERRCODE_REQ);
+//			Sleep(50);
+//			data = Rcv_Data(5);
 			// 20091002 , show error code
-			amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", String.format(outptrn1, data));		
+//			amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", String.format(outptrn1, data));		
 
-			ResetPrinter();
-			return true;
+//			ResetPrinter();
+//			return true;
+			return false;
+			//----20240311
+
 		case (byte) 'q': // read/write error of MS
 		case (byte) 'r': // read error of MS
 			//20200728
