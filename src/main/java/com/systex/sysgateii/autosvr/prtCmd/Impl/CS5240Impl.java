@@ -784,7 +784,7 @@ public class CS5240Impl implements Printer {
 //		}
 		return true;
 	}
-	/* 20240311 MatsudairaSyuMe mark up
+	/* 20240327 MatsudairaSyuMe mark up
 	@Override
 	public boolean Prt_Text(byte[] skipbuff, byte[] buff) {
 		// TODO Auto-generated method stub
@@ -1158,13 +1158,13 @@ public class CS5240Impl implements Printer {
 						Sleep(500);
 						log.debug("{} {} reset printer", brws, wsno);
 						ResetPrinter();
-						////20240311 MatsudairaSyuMe TEST
+						////20240327 MatsudairaSyuMe TEST
 						/*
 						Sleep(500);
 						log.debug("{} {} close connection", brws, wsno);
 						pc.close();   //close
 						*/
-						//----20240311
+						//----20240327
 					}
 					//20230309 end
 					//----
@@ -1831,7 +1831,7 @@ public class CS5240Impl implements Printer {
 	@Override
 	public boolean CheckPaper(boolean startDetect, int iTimeout) {
 		// TODO Auto-generated method stub
-		//20240311 MatsudairaSyuMe
+		//20240327 MatsudairaSyuMe
 		long currentTime = 0;
 		if (startDetect) {
 			this.curState = DetectPaper_START;
@@ -1863,12 +1863,18 @@ public class CS5240Impl implements Printer {
 					return false;
 				}
 			}
+			//20240327 MatsudairaSyuMe
+			else if (this.curState == DetectPaper && this.iCnt > 0) {
+				this.curChkState = CheckStatusRecvData;
+//				log.debug("{} {} {} CheckPaper curState={} iCnt={} curChkState={}", brws, "", "", this.curState, this.iCnt, this.curChkState);
+			}
+			//----20240327
 			if (!CheckError(data)) {
 				if (!pc.connectStatus()) {
 					log.debug("{} {} {} channel break", brws, "", "");
 					return false;
 				}
-				return true;
+				//20240327 MatsydairaSyuMe markup ----return true;  ////test
 			} else {
 				//20210409 MatsudairaSyuMe already gat response data reset detectStartTimeout
 				this.detectStartTimeout = System.currentTimeMillis();
@@ -1906,9 +1912,9 @@ public class CS5240Impl implements Printer {
 					log.debug("{} {} {} get '4' paper in chasis curState={}  curChkState={} ", brws, wsno, "",this.curState,  this.curChkState);
 					this.iCnt = 0;
 					log.debug("{} {} reset printer curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
-					ResetPrinter();
+					//20240327 MatsudairaSyuMe mark ResetPrinter();
 					return true;		
-					//----20240311
+					//----20240327
 					//----
 				} else {
 					switch (data[2]) {
@@ -1933,12 +1939,12 @@ public class CS5240Impl implements Printer {
 						//----
 						break;
 					case (byte) 'X':
-						//20240311 MatsudairasyuMe send 
+						//20240327 MatsudairasyuMe send 
 						PurgeBuffer();
 						Send_hData(S5240_PERRCODE_REQ);
 						log.debug("{} {} paper lower send perrcode_req curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
 						amlog.info("[{}][{}][{}]:94傳票稍短,超出可列印範圍", brws, "        ", "            ");
-						//----20240311
+						//----20240327
 						break;
 					case (byte) 'a':
 						log.debug("{} {} {} 94紙張插歪 或 錯誤資料格式", brws, wsno, "");
@@ -2019,7 +2025,7 @@ public class CS5240Impl implements Printer {
 				this.curChkState = CheckStatus_START;
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
 			}  //20230309 MatsudairaSyuMe for ESC,r434
-			//20240311 MAtsudairaSyuME TEST
+			//20240327 MAtsudairaSyuME TEST
 			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
 //			else if (data.length > 3 && (data[2] == (byte) '4'))
 			{
@@ -2036,10 +2042,10 @@ public class CS5240Impl implements Printer {
 				pc.close();   //close
 				return false;		
 			}
-			//--20240311
-			//20240311 MatsudairaSyuME TEST
+			//--20240327
+			//20240327 MatsudairaSyuME TEST
 			else if (data.length > 3 && (data[2] == (byte) '4') && (data[3] == ESQ) && (data[4] == (byte)'r') && (data[5] == (byte)'4')) {
-				//20240311
+				//20240327
 				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] paper in printer purge buffer", brws, "        ", "            ", "r4.r4");
 				this.curChkState = CheckStatus_START;
 				PurgeBuffer();
@@ -2120,7 +2126,7 @@ public class CS5240Impl implements Printer {
 			//----20230309 end
 			return false;
 		case (byte) 'X': // Warning , paper lower
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			PurgeBuffer();
 			Send_hData(S5240_PERRCODE_REQ);
 			log.debug("{} {} paper lower send perrcode_req curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
@@ -2134,7 +2140,7 @@ public class CS5240Impl implements Printer {
 //			ResetPrinter();
 //			return true;
 			return false;
-			//----20240311
+			//----20240327
 
 		case (byte) 'q': // read/write error of MS
 		case (byte) 'r': // read error of MS

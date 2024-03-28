@@ -246,7 +246,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private String con = "";
 	private String dCount = "";
 	private int iLine = 0;
-	//20240311 MatsudairaSyuMe TEST
+	//20240327 MatsudairaSyuMe TEST
 	private int cur_arr_idx = 0;
 	private boolean done1stCheckPaper = false;
 	private boolean sendSkipLine = false;
@@ -1448,10 +1448,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String pbpr_balance = String.format("%18s", " ");//結存 18
 		String pr_datalog = ""; //  80
 		String pr_data = ""; //  80
+		//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
+		byte[] crossskipbytes = null;
+		//----20240327
 
 		if (this.curState == STARTPROCTLM) {
 			this.curState = PBDATAFORMAT;
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			this.cur_arr_idx = 0;
 			this.done1stCheckPaper = false;
 			this.sendSkipLine = false;
@@ -1462,11 +1465,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----
 		}
 		else {
-			log.debug("0--->start to detectPaper=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240311 MatsudairaSyuMe TEST
+			log.debug("0--->start to detectPaper=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240327 MatsudairaSyuMe TEST
 			if (prt.CheckPaper(false, 1000)) {
 				if (this.done1stCheckPaper == false) {
 					this.done1stCheckPaper = true;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					return false;
 				} else {
@@ -1477,13 +1480,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			} else
 				return false;
 		}
-		log.debug("1--->p0080text=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240311 MatsudairaSyuMe TEST
+		log.debug("1--->p0080text=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240327 MatsudairaSyuMe TEST
 		try {
 			//PB 日期(1+8)/空格(1)/櫃檯機編號(7)/摘要(16)/支出收入金額(20)/結存(18)/
-			//20240311 MatsudairaSyuMe TEST  for (; this.cur_arr_idx < pb_arr.size(); this.cur_arr_idx++)
+			//20240327 MatsudairaSyuMe TEST  for (; this.cur_arr_idx < pb_arr.size(); this.cur_arr_idx++)
 			if (this.cur_arr_idx < pb_arr.size())
 			{
-			//----20240311
+			//----20240327
 				//處理日期格式
 				//20201216 add one space
 				//20210420 MatsudairaSymMe reduse one space
@@ -1733,6 +1736,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						//20200915
 						prt.SkipnLineBuf(2);
 						//----
+						//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
+						crossskipbytes = prt.GetSkipLineBuf();
+						//----20240327
+
 					}
 					
 				}
@@ -1745,21 +1752,29 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				System.arraycopy(dsptbsnd, 0, sndbary, pr_dataprev.getBytes().length, dsptblen);  //20220630 MatsudairaSyuMe use dsptblen
 //				prt.Prt_Text(pr_data.getBytes());
 				//20200915
-				//20240311 MatsydairaSyuMe TEST
+				//20240327 MatsydairaSyuMe TEST
 				if (this.needSendTurnPage == false) {
 					if (skipbytes != null && skipbytes.length > 0
 							&& this.cur_arr_idx == 0 && this.sendSkipLine == false) {
 						//prt.Prt_Text(skipbytes, sndbary);
-						//---20240311
+						//---20240327
 						this.sendSkipLine = true;
 						this.cur_arr_idx -= 1;
-						//20240311 MatsudairaSyuMe TEST
+						//20240327 MatsudairaSyuMe TEST
 						prt.Send_hData(skipbytes);
-						//--20240311
+						//--20240327
 					} else
+					//20240327 MatsudairaSyuMe check line 13
+					{
+						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null &&  crossskipbytes.length > 0) {
+							log.debug("send skip line before print line 13");
+							prt.Send_hData(crossskipbytes);
+						}
 						prt.Prt_Text(sndbary);
+					}
+					//----20240327
 				}
-				//----20240311
+				//----20240327
 				//若印滿 24 筆且尚有補登資料，加印「請翻下頁繼續補登」
 				if ( (tl+this.cur_arr_idx) == 24 && (total > (this.cur_arr_idx+1)) )   //20210401 total >= (i+1) change to total > (i+1))
 				{
@@ -1767,18 +1782,21 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					// 20180518 , add
 					if (this.npage >= TXP.PB_MAX_PAGE) {
 						this.iEnd = 2;
-						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240311 MatsudairaSyuMe TEST
+						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
+						this.done1stCheckPaper = false;
+						//Sleep(100);//20240327
+						prt.CheckPaper(true, 1000);
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n"
-					//20240311 MatsudairaSyuMe TEST
+					//20240327 MatsudairaSyuMe TEST
 					if (this.iEnd < 1 && this.needSendTurnPage == false) {
 						this.needSendTurnPage = true;
 						this.done1stCheckPaper = false;
 						rtn = false;
 					} else {
-						//----20240311
-						//20240311 MatsudairaSyuMe TEST
+						//----20240327
+						//20240327 MatsudairaSyuMe TEST
 						this.iEnd = 1;
 						amlog.info("[{}][{}][{}]:62請翻下頁繼續補登...", brws, pasname, this.account);
 //					    if (prt.Prt_Text(pr_data.getBytes()) == false)
@@ -1788,18 +1806,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						rtn =  true;
 					}
 					this.done1stCheckPaper = false;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					return rtn;
-					//----20240311
+					//----20240327
 				}
 				else
 					this.iEnd = 0;
-				//20240311 MatsudairaSyuMe TEST
+				//20240327 MatsudairaSyuMe TEST
 				if ((tl+this.cur_arr_idx) == 24) //20210401
 				{
 					rtn = true;
-					//20240311 MatsudairaSyuMe TEST
+					//20240327 MatsudairaSyuMe TEST
 					/*
 					break;
 					*/
@@ -1807,21 +1825,28 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				else
 					rtn = false;
 				this.done1stCheckPaper = false;
-				Sleep(100);
+				//Sleep(100);
 				prt.CheckPaper(true, 1000);
 			}
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			else
-				return rtn;
+			//20240327 MatsudairaSyuMe
+			{
+				////return rtn;
+				if ((tl+this.cur_arr_idx) < 24)
+					this.done1stCheckPaper = true;
+				rtn = true;
+			}
+			//----20240327
 			//----
 		} catch (Exception e) {
 			log.debug("error--->p0080text convert error", e.getMessage());
 			rtn = false;
 			this.curState = FORMATPRTDATAERROR;
 		}
-		//20240311 MatsudairaSyuMe TEST
-		log.debug("PbDataFormat() return 2 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx, this.curState, this.iEnd);
-		//----20240311 MatsudairaSyuMe TEST
+		//20240327 MatsudairaSyuMe TEST, 20240327 add rtn log
+		log.debug("PbDataFormat() return 2 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}] rtn=[{}]",this.cur_arr_idx, this.curState, this.iEnd, rtn);
+		//----20240327 MatsudairaSyuMe TEST, 20240327
 		return rtn;
 	}
 
@@ -1851,10 +1876,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String pbpr_balance = String.format("%18s", " ");// 結存 18
 		String pr_datalog = ""; // 80
 		String pr_data = ""; // 80
+		//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
+		byte[] crossskipbytes = null;
+		//----20240327
 
 		if (this.curState == STARTPROCTLM) {
 			this.curState = PBDATAFORMAT;
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			this.cur_arr_idx = 0;
 			this.done1stCheckPaper = false;
 			this.sendSkipLine = false;
@@ -1865,11 +1893,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----
 		}
 		else {
-			log.debug("0--->start to detectPaper=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240311 MatsudairaSyuMe TEST
+			log.debug("0--->start to detectPaper=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240327 MatsudairaSyuMe TEST
 			if (prt.CheckPaper(false, 1000)) {
 				if (this.done1stCheckPaper == false) {
 					this.done1stCheckPaper = true;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					return false;
 				} else {
@@ -1880,14 +1908,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			} else
 				return false;
 		}
-		log.debug("1--->q0880text=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240311 MatsudairaSyuMe TEST
+		log.debug("1--->q0880text=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240327 MatsudairaSyuMe TEST
 		try {
 			// PB 日期(1+8)/空格(1)/櫃檯機編號(7)/摘要(16)/支出收入金額(20)/結存(18)/
 			// FC 日期(1+8)/空格(1)/櫃檯機編號(5)/摘要(16)/幣別(3)/支出收入金額(21)/結存(18)
-			//20240311 MatsudairaSyuMe TEST  for (int i = 0; i < fc_arr.size(); i++)
+			//20240327 MatsudairaSyuMe TEST  for (int i = 0; i < fc_arr.size(); i++)
 			if (this.cur_arr_idx < fc_arr.size())
 			{
-			//----20240311
+			//----20240327
 				//處理日期格式
 				pr_data = "";
 				pbpr_date = String.format("%8s", (Integer.parseInt(new String (q0880DataFormat.getTotaTextValueSrc("date", fc_arr.get(this.cur_arr_idx))).trim()) - 19110000));
@@ -2015,6 +2043,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						//20200915
 						prt.SkipnLineBuf(2);
 						//----
+						//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
+						crossskipbytes = prt.GetSkipLineBuf();
+						//----20240327
 					}
 					
 				}
@@ -2026,21 +2057,30 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
 				System.arraycopy(dsptb, 0, sndbary, pr_dataprev.getBytes().length, dsptb.length);
 				//20200915
-				//20240311 MatsydairaSyuMe TEST
+				//20240327 MatsydairaSyuMe TEST
 				if (this.needSendTurnPage == false) {
 					if (skipbytes != null && skipbytes.length > 0
 							&& this.cur_arr_idx == 0 && this.sendSkipLine == false) {
 						//prt.Prt_Text(skipbytes, sndbary);
-						//---20240311
+						//---20240327
 						this.sendSkipLine = true;
 						this.cur_arr_idx -= 1;
-						//20240311 MatsudairaSyuMe TEST
+						//20240327 MatsudairaSyuMe TEST
 						prt.Send_hData(skipbytes);
-						//--20240311
-					} else
+						//--20240327
+					}
+					else
+					//20240327 MatsudairaSyuMe check line 13
+					{
+						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null &&  crossskipbytes.length > 0) {
+							log.debug("send skip line before print line 13");
+							prt.Send_hData(crossskipbytes);
+						}
 						prt.Prt_Text(sndbary);
+					}
+					//----20240327
 				}
-				//----20240311
+				//----20240327
 				//若印滿 24 筆且尚有補登資料，加印「請翻下頁繼續補登」
 				if ( (tl+this.cur_arr_idx) == 24 && (total > (this.cur_arr_idx+1)) )   //20210401 total >= (i+1) change to total > (i+1))
 				{
@@ -2048,18 +2088,21 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					// 20180518 , add
 					if (this.npage >= TXP.FC_MAX_PAGE) {
 						this.iEnd = 2;
-						log.debug("FcDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240311 MatsudairaSyuMe TEST
+						log.debug("FcDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
+						this.done1stCheckPaper = false;
+						//Sleep(100);//20240327
+						prt.CheckPaper(true, 1000);
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n"
-					//20240311 MatsudairaSyuMe TEST
+					//20240327 MatsudairaSyuMe TEST
 					if (this.iEnd < 1 && this.needSendTurnPage == false) {
 						this.needSendTurnPage = true;
 						this.done1stCheckPaper = false;
 						rtn = false;
 					} else {
-						//----20240311
-						//20240311 MatsudairaSyuMe TEST
+						//----20240327
+						//20240327 MatsudairaSyuMe TEST
 						this.iEnd = 1;
 						amlog.info("[{}][{}][{}]:62請翻下頁繼續補登...", brws, pasname, this.account);
 //						if (prt.Prt_Text(pr_data.getBytes()) == false)
@@ -2069,18 +2112,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						rtn =  true;
 					}
 					this.done1stCheckPaper = false;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					return rtn;
-					//----20240311
+					//----20240327
 				}
 				else
 					this.iEnd = 0;
-				//20240311 MatsudairaSyuMe TEST
+				//20240327 MatsudairaSyuMe TEST
 				if ((tl+this.cur_arr_idx) == 24) //20210401
 				{
 					rtn = true;
-					//20240311 MatsudairaSyuMe TEST
+					//20240327 MatsudairaSyuMe TEST
 					/*
 					break;
 					*/
@@ -2088,21 +2131,28 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				else
 					rtn = false;
 				this.done1stCheckPaper = false;
-				Sleep(100);
+				//Sleep(100);
 				prt.CheckPaper(true, 1000);
 			}
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			else
-				return rtn;
+			//20240327 MatsudairaSyuMe
+			{
+				////return rtn;
+				if ((tl+this.cur_arr_idx) < 24)
+					this.done1stCheckPaper = true;
+				rtn = true;
+			}
+			//----20240327
 			//----
 		} catch (Exception e) {
 			log.debug("error--->q0880text convert error", e.getMessage());
 			rtn = false;
 			this.curState = FORMATPRTDATAERROR;
 		}
-		//20240311 MatsudairaSyuMe TEST
-		log.debug("FcDataFormat() return 2 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx, this.curState, this.iEnd);
-		//----20240311 MatsudairaSyuMe TEST
+		//20240327 MatsudairaSyuMe TEST, 20240327 add rtn log
+		log.debug("FcDataFormat() return 2 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}] rtn=[{}]",this.cur_arr_idx, this.curState, this.iEnd, rtn);
+		//----20240327 MatsudairaSyuMe TEST, 20240327
 		return rtn;
 	}
 	
@@ -2132,6 +2182,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String pbpr_balance = String.format("%12s", " ");// 結存 12
 		String pr_datalog = ""; // 80
 		String pr_data = ""; // 列印資料 80
+		//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
+		byte[] crossskipbytes = null;
+		//----20240327
 		//20200904
 		atlog.info(": GlDataFormat() -- m_gArr.Count=[{}]", gl_arr.size());
 		//----
@@ -2139,7 +2192,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		if (this.curState == STARTPROCTLM) {
 			p0880DataFormat = new P0880TEXT();
 			this.curState = PBDATAFORMAT;
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			this.cur_arr_idx = 0;
 			this.done1stCheckPaper = false;
 			this.sendSkipLine = false;
@@ -2150,11 +2203,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----
 		}
 		else {
-			log.debug("0--->start to detectPaper=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240311 MatsudairaSyuMe TEST
+			log.debug("0--->start to detectPaper=>curState={} cur_arr_idx={}", this.curState, this.cur_arr_idx); //20240327 MatsudairaSyuMe TEST
 			if (prt.CheckPaper(false, 1000)) {
 				if (this.done1stCheckPaper == false) {
 					this.done1stCheckPaper = true;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					return false;
 				} else {
@@ -2170,10 +2223,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			// PB 日期(1+8)/空格(1)/櫃檯機編號(7)/摘要(16)/支出收入金額(20)/結存(18)/
 			// FC 日期(1+8)/空格(1)/櫃檯機編號(5)/摘要(16)/幣別(3)/支出收入金額(21)/結存(18)
 			// GL 空格(1)/日期(8)/空格(1)/櫃檯機編號(7)/空格(1)/摘要(8)/幣別(2)/單價(4.2)/空格(1)/支出(S5.2)/空格(1)/收入(S5.2)/空格(1)/結存(7.2)/空格(1)/更正記號(1)
-			//20240311 MatsudairaSyuMe TEST  for (int i = 0; i < gl_arr.size(); i++
+			//20240327 MatsudairaSyuMe TEST  for (int i = 0; i < gl_arr.size(); i++
 			if (this.cur_arr_idx < gl_arr.size())
 			{
-			//----20240311
+			//----20240327
 				//空格(1)+日期
 				//20210127 MatsudairaSyume add back 1 space
 				pr_data = " ";
@@ -2341,6 +2394,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						//20200915
 						prt.SkipnLineBuf(2);
 						//----
+						//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
+						crossskipbytes = prt.GetSkipLineBuf();
+						//----20240327
 					}
 					
 				}
@@ -2352,21 +2408,30 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
 				System.arraycopy(dsptb, 0, sndbary, pr_dataprev.getBytes().length, dsptb.length);  //20220630 MatsudairaSyuMe dsptbsnd left shift one column
 				//20200915
-				//20240311 MatsydairaSyuMe TEST
+				//20240327 MatsydairaSyuMe TEST
 				if (this.needSendTurnPage == false) {
 					if (skipbytes != null && skipbytes.length > 0
 							&& this.cur_arr_idx == 0 && this.sendSkipLine == false) {
 						//prt.Prt_Text(skipbytes, sndbary);
-						//---20240311
+						//---20240327
 						this.sendSkipLine = true;
 						this.cur_arr_idx -= 1;
-						//20240311 MatsudairaSyuMe TEST
+						//20240327 MatsudairaSyuMe TEST
 						prt.Send_hData(skipbytes);
-						//--20240311
-					} else
+						//--20240327
+					}
+					else
+					//20240327 MatsudairaSyuMe check line 13
+					{
+						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null && crossskipbytes.length > 0) {
+							log.debug("send skip line before print line 13");
+							prt.Send_hData(crossskipbytes);
+						}
 						prt.Prt_Text(sndbary);
+					}
+					//----20240327
 				}
-				//----20240311
+				//----20240327
 				//若印滿 24 筆且尚有補登資料，加印「請翻下頁繼續補登」
 				if ( (tl+this.cur_arr_idx) == 24 && (total > (this.cur_arr_idx+1)) )  //20210401 total >= (this.cur_arr_idx+1)  change to total > (this.cur_arr_idx+1))
 				{
@@ -2374,18 +2439,21 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					// 20180518 , add
 					if (this.npage >= TXP.GL_MAX_PAGE) {
 						this.iEnd = 2;
-						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240311 MatsudairaSyuMe TEST
+						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
+						this.done1stCheckPaper = false;
+						//Sleep(100);//20240327
+						prt.CheckPaper(true, 1000);
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n";
-					//20240311 MatsudairaSyuMe TEST
+					//20240327 MatsudairaSyuMe TEST
 					if (this.iEnd < 1 && this.needSendTurnPage == false) {
 						this.needSendTurnPage = true;
 						this.done1stCheckPaper = false;
 						rtn = false;
 					} else {
-						//----20240311
-						//20240311 MatsudairaSyuMe TEST
+						//----20240327
+						//20240327 MatsudairaSyuMe TEST
 						this.iEnd = 1;
 						amlog.info("[{}][{}][{}]:62請翻下頁繼續補登...", brws, pasname, this.account);
 //					    if (prt.Prt_Text(pr_data.getBytes()) == false)
@@ -2395,18 +2463,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						rtn =  true;
 					}
 					this.done1stCheckPaper = false;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					return rtn;
-					//----20240311
+					//----20240327
 				}
 				else
 					this.iEnd = 0;
-				//20240311 MatsudairaSyuMe TEST
+				//20240327 MatsudairaSyuMe TEST
 				if ((tl+this.cur_arr_idx) == 24) //20210401
 				{
 					rtn = true;
-					//20240311 MatsudairaSyuMe TEST
+					//20240327 MatsudairaSyuMe TEST
 					/*
 					break;
 					*/
@@ -2414,21 +2482,28 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				else
 					rtn = false;
 				this.done1stCheckPaper = false;
-				Sleep(100);
+				//Sleep(100);
 				prt.CheckPaper(true, 1000);
 			}
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			else
-				return rtn;
+			//20240327 MatsudairaSyuMe
+			{
+				////return rtn;
+				if ((tl+this.cur_arr_idx) < 24)
+					this.done1stCheckPaper = true;
+				rtn = true;
+			}
+			//----20240327
 			//----
 		} catch (Exception e) {
 			log.debug("error--->p0880text convert error", e.getMessage());
 			rtn = false;
 			this.curState = FORMATPRTDATAERROR;
 		}
-		//20240311 MatsudairaSyuMe TEST
+		//20240327 MatsudairaSyuMe TEST
 		log.debug("PbDataFormat() return 2 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx, this.curState, this.iEnd);
-		//----20240311 MatsudairaSyuMe TEST
+		//----20240327 MatsudairaSyuMe TEST
 		return rtn;
 	}
 	/*********************************************************
@@ -5021,9 +5096,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			//20200718
 			lastCheck(before);
 			log.debug("after {}=>{}=====check prtcliFSM", before, this.curState);
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			break;
-			//----20240311 MatsudairaSyuMe
+			//----20240327 MatsudairaSyuMe
 
 		case FORMATPRTDATAERROR:
 			log.debug("{} {} {} ORMATPRTDATAERROR :AutoPrnCls : XXDataFormat() -- Print Data Error!", brws, catagory, account);
@@ -5044,18 +5119,22 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 
 		case WRITEMSR:
 			log.debug("{} {} {} :AutoPrnCls : process WRITEMSR", brws, catagory, account);
-			//20240311 MatsudairaSyuMe TEST
+			//20240327 MatsudairaSyuMe TEST
 			if (prt.CheckPaper(false, 1000)) {
 				if (this.done1stCheckPaper == false) {
 					this.done1stCheckPaper = true;
-					Sleep(100);
+					//Sleep(100);
 					prt.CheckPaper(true, 1000);
 					break;
 				} else {
 					this.done1stCheckPaper = false;
 				}
 			}
-			//----20240311
+			//20240327 MatsudairaSyuMe check 2 time normal send and response for normal check paper
+			else if (!this.done1stCheckPaper)
+				break;
+			//----20240327
+			//----20240327
 			if (WMSRFormat(firstOpenConn)) {
 				/*20211028 MatsudairaSyuMe read MSR again after write MSR and check the result with previous write constant*/
 				this.curState = READANDCHECKMSR;
@@ -5430,7 +5509,11 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
     //20200718 status check
 	private void lastCheck(int before) {
 		long now = System.currentTimeMillis();
-		if (before != this.curState || (before == this.curState && (this.curState == CAPTUREPASSBOOK && this.iFirst == 0))) {
+		if (before != this.curState || (before == this.curState && (this.curState == CAPTUREPASSBOOK && this.iFirst == 0))
+				//20240327 MatsudairaSyuMe
+				|| ((before == this.curState) && (this.curState == PBDATAFORMAT)))
+			    //----20240327
+		{
 			this.lastState = before;
 //20200722			this.startTime = now;
 			this.stateStartTime = now;
