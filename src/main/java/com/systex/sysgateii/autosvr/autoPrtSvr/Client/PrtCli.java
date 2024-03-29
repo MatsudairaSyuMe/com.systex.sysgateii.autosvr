@@ -1835,6 +1835,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				////return rtn;
 				if ((tl+this.cur_arr_idx) < 24)
 					this.done1stCheckPaper = true;
+				//20240328
+				else
+					prt.CheckPaper(true, 1000);
+				//----20240328
 				rtn = true;
 			}
 			//----20240327
@@ -2141,6 +2145,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				////return rtn;
 				if ((tl+this.cur_arr_idx) < 24)
 					this.done1stCheckPaper = true;
+				//20240328
+				else
+					prt.CheckPaper(true, 1000);
+				//----20240328
 				rtn = true;
 			}
 			//----20240327
@@ -2492,6 +2500,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				////return rtn;
 				if ((tl+this.cur_arr_idx) < 24)
 					this.done1stCheckPaper = true;
+				//20240328
+				else
+					prt.CheckPaper(true, 1000);
+				//----20240328
 				rtn = true;
 			}
 			//----20240327
