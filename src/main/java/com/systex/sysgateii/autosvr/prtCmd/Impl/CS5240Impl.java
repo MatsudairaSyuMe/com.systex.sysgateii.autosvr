@@ -1854,6 +1854,12 @@ public class CS5240Impl implements Printer {
 				this.curState = DetectPaper;
 				this.curChkState = CheckStatus_START;
 			}
+			//20240401 MatsudairaSyuMe
+			else if (this.curState == DetectPaper && this.iCnt > 0) {
+				this.curChkState = CheckStatusRecvData;
+//				log.debug("{} {} {} CheckPaper curState={} iCnt={} curChkState={}", brws, "", "", this.curState, this.iCnt, this.curChkState);
+			}
+			//----20240401
 			data = CheckStatus();
 			if (this.detectTimeout > 0) {
 				currentTime = System.currentTimeMillis();

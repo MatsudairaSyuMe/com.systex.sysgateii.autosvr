@@ -5156,7 +5156,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				if (null != (reReadcusid = prt.MS_CheckAndRead(firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead
 					if (reReadcusid.length == 1) {
 						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
-						InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
+						InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairaSyuMe change catagory to "        "
 						log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from WRITEMSR", brws, catagory, account);
 						atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
 						//amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);  20211203 MatsudairaSyuMe
@@ -5218,7 +5218,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					if (reReadcusid.length == 1) {
 						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
 						atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
-						InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
+						InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairasyuMe change catagory to "        "
 						log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from WRITEMSRWAITCONFIRM", brws, catagory, account);
 						//amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account); 20211203 MatsudairaSyuMe
 						//InsertAMStatus(brws, pasname, account, "13磁條比對不符"); 20211203 MatsudairaSyuMe
@@ -5267,7 +5267,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				if (reReadcusid.length == 1) {
 					amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
 					atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
-					InsertAMStatus(brws, catagory, account, "11磁條讀取失敗(1)！");
+					InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairaSyuMe change catagory to "        "
 					log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from READANDCHECKMSR", brws, catagory, account);
 					//amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account); 20211203 MatsudairaSyuMe
 					//InsertAMStatus(brws, pasname, account, "13磁條比對不符"); 20211203 MatsudairaSyuMe
