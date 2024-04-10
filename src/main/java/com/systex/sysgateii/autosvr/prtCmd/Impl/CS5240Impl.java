@@ -388,10 +388,35 @@ public class CS5240Impl implements Printer {
 						rtn = new byte[3];
 					log.debug("Rcv_Data get {} bytes", rtn.length);
 					pc.clientMessageBuf.readBytes(rtn, 0, rtn.length);
-					atlog.info("[{}]-[{}]",rtn.length,new String(rtn, 0, rtn.length));
+					//20240403 mark atlog.info("[{}]-[{}]",rtn.length,new String(rtn, 0, rtn.length));
 					return rtn;
+					//20240403 MatsudairaqSyuMe add for purge garbage data for CS4625
+				} else {
+					log.warn("Rcv_Data have some garbage data!!!!");
+					rtn = new byte[size];
+					pc.clientMessageBuf.readBytes(buf, 0, buf.length);
+					int starti = -1;
+					for (int i = 0; i < buf.length; i++)
+						if (buf[i] == (byte)0x1b) {
+							starti = i;
+							break;
+						}
+					log.warn("Rcv_Data get ESC data from idx {}!!!!{}", starti, buf);
+					if (starti > -1) {
+						rtn = new byte[buf.length - starti];
+						log.warn("Rcv_Data get ESC data from idx {}!!!! rtn.length={}", starti, rtn.length);
+						for (int idx = 0; starti < buf.length; idx++, starti++)
+							rtn[idx] = buf[starti];
+						return rtn;
+					} else {
+						rtn = new byte[buf.length];
+						for (int idx = 0; idx < buf.length; idx++)
+							rtn[idx] = buf[idx];
+						return rtn;
+					}
 				}
-			}
+				//----20240403
+			}//20240403 test else if (pc.clientMessageBuf != null) log.debug("pc.clientMessageBuf.readableBytes()={}", pc.clientMessageBuf.readableBytes());
 //20200430			Sleep(100);
 			Sleep(30);//20220429 MatsudairaSyuMe change from 50 to 100  20220430 change to 30
 		} while (++retry < 10);
@@ -2025,17 +2050,28 @@ public class CS5240Impl implements Printer {
 		   if (this.curState == SetCPI && data[2] == (byte) '2' && data.length == 3) //20220803 BatsudairaSyuMe add for S5240
 		    	Send_hData(S5240_CANCEL);  //special for S5040
 		    //----
-			//20220827 MatsudairaSyuMe for ESC,r475
-			if (data.length > 3 && data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
+			//20220827 MatsudairaSyuMe for ESC,r475, 20240403 Special for CS4625 ignore the last code
+			if (data.length > 3 && data[2] == (byte) '4' && data[3] == (byte) '7') {
 				ResetPrinter();
 				this.curChkState = CheckStatus_START;
-				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
+				//20240403 Special for CS4625 ignore the last code
+				if (data.length > 4)
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");
+				else
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]不完整!!請儘快維修機器", brws, "        ", "            ", "r47");
+				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");
+				//----20240403
 			}  //20230309 MatsudairaSyuMe for ESC,r434
 			//20240327 MAtsudairaSyuME TEST
-			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
+			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3'))
 //			else if (data.length > 3 && (data[2] == (byte) '4'))
 			{
-				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
+				//20240403 Special for CS4625 ignore the last code
+				if (data.length > 4)
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
+				else
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]不完整!!請儘快維修機器", brws, "        ", "            ", "r43");
+				//----20240403
 				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] reset printer", brws, "        ", "            ", "r434");
 				this.curChkState = CheckStatus_START;
 				log.debug("{} {} eject paper", brws, wsno);

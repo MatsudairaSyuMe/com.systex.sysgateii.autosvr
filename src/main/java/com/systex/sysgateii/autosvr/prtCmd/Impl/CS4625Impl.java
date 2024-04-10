@@ -371,7 +371,7 @@ public class CS4625Impl implements Printer {
 		if (getIsShouldShutDown().get())
 			return "DIS".getBytes();
 		do {
-//			log.debug("pc.clientMessageBuf={}", pc.clientMessageBuf.readableBytes());
+			//log.debug("pc.clientMessageBuf={}", pc.clientMessageBuf.readableBytes());
 			if (pc.clientMessageBuf != null && pc.clientMessageBuf.readableBytes() > 2) {
 				int size = pc.clientMessageBuf.readableBytes();
 				byte[] buf = new byte[size];
@@ -393,10 +393,35 @@ public class CS4625Impl implements Printer {
 						rtn = new byte[3];
 					log.debug("Rcv_Data get {} bytes", rtn.length);
 					pc.clientMessageBuf.readBytes(rtn, 0, rtn.length);
-					atlog.info("[{}]-[{}]",rtn.length,new String(rtn, 0, rtn.length)); //20201002
+					//20240403 mark atlog.info("[{}]-[{}]",rtn.length,new String(rtn, 0, rtn.length)); //20201002
 					return rtn;
+					//20240403 MatsudairaqSyuMe add for purge garbage data for CS4625
+				} else {
+					log.warn("Rcv_Data have some garbage data!!!!");
+					rtn = new byte[size];
+					pc.clientMessageBuf.readBytes(buf, 0, buf.length);
+					int starti = -1;
+					for (int i = 0; i < buf.length; i++)
+						if (buf[i] == (byte)0x1b) {
+							starti = i;
+							break;
+						}
+					log.warn("Rcv_Data get ESC data from idx {}!!!!{}", starti, buf);
+					if (starti > -1) {
+						rtn = new byte[buf.length - starti];
+						log.warn("Rcv_Data get ESC data from idx {}!!!! rtn.length={}", starti, rtn.length);
+						for (int idx = 0; starti < buf.length; idx++, starti++)
+							rtn[idx] = buf[starti];
+						return rtn;
+					} else {
+						rtn = new byte[buf.length];
+						for (int idx = 0; idx < buf.length; idx++)
+							rtn[idx] = buf[idx];
+						return rtn;
+					}
 				}
-			}
+				//----20240403
+			}//20240403 test else if (pc.clientMessageBuf != null) log.debug("pc.clientMessageBuf.readableBytes()={}", pc.clientMessageBuf.readableBytes());
 //20200330			Sleep(100);
 			Sleep(30); //20220429 MatsudairaSyuMe change from 50 to 33
 		} while (++retry < 10);
@@ -436,7 +461,7 @@ public class CS4625Impl implements Printer {
 			/*20201208 mark
 			data = Rcv_Data(3);
 			*/
-			data = Rcv_Data();
+			data = Rcv_Data();log.debug("CheckStatus after Rcv_Data data len={}", data != null ? data.length:0);
 			//20200330 change from 3 to 20
 			if (data == null && iCnt > 20) {
 				amlog.info("[{}][{}][{}]:95補摺機無回應！", brws, "        ", "            ");
@@ -1921,11 +1946,14 @@ public class CS4625Impl implements Printer {
 					case (byte) 'X':
 						//20240327 MatsudairasyuMe send 
 						PurgeBuffer();
+					    /*20240408 MatsudairaSyuMe get paper lower change to reset
 						Send_hData(S4625_PERRCODE_REQ);
+						*/
 						log.debug("{} {} paper lower send perrcode_req curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
 						amlog.info("[{}][{}][{}]:94傳票稍短,超出可列印範圍", brws, "        ", "            ");
 						//----20240327
-						break;
+						//20240408 MatsudairaSyuMe get paper lower change to reset
+						return true; //break;
 					case (byte) 'a':
 						amlog.info("[{}][{}][{}]:94紙張插歪 或 錯誤資料格式", brws, "        ", "            ");
 						break;
@@ -1992,17 +2020,28 @@ public class CS4625Impl implements Printer {
 					//----
 					return false;
 			}
-			//20220827 MatsudairaSyuMe for ESC,r475
-			if (data.length > 3 && data[2] == (byte) '4' && data[3] == (byte) '7' && data[4] == (byte) '5') {
+			//20220827 MatsudairaSyuMe for ESC,r475, 20240403 Special for CS4625 ignore the last code
+			if (data.length > 3 && data[2] == (byte) '4' && data[3] == (byte) '7') {
 				ResetPrinter();
 				this.curChkState = CheckStatus_START;
-				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");		
+				//20240403 Special for CS4625 ignore the last code
+				if (data.length > 4)
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");
+				else
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]不完整!!請儘快維修機器", brws, "        ", "            ", "r47");
+				//----20240403
+				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r475");
 			}  //20230309 MatsudairaSyuMe for ESC,r434
 			//20240327 MAtsudairaSyuME TEST
-			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3' && data[4] == (byte) '4'))
+			else if (data.length > 3 && (data[2] == (byte) '4' && data[3] == (byte) '3'))
 //			else if (data.length > 3 && (data[2] == (byte) '4'))
 			{
-				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
+				//20240403 Special for CS4625 ignore the last code
+				if (data.length > 4)
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", "r434");
+				else
+					amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]不完整!!請儘快維修機器", brws, "        ", "            ", "r43");
+				//----20240403
 				log.error("[{}][{}][{}]:95硬體錯誤代碼3[{}] reset printer", brws, "        ", "            ", "r434");
 				this.curChkState = CheckStatus_START;
 				log.debug("{} {} eject paper", brws, wsno);
@@ -2097,16 +2136,21 @@ public class CS4625Impl implements Printer {
 		case (byte) 'X': // Warning , paper lower
 			//20240327 MatsudairaSyuMe TEST
 			PurgeBuffer();
+		    /*20240408 MatsudairaSyuMe paper lower change to reprinter directly
 			Send_hData(S4625_PERRCODE_REQ);
+			*/
 			log.debug("{} {} paper lower send perrcode_req curState={}  curChkState={}", brws, wsno, this.curState,  this.curChkState);
-			amlog.info("[{}][{}][{}]:94傳票稍短,超出可列印範圍", brws, "        ", "            ");
+			amlog.info("[{}][{}][{}]:94-1傳票稍短,超出可列印範圍", brws, "        ", "            ");
 			////Sleep(50);
 			////data = Rcv_Data(5);
 			// 20091002 , show error code
 
 			////ResetPrinter();
-			return false;
 			//----20240327
+			//20240408 MatsudairaSyuMe paper lower change to reprinter directly
+			//return false;
+			ResetPrinter();
+			return true;
 		case (byte) 'q': // read/write error of MS
 		case (byte) 'r': // read error of MS
 			//20200729
