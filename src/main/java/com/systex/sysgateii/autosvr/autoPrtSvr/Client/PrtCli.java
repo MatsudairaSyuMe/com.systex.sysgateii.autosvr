@@ -9,12 +9,15 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 //20240201 Use SecureRandom //import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -55,6 +58,7 @@ import com.systex.sysgateii.autosvr.telegram.TOTATel;
 import com.systex.sysgateii.autosvr.util.CharsetCnv;
 import com.systex.sysgateii.autosvr.util.LogUtil;
 import com.systex.sysgateii.autosvr.util.StrUtil;
+import com.systex.sysgateii.autosvr.util.TWCategory;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 import com.systex.sysgateii.autosvr.util.ipAddrPars;
 import com.systex.sysgateii.comm.mdp.mdcliapi2;
@@ -1254,23 +1258,20 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		return DataINQ(iVal, ifig, dCount, null);
 	}
 	//----
-
+	
 	private void setpasname(byte[] cussrc) {
 		String chkcatagory = new String(cussrc, 3, 3);
 		String chkcusid = "";
 		boolean negiative = false;
 		boolean allzero = true;
 		int i = 0, j = 0;
-		switch (chkcatagory) {
-		// 台幣存摺
-			case "001":
-			case "002":
-			case "003":
-			case "004":
-			case "005":
-			case "006":
-			case "008":
+		// 20240412 add TW passbook's category from DB
+	    try {
+	    	String[] twCategories = TWCategory.getTwCategories();
+	        Set<String> categorySet = new HashSet<>(Arrays.asList(twCategories)); 
+	        if (categorySet.contains(chkcatagory)) {  
 				pasname = "台幣存摺";
+				 log.info("Set pasname to 台幣存摺 for category: {}", chkcatagory);
 				//20230220 MatsudairaSyuMe check pb msr balance if <0000000000000 change to +0000000000000
 				chkcusid = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN);
 				negiative = false;
@@ -1291,26 +1292,79 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					cusid[TXP.ACTNO_LEN + TXP.ACFILLER_LEN + j] = (byte)'0';
 				log.info("WOW !!!! after check pb msr neiactive and all zero [{}] [{}] new cusid[{}] !!!", negiative, allzero, new String(cusid));
 				//---- end 20230220
-				break;
-				// 外幣存摺
-			case "007":
-			case "021":
-			case "701":
-			case "702":
-			case "703":
-				pasname = "外幣存摺";
-				break;
-				// 黃金存摺
-			case "071":
-			case "072":
-				pasname = "黃金存摺";
-				break;
-			default:
-				pasname = "        ";
-				break;
+	        } else {
+	            pasname = "        ";  
+	        }
+	    } catch (Exception e) {
+			e.printStackTrace();
 		}
-		return;
+	    // 處理外幣存摺和黃金存摺
+	    switch (chkcatagory) {
+	        case "007":
+	        case "021":
+	        case "701":
+	        case "702":
+	        case "703":
+	            pasname = "外幣存摺";
+	            break;
+	        case "071":
+	        case "072":
+	            pasname = "黃金存摺";
+	            break;
+	    }
 	}
+
+//		switch (chkcatagory) {
+		// 台幣存摺
+//			case "001":
+//			case "002":
+//			case "003":
+//			case "004":
+//			case "005":
+//			case "006":
+//			case "008":
+//				pasname = "台幣存摺";
+//				//20230220 MatsudairaSyuMe check pb msr balance if <0000000000000 change to +0000000000000
+//				chkcusid = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN);
+//				negiative = false;
+//				allzero = true;
+//				i = 0;
+//				j = 0;
+//				for ( char c : chkcusid.toCharArray()) {
+//					if (c == '-' || c == '<') {
+//						negiative = true;
+//						j = i;
+//					} else	if (c != '0') {
+//						allzero = false;
+//						break;
+//					}
+//					i += 1;
+//				}
+//				if (negiative && allzero) // balance is zero but sign is minus
+//					cusid[TXP.ACTNO_LEN + TXP.ACFILLER_LEN + j] = (byte)'0';
+//				log.info("WOW !!!! after check pb msr neiactive and all zero [{}] [{}] new cusid[{}] !!!", negiative, allzero, new String(cusid));
+//				//---- end 20230220
+//				break;
+//				// 外幣存摺
+//			case "007":
+//			case "021":
+//			case "701":
+//			case "702":
+//			case "703":
+//				pasname = "外幣存摺";
+//				break;
+//				// 黃金存摺
+//			case "071":
+//			case "072":
+//				pasname = "黃金存摺";
+//				break;
+//			default:
+//				pasname = "        ";
+//				break;
+//		}
+//		return;
+//	}
+	
 	private boolean MS_Check(byte[] cussrc) {
 		boolean rtn = true;
 		//20230323 MatsudairaSyuMe
@@ -1348,15 +1402,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.catagory = account.substring(3, 6);
 		this.cpage = "";
 		this.cline = "";
-		switch (catagory) {
-		// 台幣存摺
-		case "001":
-		case "002":
-		case "003":
-		case "004":
-		case "005":
-		case "006":
-		case "008":
+		// 20240412 add TW passbook's category from DB
+    	String[] twCategories = TWCategory.getTwCategories(); log.debug("twCategories={}", twCategories);
+        Set<String> categorySet = new HashSet<>(Arrays.asList(twCategories)); 
+        if (categorySet.contains(catagory)) {  
 			this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN); // !< 帳號保留 MSR for PB/FC len 4
 			this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
 			//20200709 add for atlog
@@ -1368,61 +1417,85 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			// 20200709 change to use atlogmsrbal for atlog
 			atlog.info("台幣存摺 PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, atlogmsrbal, cline, cpage, bkseq);
 			iFig = TXP.PBTYPE;
-			break;
-		// 外幣存摺
-		case "007":
-		case "021":
-		case "701":
-		case "702":
-		case "703":
-			this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN); // !< 帳號保留 MSR for PB/FC len 4
-			this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
-			this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
-			this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN,
-					TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
-			this.pbver = new String(cussrc,
-					TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.PBVER_LEN); // !< 領用序號 MSR for PB len 1, FC len 2
-			atlog.info("外幣存摺 FC_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, msrbal, cline, cpage, pbver);
-			iFig = TXP.FCTYPE;
-			break;
-		// 黃金存摺
-		case "071":
-		case "072":
-			this.msrbal = new String(cussrc, TXP.ACTNO_LEN, TXP.MSRBALGL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
-			this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
-			this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
-			this.no = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.NO_LEN); // !< 存摺號碼 MSR for GL len 9
-			atlog.info("黃金存摺 GL_MSR [{}]/[{}]/[{}]/[{}]/[{}]", account, msrbal, cline, cpage, no);
-			iFig = TXP.GLTYPE;
-			break;
-		default:
-			amlog.info("[{}][{}][{}]:13存摺帳號錯誤！[{}](非台幣/外幣/黃金存摺)", brws, pasname, this.account);
-                	//20231116
-                	InsertAMStatus(brws, pasname, this.account, "13存摺帳號錯誤！(非台幣/外幣/黃金存摺)");
-                	//----
-			atlog.info("ERROR！！ PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, "", "", cline, cpage, bkseq);
-			iFig = 0;
-			rtn = false;
-			break;
-		}
-		if (iFig == 0)
-			return rtn;
-		this.nline = Integer.parseInt(this.cline);
-		this.npage = Integer.parseInt(this.cpage);
-		} catch (Exception e) {
-			e.printStackTrace();
-			amlog.info("[{}][{}][{}]:13存摺格式錯誤！", brws, "        ", this.account);
-			//20231116
-                	InsertAMStatus(brws, " ", this.account, "13存摺格式錯誤！");
-                	//----
-			atlog.info("MSR format ERROR！！[{}]", account);
-			iFig = 0;
-			rtn = false;
-		}
+        
+//		switch (catagory) {
+//		// 台幣存摺
+//		case "001":
+////		case "002":
+////		case "003":
+//		case "004":
+////		case "005":
+////		case "006":
+////		case "008":
+//			this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN); // !< 帳號保留 MSR for PB/FC len 4
+//			this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
+//			//20200709 add for atlog
+//			String atlogmsrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + 1, TXP.MSRBAL_LEN - 1); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
+//			this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
+//			this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
+//			this.bkseq = new String(cussrc,
+//					TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.BKSEQ_LEN); // !< 領用序號 MSR for PB len 1, FC len 2
+//			// 20200709 change to use atlogmsrbal for atlog
+//			atlog.info("台幣存摺 PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, atlogmsrbal, cline, cpage, bkseq);
+//			iFig = TXP.PBTYPE;
+//			break; 
+	     } else {
+	    	//外幣存摺及黃金存摺
+			switch (catagory) {
+			case "007":
+			case "021":
+			case "701":
+			case "702":
+			case "703":
+				this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN); // !< 帳號保留 MSR for PB/FC len 4
+				this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
+				this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
+				this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN,
+						TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
+				this.pbver = new String(cussrc,
+						TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.PBVER_LEN); // !< 領用序號 MSR for PB len 1, FC len 2
+				atlog.info("外幣存摺 FC_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, msrbal, cline, cpage, pbver);
+				iFig = TXP.FCTYPE;
+				break;
+			case "071":
+			case "072":
+				this.msrbal = new String(cussrc, TXP.ACTNO_LEN, TXP.MSRBALGL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
+				this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
+				this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
+				this.no = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.NO_LEN); // !< 存摺號碼 MSR for GL len 9
+				atlog.info("黃金存摺 GL_MSR [{}]/[{}]/[{}]/[{}]/[{}]", account, msrbal, cline, cpage, no);
+				iFig = TXP.GLTYPE;
+				break;
+			default:
+				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！[{}](非台幣/外幣/黃金存摺)", brws, pasname, this.account);
+		            	//20231116
+		            	InsertAMStatus(brws, pasname, this.account, "13存摺帳號錯誤！(非台幣/外幣/黃金存摺)");
+		            	//----
+				atlog.info("ERROR！！ PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, "", "", cline, cpage, bkseq);
+				iFig = 0;
+				rtn = false;
+				break;
+				}
+			}
+			if (iFig == 0)
+				return rtn;
+			this.nline = Integer.parseInt(this.cline);
+			this.npage = Integer.parseInt(this.cpage);
+			} catch (Exception e) {
+				e.printStackTrace();
+				amlog.info("[{}][{}][{}]:13存摺格式錯誤！", brws, "        ", this.account);
+				//20231116
+		            	InsertAMStatus(brws, " ", this.account, "13存摺格式錯誤！");
+		            	//----
+				atlog.info("MSR format ERROR！！[{}]", account);
+				iFig = 0;
+				rtn = false;
+			}
 		//----20230323
+		
 		return rtn;
+		
 	}
-
 	/*********************************************************
 	*  PbDataFormat() : Format TOTA Text to print            *
 	*  function       : 列印台幣存摺資料格式                 *
@@ -5216,9 +5289,17 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				reReadcusid = null;
 				if (null != (reReadcusid = prt.MS_CheckAndRead(firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead
 					if (reReadcusid.length == 1) {
-						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
-						atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
-						InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairasyuMe change catagory to "        "
+						//20240420 MatsudairaSyuMe
+						if (reReadcusid[0] == (byte)'W') {
+							amlog.info("[{}][{}][{}]:11磁條寫入失敗(1)！", brws, "        ", "            ");
+							InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");
+						//---->20240420
+						} else {
+							amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
+							//atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
+							InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairasyuMe change catagory to "        "
+						}
+						//----20240420					
 						log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from WRITEMSRWAITCONFIRM", brws, catagory, account);
 						//amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account); 20211203 MatsudairaSyuMe
 						//InsertAMStatus(brws, pasname, account, "13磁條比對不符"); 20211203 MatsudairaSyuMe
@@ -5265,9 +5346,17 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			reReadcusid = null;
 			if (null != (reReadcusid = prt.MS_CheckAndRead(!firstOpenConn, brws))) {//20211123 change to use MS_CheckAndRead
 				if (reReadcusid.length == 1) {
-					amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
-					atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
-					InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairaSyuMe change catagory to "        "
+					//20240420 MatsudairaSyuMe
+					if (reReadcusid[0] == (byte)'W') {
+						amlog.info("[{}][{}][{}]:11磁條寫入失敗(1)！", brws, "        ", "            ");
+						InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");
+					//---->20240420
+					} else {
+						amlog.info("[{}][{}][{}]:11磁條讀取失敗(1)！", brws, "        ", "            ");
+						//atlog.info("[{}]:AutoPrnCls : MS_Read() -- Read MSR Error(1) !", brws);
+						InsertAMStatus(brws, "        ", account, "11磁條讀取失敗(1)！");  //20240402 MatsudairaSyuMe change catagory to "        "
+					}
+					//----20240420					
 					log.debug("{} {} {} AutoPrnCls : read MSR ERROR after write: from READANDCHECKMSR", brws, catagory, account);
 					//amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account); 20211203 MatsudairaSyuMe
 					//InsertAMStatus(brws, pasname, account, "13磁條比對不符"); 20211203 MatsudairaSyuMe

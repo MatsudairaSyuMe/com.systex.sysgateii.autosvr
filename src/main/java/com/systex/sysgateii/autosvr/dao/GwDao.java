@@ -13,7 +13,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import org.slf4j.Logger;
@@ -1757,4 +1759,16 @@ public class GwDao {
 	}
 
 	//----
+	//20240412 add TW passbook's category from DB
+	public String[] selectTWPBCategory(String paramType) throws SQLException {
+		String selstr = "SELECT PARAM_CODE FROM TBSYSPARAMETER WHERE PARAM_TYPE = ?";
+		PreparedStatement pstmt = selconn.prepareStatement(selstr);
+		pstmt.setString(1, paramType);
+		ResultSet rs = pstmt.executeQuery();
+		List<String> paramCodes = new ArrayList<>();
+		while(rs.next()) {
+			paramCodes.add(rs.getString("PARAM_CODE"));
+		}
+		return paramCodes.toArray(new String[0]);
+	}
 }

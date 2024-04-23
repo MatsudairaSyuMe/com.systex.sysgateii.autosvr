@@ -5,7 +5,9 @@ import java.lang.management.ManagementFactory;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import com.systex.sysgateii.autosvr.autoPrtSvr.Server.PrnSvr;
 import com.systex.sysgateii.autosvr.prtCmd.Printer;
 import com.systex.sysgateii.autosvr.util.CharsetCnv;
 import com.systex.sysgateii.autosvr.util.LogUtil;
+import com.systex.sysgateii.autosvr.util.TWCategory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -1032,8 +1035,8 @@ public class CS5240Impl implements Printer {
 				} else {
 					iCnt = 0;
 					amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-1)", brws, "        ", "            ");
-					//20201119
-					pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-1)");
+					//20201119, 20240420 add private toAsciiStr
+					pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-1)磁條讀取回傳硬體錯誤代碼:" + toAsciiStr(data));
 					//----
 					//20220828 MatsudairaSyuMe
 					/*this.curState = ResetPrinterInit_START;
@@ -1513,36 +1516,63 @@ public class CS5240Impl implements Printer {
 		String pasname = "        ";
 		String chkcatagory = cussrc.substring(3, 6);;
 
-		switch (chkcatagory) {
-		// 台幣存摺
-			case "001":
-			case "002":
-			case "003":
-			case "004":
-			case "005":
-			case "006":
-			case "008":
-				pasname = "台幣存摺";
-				break;
-				// 外幣存摺
-			case "007":
-			case "021":
-			case "701":
-			case "702":
-			case "703":
-				pasname = "外幣存摺";
-				break;
-				// 黃金存摺
-			case "071":
-			case "072":
-				pasname = "黃金存摺";
-				break;
-			default:
-				pasname = "        ";
-				break;
+		// 20240412 add TW passbook's category from DB
+		Set<String> twCategories = new HashSet<>(Arrays.asList(TWCategory.getTwCategories()));
+		if (twCategories.contains(chkcatagory)) {
+			pasname = "台幣存摺";
+		} else {
+			switch (chkcatagory) {
+					// 外幣存摺
+				case "007":
+				case "021":
+				case "701":
+				case "702":
+				case "703":
+					pasname = "外幣存摺";
+					break;
+					// 黃金存摺
+				case "071":
+				case "072":
+					pasname = "黃金存摺";
+					break;
+				default:
+					pasname = "        ";
+					break;
+			}
 		}
 		return pasname;
 	}
+		
+//		switch (chkcatagory) {
+//		// 台幣存摺
+//			case "001":
+//			case "002":
+//			case "003":
+//			case "004":
+//			case "005":
+//			case "006":
+//			case "008":
+//				pasname = "台幣存摺";
+//				break;
+//				// 外幣存摺
+//			case "007":
+//			case "021":
+//			case "701":
+//			case "702":
+//			case "703":
+//				pasname = "外幣存摺";
+//				break;
+//				// 黃金存摺
+//			case "071":
+//			case "072":
+//				pasname = "黃金存摺";
+//				break;
+//			default:
+//				pasname = "        ";
+//				break;
+//		}
+//		return pasname;
+//	}
 
 	
 	@Override
@@ -1729,6 +1759,26 @@ public class CS5240Impl implements Printer {
 						}
 						//----
 						return true;
+						//20240420 MatsudairaSyuMe
+						case (byte) '6': // read error response
+							byte[] nr = new byte[1];
+							nr[0] = (byte)'W';
+							this.curmsdata = nr;
+							amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
+							String s = "94補摺機狀態錯誤！磁條寫入時回傳硬體錯誤碼代碼:" + toAsciiStr(data);
+							pc.InsertAMStatus(brws, "", "", s);
+							Send_hData(S5240_CANCEL);
+							ResetPrinter();
+							this.curState = ResetPrinterInit_START;
+							ResetPrinterInit();
+							data = CheckStatus();
+							if (data != null && data.length > 0) {
+								this.curmsdata = data;
+								this.curState = ResetPrinterInit_FINISH;
+								amlog.info("[{}][{}][{}]:00補摺機重置完成！", brws, "        ", "            ");	
+							}
+							return true;
+						//----20240420
 					default:
 						// 20060713 , RECEVIE UNKNOWN ERROR , JUST RESET
 						this.curState = ResetPrinterInit_START;
@@ -2251,14 +2301,24 @@ public class CS5240Impl implements Printer {
 				return false;
 			} else {
 
-				// 20201208 add
+				// 20201208 add, 20240420 add if this.curState == MS_Read_Check change to nr[0] == 'W'
 				byte[] nr = new byte[1];
-				nr[0] = (byte) 'X';
+				if (this.curState == MS_Read_Check)
+					nr[0] = (byte)'W';
+				else
+					nr[0] = (byte)'X';
 				this.curmsdata = nr;
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ",
 						new String(data, 1, data.length - 1));
-				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
-				//20240110 mark pc.InsertAMStatus(brws, "", "", s);
+				//20240420 add private toAsciiStr
+				//				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
+				String s = "";
+				if (this.curState == MS_Read_Check)
+					s = "94補摺機狀態錯誤！磁條寫入時回傳硬體錯誤碼代碼:" + toAsciiStr(data);
+				else
+					s = "94硬體錯誤代碼:" + toAsciiStr(data);
+				pc.InsertAMStatus(brws, "", "", s);
+				//----2024020
 				//20201216
 				Send_hData(S5240_CANCEL);  //special for S5020
 				amlog.info("[{}][{}][{}]:00補摺機重置中...", brws, "        ", "            ");		
@@ -2696,7 +2756,15 @@ public class CS5240Impl implements Printer {
 			if (!CheckError(data)) {
 				return null;
 			} else
-				this.curState = MS_Read_START;
+			//20240420 MatsudairaSyuMe check for MSW error
+			{
+				if(this.curmsdata.length == 1)
+					return this.curmsdata;
+				else
+			//---->20240420
+					this.curState = MS_Read_START;	
+			}
+			//----20240420
 		}
 		log.debug("MS_CheckAndRead 2 curState={} curChkState={}", this.curState, this.curChkState);
 		if (this.curState == MS_Read_START) {
@@ -2758,7 +2826,9 @@ public class CS5240Impl implements Printer {
 				} else {
 					iCnt = 0;
 					amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-1)", brws, "        ", "            ");
-					pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！(MSR-1)");
+					//20240420 add private toAsciiStr
+					pc.InsertAMStatus(brws, "", "", "94補摺機狀態錯誤！磁條寫入後讀取回傳硬體錯誤碼:" + toAsciiStr(data));
+					//----20240420
 					this.curState = ResetPrinterInit_START;
 					ResetPrinterInit();
 					pc.close();
@@ -2790,5 +2860,16 @@ public class CS5240Impl implements Printer {
 		log.debug("{} {} {} {} MS_CheckAndRead final data.length={}", iCnt, brws, "", "", (data == null? 0: data.length));
 		return curmsdata;
 	}
-
+	//20240420 MatsudairaSyuMe convert byte array to ascii string
+	private String toAsciiStr(byte[] b) {
+		String rtn = "";
+		if (b == null || b.length == 0)
+			return rtn;
+		for (int i = 0; i < b.length; i++)
+			if ((int)(b[i] & 0xff) < 32 || (int)(b[i] & 0xff) > 126)
+                b[i] = (byte)'.';
+		rtn = new String(b);
+		return rtn;
+	}
+	//----20240420
 }
