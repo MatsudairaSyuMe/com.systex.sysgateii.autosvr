@@ -23,7 +23,6 @@ import org.slf4j.MDC;
 import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.comm.TXP;
 import com.systex.sysgateii.autosvr.listener.MessageListener;
-import com.systex.sysgateii.autosvr.ratesvr.Server.ServerProducer;
 import com.systex.sysgateii.autosvr.util.CharsetCnv;
 import com.systex.sysgateii.autosvr.util.TelegramReg;
 import com.systex.sysgateii.autosvr.util.dataUtil;

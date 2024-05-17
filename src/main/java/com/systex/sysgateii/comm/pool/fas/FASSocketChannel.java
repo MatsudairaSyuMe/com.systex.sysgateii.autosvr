@@ -1,6 +1,5 @@
 package com.systex.sysgateii.comm.pool.fas;
 
-import com.systex.sysgateii.autosvr.ratesvr.Server.ServerProducer;
 import com.systex.sysgateii.comm.pool.MultiNodeConnPoolImpl;
 import com.systex.sysgateii.comm.pool.NonBlockingConnPool;
 
