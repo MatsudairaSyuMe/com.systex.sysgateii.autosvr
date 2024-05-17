@@ -45,7 +45,7 @@ public class Conductor implements Runnable {
 		try {
 			Thread.sleep(t * 1000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			//20250503 MatsidairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	}
 	public static void createServer(ConcurrentHashMap<String, String> _map, String _svrip) {
@@ -101,14 +101,14 @@ public class Conductor implements Runnable {
 				log.error("ERROR!!! no svrid exist in table while IP=[{}] !!!", getSvrip());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.info("read database error [{}]", e.toString());
+			//20240503 MatsudairaSyuMe mark up for System Information Leak e.printStackTrace();
+			log.info("read database service data error");//20240503 change log message
 		} finally {
 			try {
 				jsel2ins.CloseConnect();
 			} catch (Exception e) {
-				e.printStackTrace();
-				log.error("close connect from database error [{}]", e.toString());
+				//20240503 MatsudairaSyuMe mark up for System Information Leak e.printStackTrace();
+				log.error("close connect from database error");//20240503 change log message
 			}
 			jsel2ins = null;
 		}
@@ -171,7 +171,7 @@ public class Conductor implements Runnable {
 				try {
 					jdawcon.CloseConnect();
 				} catch (Exception any) {
-					any.printStackTrace();
+					//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 					log.error("jdawcon close error ignore");
 				}
 				jdawcon = null;
@@ -233,14 +233,14 @@ public class Conductor implements Runnable {
 													chksno = new String[1];
 													chksno[0] = "-1";
 												}
-												sno = cmdhiscon.INSSELChoiceKey(svrcmdhistbname, svrcmdhistbfields,
-														failfldvals, svrcmdhistbsearkey, chksno[0], false, false);
+												cmdhiscon.INSSELChoiceKey(svrcmdhistbname, svrcmdhistbfields,
+														failfldvals, svrcmdhistbsearkey, chksno[0], false, false);//20240510 Poor Style: Value Never Read for sno
 												/*
 												 * 20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 												 cmdhiscon.CloseConnect();
 												 cmdhiscon = null;
 												/*20230517 take out mark for closing connection after access db */
-												sno = null;
+												//20240510 Poor Style: Value Never Read sno = null;
 											}
 											/*20230517 mark up for closing connection after access db 
 											jdawcon.DELETETB_R(cmdtbname, "SVRID", cmdary[0], false);  //20220613 change to use reused statement
@@ -251,7 +251,7 @@ public class Conductor implements Runnable {
 												try {
 													jdawcon.CloseConnect();
 												} catch (Exception any) {
-													any.printStackTrace();
+													//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 													log.error("jdawcon close error ignore");
 												}
 												jdawcon = null;
@@ -547,21 +547,21 @@ public class Conductor implements Runnable {
 					   cmdhiscon = null;
 					 /*20230517 MatsudairaSyuMe take out mark for closing connection after access db */
 				} catch (Exception e) {
-					e.printStackTrace();
-					log.error("parse command error:{}", e.getMessage());
+					//20240503 MatsudairaSyuMe mark up for System Information Leak e.printStackTrace();
+					log.error("parse command error"); //20240503 change log message
 				}
 				sleep(3);
 			}
 		// 20220607 MatsudairaSyuMe
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("jdawcon error:{}", e.getMessage());
+			//20240503 MatsudairaSyuMe mark up for System Information Leak e.printStackTrace();
+			log.error("jdawcon read or update error"); //20240503 change log message
 		} finally {
 			if (jdawcon != null) {
 				try {
 					jdawcon.CloseConnect();
 				} catch (Exception any) {
-					any.printStackTrace();
+					//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 					log.error("jdawcon close error ignore");
 				}
 				jdawcon = null;
@@ -570,7 +570,7 @@ public class Conductor implements Runnable {
 				try {
 					cmdhiscon.CloseConnect();
 				} catch (Exception any) {
-					any.printStackTrace();
+					//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 					log.error("cmdhiscon close error ignore");
 				}
 			cmdhiscon = null;
@@ -580,11 +580,11 @@ public class Conductor implements Runnable {
 	
 	public void stop(int waitTime) {
 		log.debug("Enter Conductor stop");
-		try {
+//		try {20240508
 //			thread.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		} catch (Exception e) {
+//			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+//		}
 	}// stop
 
 

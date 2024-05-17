@@ -36,7 +36,8 @@ public class Cli {
 
 				boolean listcr = false;
 
-				String userName = System.getProperty("user.name").trim();
+				String userName = System.getProperty("user.name");
+				if (userName == null || userName.length() == 0) userName = "SYSTEM";
 				userName = userName.length() > 6 ? userName.substring(0, 6): userName;
 
 				for (int i = 0; i < args.length; i++) {
@@ -145,7 +146,7 @@ public class Cli {
 						System.exit(-1);
 					}
 				}
-				System.out.println("listcr=" + listcr + " user name=" + userName);
+				//20240503 mark up System.out.println("listcr=" + listcr + " user name=" + userName);
 				if (listcr) {
 					dcf = new DynamicProps("rateprtservice.xml");
 					url = dcf.getConHashMap().get("system.db[@url]");
@@ -224,14 +225,14 @@ public class Cli {
 							String t = sdf.format(new java.util.Date());
 							String updValue = String.format(updcmdPtrn, Integer.parseInt(auidS), setcmdS, t, "",
 									sdf.format(0l), userName);
-							System.out.println("update " + updValue + " ");
+							//20240503 mark up updValue System.out.println("update " + updValue + " ");
 							int row = jsel2ins.UPSERT(cmdtbname, cmdtbfields, updValue, cmdtbmkey, sidS + ",'" + brwsS + "'");
 							System.out.println("total " + row + " records update");
 							jsel2ins.CloseConnect();
 							jsel2ins = null;
 							if (jselonefield != null)
 								jselonefield.CloseConnect(); //20210413 MatsudairaSyuMe prevent Null Dereference
-							jselonefield = null;
+							//20240510 Poor Style: Value Never Read jselonefield = null;
 						} else {//20201119 set command for svrid
 							String cmdtbname = dcf.getConHashMap().get("system.svrcmdtb[@name]");
 							String cmdtbmkey = "SVRID";
@@ -253,7 +254,7 @@ public class Cli {
 							String t = sdf.format(new java.util.Date());
 							String updValue = String.format(updsvrcmdPtrn, ipS, setcmdS, t, "",
 									sdf.format(0l), userName);
-							System.out.println("update " + updValue + " ");
+							//20240503 mark up updValue System.out.println("update " + updValue + " ");
 							int row = jsel2ins.UPSERT(cmdtbname, cmdtbfields, updValue, cmdtbmkey,
 									sidC);
 							System.out.println("total " + row + " records update");
@@ -261,7 +262,7 @@ public class Cli {
 							jsel2ins = null;
 							if (jselonefield != null)
 								jselonefield.CloseConnect();//20210413 MatsudairaSyuMe prevent Null Dereference
-							jselonefield = null;
+							//20240510 Poor Style: Value Never Read jselonefield = null;
 						}
 					} else if (brwsS.length() > -1 || sidS.length() > -1) {
 						dcf = new DynamicProps("rateprtservice.xml");
@@ -346,8 +347,8 @@ public class Cli {
 				System.out.println("Cli -cr :{BRWS} or {BRWS}                     list command status of device BRWS");
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println("error:"+ e);
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			System.err.println("error: exception"); //20240503 change log message
 		}
 	}
 }

@@ -267,7 +267,7 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 			i = secureRandomGenerator.nextInt(n);
 		} catch (NoSuchAlgorithmException e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e1.printStackTrace();
 			LOG.error("get random number error use default [{}]", i);
 		}	
 		//----
@@ -365,7 +365,7 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 			i = secureRandomGenerator.nextInt(n);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			LOG.error("SecureRandom error:NoSuchAlgorithmException");
 		}
 		//----
@@ -599,7 +599,7 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 				TimeUnit.MILLISECONDS.sleep(50);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			}
 
 			for (final String nodeAddr : allConns.keySet()) {

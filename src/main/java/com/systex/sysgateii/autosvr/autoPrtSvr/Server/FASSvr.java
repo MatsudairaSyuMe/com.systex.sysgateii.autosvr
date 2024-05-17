@@ -86,14 +86,14 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 
 	public void run() {
 		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
-		String jvmName = bean.getName();
-		long pid = Long.valueOf(jvmName.split("@")[0]);
-		log.info("FASSvr MainThreadId={}", pid);
+		//20240510 Poor Style: Value Never Read String jvmName = bean.getName();
+		//20240503 mark for no use long pid = Long.valueOf(jvmName.split("@")[0]);
+		log.info("FASSvr MainThreadId");//20240503 change log message
 		try {
 			this.ec2 = new FASSocketChannel(NODES);
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("add thread FASSocketChannel error");//20240503 change log message
 		}
 	}
 
@@ -139,7 +139,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 		try {
 			TimeUnit.SECONDS.sleep(t);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	}
 
@@ -239,8 +239,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 					System.arraycopy("\u0003".getBytes(), 0, sndm, (telmsg.length + 12), 1);
 					ByteBuf req = Unpooled.wrappedBuffer(sndm);
 					this.currConn.writeAndFlush(req.retain()).sync();
-					sndm = null;
-					req = null;
+					//20240510 Poor Style: Value Never Read sndm = null;
+					//20240510 Poor Style: Value Never Read req = null;
 					//---- 20220902 MatsidairasyuMe
 					rtn = true;
 					//20220902 MatsudairaSyuMe add tail one byte
@@ -256,7 +256,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 								charcnv.BIG5bytesUTF8str(telmsg)));
 					//-- MatsudairaSyuMe add tail one byte
 					} catch (Exception e) {
-						e.printStackTrace();
+						log.error("convert fas send message error");//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 					}
 					// ----
 			//20220715 MatsudairaSyuMe change to error for get seqno error
@@ -281,9 +281,9 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 //20220715 MatsudairaSyuMe			} catch (final InterruptedException e) {
 //20220715 MatsudairaSyuMe				log.debug("get connect from pool error {}", e.getMessage());
 			} catch (final Throwable cause) {
-				log.debug("get connect from pool error {}", cause.getMessage());
+				log.debug("get connect from pool error :exception");//20240503 change log message
 				//20220819 MataudairaSyuMe
-				trace.debug("get connect from pool error {}", cause.getMessage());
+				trace.debug("get connect from pool error :exception ");//20240503 change log message
 			} finally {
 				log.debug("2 end sendTelegram isCurrConnNull=[{}]", isCurrConnNull());
 				releaseConn();
@@ -350,6 +350,8 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	}
 	//----
 	 */
+	
+/*20240516 MataudairaSyuMe
 	public byte[] getResultTelegram() {
 		byte[] rtn = null;
 		byte[] lenbary = new byte[3];
@@ -406,6 +408,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 //				log.debug("get rtn len= {}", rtn.length);
 //				this.ec2.getrcvBuf().readBytes(rtn);
 //				this.setTITA_TOTA_START(false);
+ 20240516 MasydairaSyuMe */
 				/*20210111 MatsudairaSyuMe mark for exclusive channel for TITA/TOTA processing 
 				try {
 					if (rtn != null && rtn.length > 0)
@@ -416,11 +419,13 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 				}
 				log.debug("return connect to pool");
 				*/
-			}
+/*20240516 MatsudairaSyuMe
+ 			}
 		//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
 		////}
 		return rtn;
 	}
+*/
 	
 	private byte[] remove03(byte[] source) {
 		if (source[source.length - 1] == 0x03) {

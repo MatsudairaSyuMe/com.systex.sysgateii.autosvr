@@ -369,6 +369,7 @@ public class P0080TEXT {
 		return this.p0080totatextlist.get(oc);
 	}
 
+	/*Poor Style: Value Never Read
 	public static void main(String[] args) throws Exception {
 		boolean rtn;
 		P0080TEXT tl = new P0080TEXT();
@@ -388,5 +389,5 @@ public class P0080TEXT {
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("4--->[{}] len={}", new String(result), tl.getP0080TotatextLen());
-	}
+	}*/
 }

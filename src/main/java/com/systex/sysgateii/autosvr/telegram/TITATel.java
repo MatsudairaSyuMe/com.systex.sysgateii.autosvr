@@ -323,7 +323,7 @@ public class TITATel {
         System.arraycopy(text, 0, titamsg, label.length, text.length);
         return titamsg;
     }
-    
+    /*Poor Style: Value Never Read
     public static void main(String[] args) throws Exception {
         int iLine = 0;
         int begin = 0;
@@ -396,6 +396,6 @@ public class TITATel {
         byte[] p0080tita = tital.mkTITAmsg(tital.getTitalabel(), p0080text.getP0080Titatext());
         log.debug("4--->[{}] len={}",new String(p0080tita), p0080tita.length);
 
-    }
+    }*/
 }
 

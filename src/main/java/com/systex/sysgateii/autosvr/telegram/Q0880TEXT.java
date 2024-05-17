@@ -457,12 +457,12 @@ public class Q0880TEXT {
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("2--->[{}]len={}", new String(result), tl.getQ0880TitatextLen());
-		rtn = tl.initQ0880TotaheadTEXT((byte) '0');
+		tl.initQ0880TotaheadTEXT((byte) '0');//20240510 Poor Style: Value Never Read take out rtn
 		result = tl.getQ0880Totaheadtext();
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("3--->[{}] len={}", new String(result), tl.getQ0880TotaheadtextLen());
-		rtn = tl.initQ0880TotaTEXT((byte) '0');
+		tl.initQ0880TotaTEXT((byte) '0');//20240510 Poor Style: Value Never Read take out rtn
 		result = tl.getQ0880Totatext();
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");

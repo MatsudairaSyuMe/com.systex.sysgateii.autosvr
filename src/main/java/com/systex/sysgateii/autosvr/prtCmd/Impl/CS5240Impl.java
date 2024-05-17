@@ -354,7 +354,7 @@ public class CS5240Impl implements Printer {
 			atlog.info("[{}]-[{}{}", buff.clone().length,new String(buff, "US-ASCII"), "]");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			return -1;
 		}
 		return 0;
@@ -396,7 +396,7 @@ public class CS5240Impl implements Printer {
 					//20240403 MatsudairaqSyuMe add for purge garbage data for CS4625
 				} else {
 					log.warn("Rcv_Data have some garbage data!!!!");
-					rtn = new byte[size];
+					//20240510 Poor Style: Value Never Read rtn = new byte[size];
 					pc.clientMessageBuf.readBytes(buf, 0, buf.length);
 					int starti = -1;
 					for (int i = 0; i < buf.length; i++)
@@ -509,17 +509,17 @@ public class CS5240Impl implements Printer {
 		if (buff == null || buff.length == 0)
 			return (false);
 		int len = buff.length;
-		byte bcc = 0x0;
+		//20240510 Poor Style: Value Never Read byte bcc = 0x0;
 		byte chrtmp = 0x0;
 		byte chrtmp1 = 0x0;
 		boolean dblword = false; // chinese character
-		byte[] data = null;
-		boolean bPrinterNoFont = false;
+		//20240510 Poor Style: Value Never Read byte[] data = null;
+		//20240510 Poor Style: Value Never Read boolean bPrinterNoFont = false;
 
 		byte[] linefeed = null;
 		int j, offset = 0;
 		boolean bLineFeed;
-		boolean bHalf = false;
+		//20240510 Poor Style: Value Never Read boolean bHalf = false;
 		//20211012 MatsudiaraSyuMe extend size of hBuf from 600 to 1500
 		byte[] hBuf = new byte[1500];
 
@@ -796,7 +796,7 @@ public class CS5240Impl implements Printer {
 					if ( bBeginSISession == true ) {
 						log.debug("6.1 ===<><>{} {} Prt_Text leave S5240_PSO wlen={} i={}", this.curState, this.curChkState, wlen, i);
 						System.arraycopy(S5240_PSO, 0, hBuf, wlen+3, 5);
-						bBeginSISession=false;
+						//20240510 Poor Style: Value Never Read bBeginSISession=false;
 						wlen+=5;
 					}
 					//20060905 , to compromise the bne at last digit, 0x0a set in upper logic
@@ -844,8 +844,8 @@ public class CS5240Impl implements Printer {
 			System.arraycopy(PrnSvr.big5funt.getFontImageData((long) fontno), 0, command, 7, 72);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("AddFont fontno=[{}] error ===<><>{} chkChkState {} {}", fontno, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("AddFont fontno=[{}] error ===<><>curState{} curChkState {} :exception", fontno, this.curState, this.curChkState);//20240503 change log message
 			return false;
 		}
 		//20200730
@@ -1175,7 +1175,7 @@ public class CS5240Impl implements Printer {
 					this.iCnt = 0;
 					//20201216
 					if (data.length >= 5 && data[3] == (byte)'2' && data[4] == (byte)'1') {
-						String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
+						//20240510 Poor Style: Value Never Read String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
 						//20240110 mark pc.InsertAMStatus(brws, "", "", s);
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ",
 								new String(data, 1, data.length - 1));
@@ -1893,8 +1893,8 @@ public class CS5240Impl implements Printer {
 			System.arraycopy(PrnSvr.big5funt.getFontImageData((long) fontno), 0, command, 7, 72);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("AddExtFont fontno=[{}] error ===<><>{} chkChkState {} {}", fontno, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("AddExtFont fontno=[{}] error ===<><>{} curChkState {}", fontno, this.curState, this.curChkState);//20240503 change log message
 			return false;			
 		}
 		//20200730
@@ -2055,7 +2055,7 @@ public class CS5240Impl implements Printer {
 		//20230322 MatsudairaSyuMe ignore the data not start with ESQ
 		if (data.length > 0 && data[0] != ESQ) {
 			log.warn("{} {} ignore receive data not start with ESC [{}]", brws, wsno, data);
-			data = null;
+			//20240510 Poor Style: Value Never Read data = null;
 			PurgeBuffer();
 			return false;
 		}
@@ -2083,7 +2083,7 @@ public class CS5240Impl implements Printer {
 			if (this.curState == Eject || this.curState == SetSignal_4) {
 				this.curChkState = CheckStatus_START;
 				//20201216
-				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
+				//20240510 Poor Style: Value Never Read String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
 				//20240110 mark pc.InsertAMStatus(brws, "", "", s);
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
 //				Send_hData(S5240_CANCEL);  //special for S5020
@@ -2246,7 +2246,7 @@ public class CS5240Impl implements Printer {
 			this.curState = CheckStatus_START;
 			*/
 		
-			data = CheckStatus();
+			CheckStatus();//20240510 Poor Style: Value Never Read mark data
 			Send_hData(S5240_PERRCODE_REQ);
 
 			//20201208 add
@@ -2728,7 +2728,7 @@ public class CS5240Impl implements Printer {
 //			TimeUnit.MICROSECONDS.sleep(s);
 			TimeUnit.MILLISECONDS.sleep(s);
 		} catch (InterruptedException e1) { // TODO Auto-generated catch block
-			e1.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e1.printStackTrace();
 		}
 	}
 

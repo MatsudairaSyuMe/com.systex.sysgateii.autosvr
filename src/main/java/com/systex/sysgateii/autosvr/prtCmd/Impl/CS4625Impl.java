@@ -360,7 +360,7 @@ public class CS4625Impl implements Printer {
 			atlog.info("[{}]-[{}{}", buff.clone().length,new String(buff, "US-ASCII"), "]");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for curChkState e.printStackTrace();
 			return -1;
 		}
 		return 0;
@@ -401,7 +401,7 @@ public class CS4625Impl implements Printer {
 					//20240403 MatsudairaqSyuMe add for purge garbage data for CS4625
 				} else {
 					log.warn("Rcv_Data have some garbage data!!!!");
-					rtn = new byte[size];
+					//20240510 Poor Style: Value Never Read rtn = new byte[size];
 					pc.clientMessageBuf.readBytes(buf, 0, buf.length);
 					int starti = -1;
 					for (int i = 0; i < buf.length; i++)
@@ -511,28 +511,28 @@ public class CS4625Impl implements Printer {
 		if (buff == null || buff.length == 0)
 			return (false);
 		int len = buff.length;
-		byte bcc = 0x0;
+		//20240510 Poor Style: Value Never Read byte bcc = 0x0;
 		byte chrtmp = 0x0;
 		byte chrtmp1 = 0x0;
 		boolean dblword = false; // chinese character
-		byte[] data = null;
-		boolean bPrinterNoFont = false;
+		//20240510 Poor Style: Value Never Read byte[] data = null;
+		//20240510 Poor Style: Value Never Read boolean bPrinterNoFont = false;
 
-		byte[] linefeed = null;
-		int j, offset = 0;
-		boolean bLineFeed;
-		boolean bHalf = false;
+		//20240510 Poor Style: Value Never Read byte[] linefeed = null;
+		int j; //20240510Poor Style: Value Never Read , offset = 0;
+		//20240510 Poor Style: Value Never Read boolean bLineFeed;
+		//20240510  boolean bHalf = false;
 		//20211012 MatsudiaraSyuMe extend size of hBuf from 600 to 1500
 		byte[] hBuf = new byte[1500];
 
 		// filter space 91.10.09
-		bLineFeed = false;
+		//20240510 Poor Style: Value Never Read bLineFeed = false;
 
 		for (j = len - 1; j >= 0; j--) {
 			if (buff[j] != (byte)0x0a && buff[j] != (byte)0x0d)
 				break;
-			else
-				bLineFeed = true;
+			//20240510 Poor Style: Value Never Read else
+			//20240510 Poor Style: Value Never Read	bLineFeed = true;
 		}
 /*		if (bLineFeed) {
 			linefeed = new byte[len - j - 1];
@@ -788,7 +788,7 @@ public class CS4625Impl implements Printer {
 					if ( bBeginSISession == true ) {
 						log.debug("6.1 ===<><>{} {} Prt_Text leave S4625_PSO wlen={} i={}", this.curState, this.curChkState, wlen, i);
 						System.arraycopy(S4625_PSO, 0, hBuf, wlen+3, 5);
-						bBeginSISession=false;
+						//20240510 Poor Style: Value Never Read bBeginSISession=false;
 						wlen+=5;
 					}
 					//20060905 , to compromise the bne at last digit, 0x0a set in upper logic
@@ -836,8 +836,8 @@ public class CS4625Impl implements Printer {
 			System.arraycopy(PrnSvr.big5funt.getFontImageData((long) fontno), 0, command, 7, 72);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("AddFont fontno=[{}] error ===<><>{} chkChkState {} {}", fontno, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("AddFont fontno=[{}] error ===<><>curState {} chkChkState {}", fontno, this.curState, this.curChkState); //20240503 change log message
 			return false;
 		}
 		//20200730
@@ -1874,8 +1874,8 @@ public class CS4625Impl implements Printer {
 			System.arraycopy(PrnSvr.big5funt.getFontImageData((long) fontno), 0, command, 7, 72);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("AddExtFont fontno=[{}] error ===<><>{} chkChkState {} {}", fontno, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for curChkState e.printStackTrace();
+			log.error("AddExtFont fontno=[{}] error ===<><>curState {} chkChkState {} {}", fontno, this.curState, this.curChkState);//20240503 change log message
 			return false;
 		}
 		//20200730
@@ -2029,7 +2029,7 @@ public class CS4625Impl implements Printer {
 		//20230322 MatsudairaSyuMe ignore the data not start with ESQ
 		if (data.length > 0 && data[0] != ESQ) {
 			log.warn("{} {} ignore receive data not start with ESC [{}]", brws, wsno, data);
-			data = null;
+			//20240510 Poor Style: Value Never Read data = null;
 			PurgeBuffer();
 			return false;
 		}
@@ -2215,7 +2215,7 @@ public class CS4625Impl implements Printer {
 		/*20201208 mark
 			this.curState = CheckStatus_START;
 			*/
-			data = CheckStatus();
+			CheckStatus();//20240510 Poor Style: Value Never Read take of data
 			Send_hData(S4625_PERRCODE_REQ);
 			
 			//20201208 add
@@ -2696,7 +2696,7 @@ public class CS4625Impl implements Printer {
 		try {
 			TimeUnit.MILLISECONDS.sleep(s);
 		} catch (InterruptedException e1) { // TODO Auto-generated catch block
-			e1.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e1.printStackTrace();
 		}
 	}
 

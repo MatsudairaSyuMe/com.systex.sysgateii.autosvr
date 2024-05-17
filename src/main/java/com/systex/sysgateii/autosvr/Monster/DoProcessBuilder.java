@@ -104,7 +104,7 @@ public class DoProcessBuilder {
 			runArgs3 = runArgs3.trim();
 			Pattern FILTER_PATTERN = Pattern.compile("[0-9]+");
 			if (!FILTER_PATTERN.matcher(runArgs3).matches()) {
-				log.debug("inpit:{} not match", runArgs3);
+				log.debug("input:{} not match", runArgs3);
 				chkOk = false;
 			} else
 				log.debug("inpit:{} ok", runArgs3);
@@ -122,9 +122,8 @@ public class DoProcessBuilder {
 				chkOk = false;
 			if (chkOk && runArgs0.trim().equals(TrustedCmd)
 					&& runArgs2.trim().equals(TrustedArg2)) {
-				//20210320 MatsudairaSyuMe for command injection
-				ProcessBuilder pb = new ProcessBuilder(TrustedCmd, TrustedArg1[arg1idx], TrustedArg2, cnvs);
-				//----
+				ProcessBuilder pb = new ProcessBuilder(TrustedCmd, TrustedArg1[arg1idx], TrustedArg2,  cnvs); //20240503 command injection
+				//----TrustedArg1[arg1idx]
 //				String currentDir = System.getProperty("user.dir");  20210426 MatsudairaSyuMe mark for path manipulation
 				pb.directory(new File("." + File.separator)); //20210426 MatsudairaSyuMe use current directory
 				Process process = pb.start();
@@ -143,8 +142,8 @@ public class DoProcessBuilder {
 				log.error(logStr);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("fork process error [{}]", e.toString());
+			//20240503 MatsudairaSyuMe mark up for System Information Leak e.printStackTrace();
+			log.error("fork process error"); //20240503 change log
 		}
 	}
 /*	public void Go() {

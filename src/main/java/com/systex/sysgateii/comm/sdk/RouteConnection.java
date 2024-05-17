@@ -104,16 +104,16 @@ public class RouteConnection {
 			try {
 				channel_.writeAndFlush(buf.retain()).sync();
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for log.info( e.printStackTrace();
 				log.error("Can't send message to RouteSvrHandler");
 			}
 			//20230703 MatsudairaSyuMe make sure for no direct memory leak
 			finally {
 				buf.release();
-				buf = null;
+				//20240510 Poor Style: Value Never Read buf = null;
 			}
 			//----
-			sndmsg = null;
+			//20240510 Poor Style: Value Never Read sndmsg = null;
 			//20230704 MatsudairaSyuMebuf = null;
 			//******
 			return true;
@@ -147,16 +147,16 @@ public class RouteConnection {
 			try {
 				channel_.writeAndFlush(buf.retain()).sync();
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for log.info( e.printStackTrace();
 				log.error("Can't sendCANCEL message to RouteSvrHandler");
 			}
 			//20230703 MatsudairaSyuMe make sure for no direct memory leak
 			finally {
 				buf.release();
-				buf = null;
+				//20240510 Poor Style: Value Never Read buf = null;
 			}
 			//----
-			sndmsg = null;
+			//20240510 Poor Style: Value Never Read sndmsg = null;
 			//20230704 MatsudairaSyuMebuf = null;
 			//******
 			return true;
@@ -200,7 +200,7 @@ public class RouteConnection {
 			log.info("close connect from Router");
 			channel_.close().sync();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			log.error("ERROR while close connect from Router");//20240503 MatsudairaSyuMe mark for log.info( e.printStackTrace();
 		}
 	}
 
@@ -210,7 +210,7 @@ public class RouteConnection {
 			channel_.close().sync();
 			group.shutdownGracefully();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			log.error("shutdown error");//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	}
 
@@ -226,7 +226,7 @@ public class RouteConnection {
 						try {
 							Thread.sleep(_wait);
 						} catch (InterruptedException e) {
-							e.printStackTrace();
+							//20240503 MatsudairaSyuMe mark for log.info( e.printStackTrace();
 						}
 						bootstrap.connect(addr_).addListener(this);
 					} else {// good, the connection is ok

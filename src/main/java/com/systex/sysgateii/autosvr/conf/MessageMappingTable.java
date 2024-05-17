@@ -53,7 +53,7 @@ public class MessageMappingTable {
 					}
 					total += 1;
 				}
-				line = "";
+				//20240510 Poor Style: Value Never Read line = "";
 				line = reader.readLine();
 				// read next line
 			}
@@ -62,8 +62,8 @@ public class MessageMappingTable {
 				reader.close();
 			//----
 		} catch (Exception e) {
-			e.getStackTrace();
-			log.error("ERROR!! {}", e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.getStackTrace();
+			log.error("ERROR!! i/o exception");//20240503 change log message
 		}
 		//20210413 MatsudairaSyuMe prevent Unreleased Resource
 		 finally {

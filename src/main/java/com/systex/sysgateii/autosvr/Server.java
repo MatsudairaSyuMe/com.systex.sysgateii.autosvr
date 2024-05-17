@@ -31,7 +31,7 @@ import com.systex.sysgateii.comm.mdp.spqueue;
 import com.systex.sysgateii.comm.sdk.RouteServer;
 //----
 import ch.qos.logback.classic.util.ContextInitializer;
-
+import org.apache.commons.lang3.StringUtils; //20240515 MatsudairaSyuMe
 public class Server {
 	private static Logger log = null;
 	private static AtomicBoolean isShouldShutDown = new AtomicBoolean(false);
@@ -114,7 +114,13 @@ public class Server {
 			if (isConductor.get())
 				System.setProperty("log.name", "conduct");
 			else
-				System.setProperty("log.name", Integer.toString(getSvrId()));
+			{//20240515 MatsudairaSyuMe
+				String chk = Integer.toString(getSvrId());
+				if (StringUtils.isNumeric(chk))
+					System.setProperty("log.name", chk);
+				else
+					log.error("sysgateii server given id [{}] format error", chk);
+			}
 			//----
 			log = LoggerFactory.getLogger(Server.class);
 
@@ -187,6 +193,7 @@ public class Server {
 					brokerThread.start();
 					//----
 					// config workno not set use default workno = 4
+					/* 20240510 Poor Style: Value Never Read
 					int workno = 4;
 					String workstr = "";
 					try {
@@ -197,6 +204,7 @@ public class Server {
 					}
 					if (workstr != null && workstr.length() > 0)
 						workno = Integer.parseInt(workstr);
+					*/
 					/* 20220809 MAtsudairaSyuMe
 					for (int startwk = 0; startwk < workno; startwk++) //20220804 turn off debug
 						ZThread.start(new mdworker2("mdworker" + startwk, "tcp://localhost:5556", "fas", setResponseTimeout, 500, FASSvr.getFASSvr(), false)); //20220505 change to localhost, 20220726 change debug verbose on
@@ -270,8 +278,8 @@ public class Server {
 			System.exit(0);
 			//----
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			//20240504 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("Exception while start autosvr or conduct process");//log.error(e.getMessage());
 		}
 
 	}
@@ -312,8 +320,8 @@ public class Server {
 						jsel2ins = null;
 
 					} catch (Exception e) {
-						e.printStackTrace();
-						log.error(e.getMessage());
+						//20240503 MatsudairaSuyuMe mark for System Information Leak e.printStackTrace();
+						log.error("error while server ShutdownHook");//20240503 log.error(e.getMessage());
 					}
 					// ----
 				}
@@ -330,7 +338,7 @@ public class Server {
 		try {
 			Thread.sleep(t * 3000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			//20240503 matsudairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	}
 

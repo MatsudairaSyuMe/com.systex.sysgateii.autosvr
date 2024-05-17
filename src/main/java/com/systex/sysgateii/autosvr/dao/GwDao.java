@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.systex.sysgateii.autosvr.comm.Constants;
+import com.systex.sysgateii.autosvr.conf.DynamicProps;  //20240508
 import com.systex.sysgateii.autosvr.util.DataConvert;
 import com.systex.sysgateii.autosvr.util.Des;
 
@@ -72,17 +73,18 @@ public class GwDao {
 				|| keyname == null || keyname.trim().length() == 0)
 			throw new Exception("given table name or field or keyname error =>" + fromTblName);
 		log.debug(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval));
-		String keyset = "";
+		String keyset = "", keyset2 = "";
 		String[] keynameary = keyname.split(",");
 		String[] keyvalueary = selkeyval.split(",");
 //		String[] keyvaluearynocomm = selkeyval.split(",");20210505 MatsudairaSyuMe Access Control: Database
 		if (keynameary.length != keyvalueary.length)
 			throw new Exception("given fields keyname can't correspond to keyvfield =>keynames [" + keyname + "] selkeyval [" + selkeyval + "]");
 		else {
-			for (int i = 0; i < keynameary.length; i++)
-//				keyset = keyset + keynameary[i] + " = " + "?" + (i == (keynameary.length - 1) ? "" : " and ");//20210505 MatsudairaSyuMe Access Control: Database
+			for (int i = 0; i < keynameary.length; i++) {
 				keyset = keyset + keynameary[i] + " = " + keyvalueary[i] + (i == (keynameary.length - 1) ? "" : " and ");
-/*20210505 MatsudairaSyuMe Access Control: Database
+				keyset2 = keyset2 + keynameary[i] + " = " + "?"+ (i == (keynameary.length - 1) ? "" : " and ");
+			}
+			/*20210505 MatsudairaSyuMe Access Control: Database
   			for (int i = 0; i < keyvaluearynocomm.length; i++) {
 				int s = keyvalueary[i].indexOf('\'');
 				int l = keyvalueary[i].lastIndexOf('\'');
@@ -92,11 +94,14 @@ public class GwDao {
 			*/
 		}
 		String selstr = "SELECT " + keyname + "," + field + " FROM " + fromTblName + " where " + keyset;
+
 		//20210122 MatsudairaSyuMe
 		String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
 		log.debug("UPSERT selstr [{}]-->[{}]", selstr, wowstr);
+
+
 		//----
-		log.debug("update value [{}]", updval);
+		//20240503 mark up updval log.debug("update value [{}]", updval);
 /*		String[] valary = updval.split(",");
 		for (int i = 0; i < valary.length; i++) {
 			int s = valary[i].indexOf('\'');
@@ -446,8 +451,8 @@ public class GwDao {
 				tblrs.close();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error : {}", e.toString());
+			//20240503 MatsudairaMe mark for System Information Leak e.printStackTrace();
+			log.error("error : exception");//20240503 change log message
 		}
 		log.debug("return SELONEFLD=[{}]", rtnVal);
 		return rtnVal;
@@ -550,8 +555,8 @@ public class GwDao {
 				tblrs.close();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error : {}", e.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("error : exception");//20240503 change log message
 		}
 		if (verbose)
 			log.debug("return SELMFLD length=[{}]", rtnVal.length);
@@ -619,8 +624,8 @@ public class GwDao {
 				tbsdytblrs.close();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error : {}", e.toString());
+			//20240503 MAtsudairaSyuuMe mark for System Information Leak e.printStackTrace();
+			log.error("error : exceoiption");//20240503 change log message
 		}
 		log.debug("return SELMFLDNOIDX length=[{}]", rtnVal.length);
 		return rtnVal;
@@ -790,7 +795,7 @@ public class GwDao {
 					log.debug("record not exist using select insert:[{}] toString=[{}]", Des.decodeValue(Constants.DEFKNOCKING, wowstr1), cnvInsertStr);
 				//----
 				} catch(Exception e) {
-					e.printStackTrace();
+					//20240503 MatsuDairaSyuMe mark for System Information Leak e.printStackTrace();
 					throw new Exception("format error");
 				}
 			}
@@ -1021,8 +1026,8 @@ public class GwDao {
 		verbose = true;
 		type = columnTypes.get(j);
 		obj = updvalary[j];
-		if (verbose)
-			log.debug("\tj=" + j + ":[" + obj + "]");
+		//20240503 mark if (verbose)
+		//20240503 mark	log.debug("\tj=" + j + ":[" + obj + "]");
 		switch (type) {
 		case Types.VARCHAR:
 		case Types.CHAR:
@@ -1036,8 +1041,8 @@ public class GwDao {
 			rtn = " " + obj + " ";
 			break;
 		case Types.TIMESTAMP:
-			if (verbose)
-				log.debug("getTimestamp[{}]", obj);
+			//20240503 mark up if (verbose)
+			//20240503 mark up 	log.debug("getTimestamp[{}]", obj);
 			rtn = "'" + obj + "'";
 			break;
 		case Types.BIGINT:
@@ -1191,8 +1196,8 @@ public class GwDao {
 			    selconn = null;
 			}
 		} catch (SQLException se) {
-			se.printStackTrace();
-			log.error("CloseConnect():{}", se.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak se.printStackTrace();
+			log.error("CloseConnect():exception");//20240503 change log message
 		} // end finally try 20220607
 		finally {
 			//20220613 MatsudairaSyuMe
@@ -1214,34 +1219,34 @@ public class GwDao {
 		//----
 	}
 
-	private Connection getDB2Connection(String url, String username, String password) throws Exception {
+	private Connection getDB2Connection(String url, String uid, String using) throws Exception {
 		Class.forName("com.ibm.db2.jcc.DB2Driver");
 		log.debug("Driver Loaded.");
-		return DriverManager.getConnection(url, username, password);
+		return DriverManager.getConnection(url, uid, DynamicProps.getDecryptedPd());//20240508
 	}
-    //20210202 MatsudairaSyuMe change to use gievn url, username, password
-	private Connection getHSQLConnection(String url, String username, String password) throws Exception {
+    //20240503 MatsudairaSyuMe change to use given url,...
+	private Connection getHSQLConnection(String url, String uid, String using) throws Exception {
 		Class.forName("org.hsqldb.jdbcDriver");
 		log.debug("Driver Loaded.");
 //		String url = "jdbc:hsqldb:data/tutorial";
-		return DriverManager.getConnection(url, username, password);
+		return DriverManager.getConnection(url, uid, using);
 	}
 	//20210118 MatsudairaSyuMe for vulnerability scanning sql injection defense
-	private Connection getMySqlConnection(String url, String username, String password) throws Exception {
+	private Connection getMySqlConnection(String url, String uid, String using) throws Exception {
 		String driver = "org.gjt.mm.mysql.Driver";
 		//String url = "jdbc:mysql://localhost/demo2s";
 		Class.forName(driver);
-		Connection conn = DriverManager.getConnection(url, username, password);
+		Connection conn = DriverManager.getConnection(url, uid, using);
 		return conn;
 	}
 
 	//20210118 MatsudairaSyuMe for vulnerability scanning sql injection defense
-	private Connection getOracleConnection(String url, String username, String password) throws Exception {
+	private Connection getOracleConnection(String url, String uid, String using) throws Exception {
 		String driver = "oracle.jdbc.driver.OracleDriver";
 //		String url = "jdbc:oracle:thin:@localhost:1521:caspian";
 
 		Class.forName(driver); // load Oracle driver
-		Connection conn = DriverManager.getConnection(url, username, password);
+		Connection conn = DriverManager.getConnection(url, uid, using);
 		return conn;
 	}
 
@@ -1344,7 +1349,7 @@ public class GwDao {
 			}
 			String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevSelSqlStr);
 			log.debug("UPSERT_R selstr [{}]-->[{}]", this.preparedDevSelSqlStr, wowstr);
-			log.debug("UPSERT_R update value [{}]", updval);
+			//20240503 mark up updval log.debug("UPSERT_R update value [{}]", updval);
 			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevInsSqlStr);
 			log.debug("UPSERT_R insstr [{}]-->[{}]", this.preparedDevInsSqlStr, wowstr);
 			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevUpdSqlStr);
@@ -1363,8 +1368,8 @@ public class GwDao {
 					this.reusedDevUpdpreparedStatement = null;
 
 				} catch (Exception e) {
-					e.printStackTrace();
-					log.error("ERROR !! this.reusedDevStspreparedStatement.close() or this.reusedDevInspreparedStatement.close() or this.reusedDevUpdpreparedStatement.close();:{}", e.getMessage());
+					//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+					log.error("ERROR !! this.reusedDevStspreparedStatement.close() or this.reusedDevInspreparedStatement.close() or this.reusedDevUpdpreparedStatement.close();: exception");//20240503 change log message
 				} finally {
 					if (this.reusedDevStspreparedStatement != null) {
 						try {this.reusedDevStspreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedDevStspreparedStatement close anyaway");}
@@ -1461,8 +1466,8 @@ public class GwDao {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error UPSERT_R: {}", e.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("error UPSERT_R: exception");//20240503 change log message
 		}
 		if (!initType)
 			log.debug("return UPSERT_R length=[{}]", row);
@@ -1509,8 +1514,8 @@ public class GwDao {
 						this.reusedpreparedStatement.close();
 					this.reusedpreparedStatement = null;
 				} catch (Exception e) {
-					e.printStackTrace();
-					log.error("ERROR !! this.reusedpreparedStatement.close():{}", e.getMessage());
+					//20240503 MAtsudairaSyuMe mark for System Information Leak e.printStackTrace();
+					log.error("ERROR !! this.reusedpreparedStatement.close(): exception");//20240503 change log message
 				} finally {
 					if (this.reusedpreparedStatement != null) {
 						try {this.reusedpreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedpreparedStatement close anyaway");}
@@ -1558,8 +1563,8 @@ public class GwDao {
 				this.reusedpreparedStatement.clearParameters();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error : {}", e.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("error : exception");//20240503 change log message
 		}
 		if (!initType)
 			log.debug("return SELMFLD_R length=[{}]", rtnVal.length);
@@ -1598,8 +1603,8 @@ public class GwDao {
 						this.reusedTBSDYpreparedStatement.close();
 					this.reusedTBSDYpreparedStatement = null;
 				} catch (Exception e) {
-					e.printStackTrace();
-					log.error("ERROR !! this.reusedTBSDYpreparedStatement.close():{}", e.getMessage());
+					//20240503 MAtsudairaSyuMe mark for System Information Leak e.printStackTrace();
+					log.error("ERROR !! this.reusedTBSDYpreparedStatement.close(): exception");//20240503 change log message
 				} finally {
 					if (this.reusedTBSDYpreparedStatement != null) {
 						try {this.reusedTBSDYpreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedTBSDYpreparedStatement close anyaway");}
@@ -1631,8 +1636,8 @@ public class GwDao {
 				this.reusedTBSDYpreparedStatement.clearParameters();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error SELTBSDY_R : {}", e.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("error SELTBSDY_R : exception");//20240503 change log message
 		}
 		log.debug("return SELTBSDY_R=[{}]", rtnVal);
 		return rtnVal;
@@ -1670,8 +1675,8 @@ public class GwDao {
 					this.reusedDeletepreparedStatement.close();
 				this.reusedDeletepreparedStatement = null;
 			} catch (Exception e) {
-				e.printStackTrace();
-				log.error("ERROR !! this.reusedDeletepreparedStatement.close():{}", e.getMessage());
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+				log.error("ERROR !! this.reusedDeletepreparedStatement.close(): exception");//20240503 change log messge
 			} finally {
 				if (this.reusedDeletepreparedStatement != null) {
 					try {this.reusedDeletepreparedStatement.close();} catch (Exception ie) {log.error("ERROR !! reusedDeletepreparedStatement close anyaway");}
@@ -1751,8 +1756,8 @@ public class GwDao {
 				tblrs.close();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("error : {}", e.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("error : exception");//20240503 change log message
 		}
 		log.debug("return SELONEFLDBary={}", rtnVal);
 		return rtnVal;
@@ -1771,4 +1776,142 @@ public class GwDao {
 		}
 		return paramCodes.toArray(new String[0]);
 	}
+	/*
+	public int UPSERT(String fromTblName, String field, String updval, String keyname, String selkeyval) {
+		int rtn = -1;
+		if (fromTblName == null || fromTblName.trim().length() == 0 || field == null || field.trim().length() == 0
+				|| keyname == null || keyname.trim().length() == 0) {
+			log.error("given table name or field or keyname error =>{}", fromTblName);
+			return -1;
+		}
+		log.debug(String.format("Select from table {%s}... where {%s}={%s} updval={%s}", fromTblName, keyname, selkeyval, updval));
+		String keyset = "";
+		String[] keynameary = keyname.split(",");
+		String[] keyvalueary = selkeyval.split(",");
+		String[] updvalary = updval.split(",");
+		if (keynameary.length != keyvalueary.length || updvalary == null || (updvalary != null && updvalary.length == 0)) {
+			log.error("given fields keyname can't correspond to keyvfield =>keynames [{}] selkeyval [{}]", keyname,  selkeyval);
+			return -1;
+		} else {
+			for (int i = 0; i < keynameary.length; i++) {
+				keyset = keyset + keynameary[i] + " = " + "?" + (i == (keynameary.length - 1) ? "" : " and ");
+				keyvalueary[i] = keyvalueary[i].trim();
+			}
+			for (int i = 0; i < updvalary.length; i++)
+				updvalary[i] = updvalary[i].trim();
+		}
+		String sqlstr;
+		int type = -1;
+		if (fromTblName.toUpperCase().indexOf("TB_AUDEVSTS") != -1) {
+			type = 0;
+			sqlstr = "SELECT IP,PORT,SYSIP,SYSPORT,ACTPAS,DEVTPE,CURSTUS,VERSION,CREATOR,MODIFIER FROM TB_AUDEVSTS WHERE BRWS = ? AND SVRID = ?";
+		} else if (fromTblName.toUpperCase().indexOf("TB_AUSVRSTS") != -1) {
+			type = 1;
+			sqlstr = "SELECT AUID,IP,CURSTUS,PID,CREATOR,MODIFIER,LASTUPDATE FROM TB_AUSVRSTS WHERE SVRID = ?";
+		} else if (fromTblName.toUpperCase().indexOf("TB_AUGEN") != -1) {
+			type = 2;
+			sqlstr = "SELECT TBSDY FROM TB_AUGEN WHERE BKNO=?";
+		} else if (fromTblName.toUpperCase().indexOf("TB_AUDEVCMD") != -1) {
+			type = 3;
+			sqlstr = "SELECT SVRID,BRWS,CMD,AUID,CMDCREATETIME,EMPNO FROM TB_AUDEVCMD WHERE SVRID=? AND BRWS=?";
+		} else {  //TB_AUSVRCMD
+			type = 4;
+			sqlstr = "SELECT SVRID,IP,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO FROM TB_AUSVRCMD WHERE SVRID=?";
+		}
+		log.debug("UPSERT2 selstr [{}]", sqlstr);
+		try {
+			PreparedStatement pstmt = selconn.prepareStatement(sqlstr);
+			for (int i = 0; i < keyvalueary.length; i++) {
+				if (keyvalueary[i].startsWith("'") && keyvalueary[i].endsWith("'")) {
+					pstmt.setString(i + 1, keyvalueary[i].substring(1, keyvalueary[i].length() - 1));
+				} else {
+					pstmt.setInt(i + 1,Integer.decode(keyvalueary[i]));
+				}
+			}
+			ResultSet selectresult = pstmt.executeQuery();
+			if (selectresult.next()) {
+				//update mode;
+				switch (type) {
+					case 0:
+						sqlstr = "UPDATE TB_AUDEVSTS SET IP=?,PORT=?,SYSIP=?,SYSPORT=?,ACTPAS=?,DEVTPE=?,CURSTUS=?,VERSION=?,CREATOR=?,MODIFIER=? WHERE BRWS=? AND SVRID=?";
+						break;
+					case 1:
+						sqlstr = "UPDATE TB_AUSVRSTS SET AUID=?,IP=?,CURSTUS=?,PID=?,CREATOR=?,MODIFIER=?,LASTUPDATE=? WHERE SVRID=?";
+						break;
+					case 2:
+						sqlstr = "UPDATE TB_AUGEN SET TBSDY=? WHERE BKNO=?";
+						break;
+					case 3:
+						sqlstr = "UPDATE TB_AUDEVCMD SET AUID=?,CMD=?,CMDCREATETIME=?,CMDRESULT=?,CMDRESULTTIME=?,EMPNO=? WHERE SVRID=? AND BRWS=?";
+						break;
+					case 4:
+						sqlstr = "UPDATE TB_AUSVRCMD SET IP=?, CMD=?,CMDCREATETIME=?,CMDRESULT=?,CMDRESULTTIME=?,EMPNO=? WHERE SVRID=?";
+						break;
+				}
+				log.debug("UPSERT2 pstmt.executeQuery() update mode {}", sqlstr);
+				pstmt = selconn.prepareStatement(sqlstr);
+				int j = 1;
+				for (int i = 0; i < updvalary.length; i++) {
+					if (updvalary[i].startsWith("'") && updvalary[i].endsWith("'")) {
+						pstmt.setString(j, updvalary[i].substring(1,updvalary[i].length() - 1));
+					} else {
+						pstmt.setInt(j,Integer.decode( updvalary[i]));
+					}
+					j += 1;
+				}
+				for (int i = 0; i < keyvalueary.length; i++) {
+					if (keyvalueary[i].startsWith("'") && keyvalueary[i].endsWith("'")) {
+						pstmt.setString(j, keyvalueary[i].substring(1, keyvalueary[i].length() - 1));
+					}else {
+						pstmt.setInt(j,Integer.decode(keyvalueary[i]));
+					}
+					j += 1;
+				}
+				rtn = pstmt.executeUpdate();
+			} else {
+				//insert mode;
+				switch (type) {
+					case 0:
+						sqlstr = "INSERT INTO TB_AUDEVSTS (BRWS,SVRID,IP,PORT,SYSIP,SYSPORT,ACTPAS,DEVTPE,CURSTUS,VERSION,CREATOR,MODIFIER) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+						break;
+					case 1:
+						sqlstr = "INSERT INTO TB_AUSVRSTS (SVRID,AUID,IP,CURSTUS,PID,CREATOR,MODIFIER,LASTUPDATE) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+						break;
+					case 2:
+						sqlstr = "INSERT INTO TB_AUGEN (BKNO, TBSDY) VALUES (?,?)";
+						break;
+					case 3:
+						sqlstr = "INSERT INTO TB_AUDEVCMD (SVRID,BRWS,AUID,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO) VALUES (?,?,?,?,?,?,?,?)";
+						break;
+					case 4:
+						sqlstr = "INSERT INTO TB_AUSVRCMD (SVRID,IP,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO) VALUES (?,?,?,?,?,?,?)";
+						break;
+				}
+				log.debug("UPSERT2 pstmt.executeQuery() insert mode {}", sqlstr);
+				pstmt = selconn.prepareStatement(sqlstr);
+				int j = 1;
+				for (int i = 0; i < keyvalueary.length; i++) {
+					if (keyvalueary[i].startsWith("'") && keyvalueary[i].endsWith("'")) {
+						pstmt.setString(j, keyvalueary[i].substring(1, keyvalueary[i].length() - 1));
+					} else {
+						pstmt.setInt(j,Integer.decode(keyvalueary[i]));
+					}
+					j += 1;
+				}
+				for (int i = 0; i < updvalary.length; i++) {
+					if (updvalary[i].startsWith("'") && updvalary[i].endsWith("'")) {
+						pstmt.setString(j, updvalary[i].substring(1,updvalary[i].length() - 1));
+					}else {
+						pstmt.setInt(j,Integer.decode( updvalary[i]));
+					}
+					j += 1;
+				}
+				rtn = pstmt.executeUpdate();
+			}
+		} catch(Exception e) {
+			return -1;
+		}
+		return rtn;
+	}
+	*/
 }

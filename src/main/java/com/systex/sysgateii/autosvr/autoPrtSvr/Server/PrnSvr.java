@@ -162,10 +162,10 @@ public class PrnSvr implements MessageListener<byte[]> {
 		log.info("[0000]:------Call MaintainLog OK------");
 		//20201115 mark atlog
 		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
-		String jvmName = bean.getName();
-		String pid = jvmName.split("@")[0];
+		//20240510 Poor Style: Value Never Read String jvmName = bean.getName();
+		//20240503 mark for no use String pid = jvmName.split("@")[0];
 		MDC.put("WSNO", "0000");
-		log.info("[0000]:------MainThreadId={}------", pid);
+		log.info("[0000]:------MainThreadId------");//20240503 change log message
 		//20201115mark atlog
 		try {
 			Thread thread;
@@ -198,8 +198,8 @@ public class PrnSvr implements MessageListener<byte[]> {
 				//----
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("create server error");  //20240503 change log message
 		}
 	}
 
@@ -226,7 +226,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 							//20220613 MatsudairaSyuMe
 							String selfld = "";
 							String selkey = "";
-							String[] sno = null;
+							//20240510 Poor Style: Value Never Read String[] sno = null;
 							if (PrnSvr.cmdtbfields.indexOf(',') > -1) {
 								selfld = PrnSvr.cmdtbfields.substring(PrnSvr.cmdtbfields.indexOf(',') + 1);
 								selkey = PrnSvr.cmdtbfields.substring(0, PrnSvr.cmdtbfields.indexOf(','));
@@ -248,7 +248,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 							try {
 								jdawcon.CloseConnect();
 							} catch (Exception any) {
-								any.printStackTrace();
+								//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 								log.error("jdawcon close error ignore");
 							}
 							jdawcon = null;
@@ -311,12 +311,12 @@ public class PrnSvr implements MessageListener<byte[]> {
 															chksno = new String[1];
 															chksno[0] = "-1";
 														}
-														sno = cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO", failfldvals, PrnSvr.devcmdhistbsearkey, chksno[0], false, false);
+														cmdhiscon.INSSELChoiceKey(PrnSvr.devcmdhistbname, "SVRID,AUID,BRWS,CMD,CMDCREATETIME,CMDRESULT,CMDRESULTTIME,EMPNO", failfldvals, PrnSvr.devcmdhistbsearkey, chksno[0], false, false);//20240510 Poor Style: Value Never Read for sno
 														/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 														cmdhiscon.CloseConnect();
 														cmdhiscon = null;
 														/* 2023016 take out mark */
-														sno = null;
+														//20240510 Poor Style: Value Never Read sno = null;
 													}
 													/*20230517 mark up for closing connection after access db 
 													jdawcon.DELETETB_R(PrnSvr.cmdtbname, "SVRID,BRWS",PrnSvr.svrid+",'" + cmdary[0] + "'", false);  //20220613 change to use reused statement
@@ -327,7 +327,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 														try {
 															jdawcon.CloseConnect();
 														} catch (Exception any) {
-															any.printStackTrace();
+															//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 															log.error("jdawcon close error ignore");
 														}
 														jdawcon = null;
@@ -546,22 +546,22 @@ public class PrnSvr implements MessageListener<byte[]> {
 								//----
 								 /*20230517 take out mark*/ 
 							} catch (Exception e) {
-								e.printStackTrace();
-								log.info("monitorThread read database error [{}]", e.toString());
+								//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+								log.info("monitorThread read database error");//20240503 change log message
 							}
 						}
 						sleep(3);
 					} // while
 					// 20220607 MatsudairaSyuMe
 					} catch (Exception e) {
-						e.printStackTrace();
-						log.error("jdawcon error:{}", e.getMessage());
+						//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+						log.error("jdawcon error exception ");//20240503 change log message
 					} finally {
 						if (jdawcon != null) {
 							try {
 								jdawcon.CloseConnect();
 							} catch (Exception any) {
-								any.printStackTrace();
+								//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 								log.error("jdawcon close error ignore");
 							}
 							jdawcon = null;
@@ -570,7 +570,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 							try {
 								cmdhiscon.CloseConnect();
 							} catch (Exception any) {
-								any.printStackTrace();
+								//20240503 MatsudairaSyuMe mark for System Information Leak any.printStackTrace();
 								log.error("cmdhiscon close error ignore");
 							}
 						cmdhiscon = null;
@@ -580,8 +580,8 @@ public class PrnSvr implements MessageListener<byte[]> {
 			monitorThread.start();
 			//20210914 MatsudairaSyuMe change for threads of printer and monitor separately running
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("db exception");//20240503 change log message
 		}
 	}
 	//20201006
@@ -600,8 +600,8 @@ public class PrnSvr implements MessageListener<byte[]> {
 					t.interrupt();
 					t.join(1 * 1000);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
-					log.error("!!! error for stop thread for [{}] !!!: [{}]", nid, e.toString());
+					//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+					log.error("!!! error for stop thread for prtcli node !!!");//20240515 change log message
 				}
 				getMe().threadMap.remove(nid);
 				getMe().nodeList.remove(nid);
@@ -655,7 +655,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 					getMe().nodeList.put(conn.getId(), conn);
 					ret += 1;
 					thread.start();
-					i = lastcfglist.size();
+					//20240510 Poor Style: Value Never Read i = lastcfglist.size();
 					break;
 				}
 			}
@@ -732,7 +732,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 			setReqTime(Integer.parseInt("50"));
 		else
 			setReqTime(Integer.parseInt(teststr)); //202204 30 change from (Integer.parseInt(teststr) / 2) to Integer.parseInt(teststr)
-		teststr = "";
+		//20240510 Poor Style: Value Never Read teststr = "";
 		teststr = cfg.getConHashMap().get("chgidletime").trim();
 		if(StrUtil.isEmpty(teststr))
 			setChgidleTime(Integer.parseInt("60"));
@@ -755,7 +755,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 		MDC.put("WSNO", "0000");
 		MDC.put("PID", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		String byDate = sdf.format(new Date());
+		//202450510 Poor Style: Value Never Read String byDate = sdf.format(new Date());
 		//20201115
 		//----
 		try {
@@ -768,7 +768,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 				p_fun_flag.set(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("Font file name error");//20230522 MatsudairaSyuMe change the tns path from /biscon/tns to /tns
 		}
 		log.debug("p_fun_flag={}", p_fun_flag);
@@ -789,7 +789,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 		try {
 			TimeUnit.SECONDS.sleep(t);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	}
 

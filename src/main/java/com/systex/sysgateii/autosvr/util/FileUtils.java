@@ -39,18 +39,25 @@ public class FileUtils {
 		try {
 			if (f.exists()) {
 				if (!append) {
-					f.delete();
+					//20240515 MatsudairaSyuMe Unchecked Return Value
+					if (!f.delete())
+						throw new IOException(String.format("delete ERROR %s!!!", path));
+					//----20240515
 					f.createNewFile();
 				}
 			} else {
 				if ((path.lastIndexOf(File.separatorChar) == 1 && path.indexOf((char)'.') != 0) ||
 						path.lastIndexOf(File.separator) > 1) {
-					boolean result = false;  // Boolean indicating whether directory was set
+					//20240510 Poor Style: Value Never Read boolean result = false;  // Boolean indicating whether directory was set
 					String chkpath = path.substring(0, path.lastIndexOf(File.separator));
 					File directory;       // Desired current working directory
 					directory = new File(chkpath).getAbsoluteFile();
 					if (!directory.exists())
-						result = directory.mkdirs();
+						//20240515 MAtsudairaSyuMe Unchecked Return Value
+						if (!directory.mkdirs()) {//20240510 Poor Style: Value Never Read take out result
+							throw new IOException(String.format("mkdir ERROR %s!!!", path));
+						}
+						//----20240515
 				}
 				//System.out.println("create file " + f.getName());
 				f.createNewFile();

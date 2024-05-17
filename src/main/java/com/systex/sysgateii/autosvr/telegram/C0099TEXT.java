@@ -92,9 +92,9 @@ public class C0099TEXT {
 	}
 
 	public static void main(String[] args) throws Exception {
-		boolean rtn;
+		//20240510 Poor Style: Value Never Read boolean rtn;
 		C0099TEXT tl = new C0099TEXT();
-		rtn = tl.initC0099TotaheadTEXT((byte) '0');
+		tl.initC0099TotaheadTEXT((byte) '0');//20240510 Poor Style: Value Never Read take out rtn 
 		byte[] result = tl.getC0099Totaheadtext();
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");

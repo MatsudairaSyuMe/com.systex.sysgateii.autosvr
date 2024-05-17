@@ -285,10 +285,10 @@ public class RouteServerHandler extends ChannelDuplexHandler {
 		if (recvrtnmsg.length - 2 > 0) {
 			rtn = new byte[recvrtnmsg.length - 2];
 			System.arraycopy(recvrtnmsg, 2, rtn, 0, (recvrtnmsg.length - 2));
-			recvrtnmsg = null;
+			//20240510 Poor Style: Value Never Read recvrtnmsg = null;
 		}
 		log.debug("get rtn len= {}", (rtn == null) ? 0 : rtn.length);
-		lenbary = null;
+		//202405610 Poor Style: Value Never Read lenbary = null;
 		return rtn;
 	}
 

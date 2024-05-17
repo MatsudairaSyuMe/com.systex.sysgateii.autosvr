@@ -299,8 +299,8 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 			// allChannels.close().awaitUninterruptibly();
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.toString());
+			//20240503 MatsuddairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("start server error");//20240503 change log message
 		} finally {
 			bossGroup.shutdownGracefully();
 			workerGroup.shutdownGracefully();
@@ -379,7 +379,7 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 				cal.add(Calendar.YEAR, +1911);
 			return df2.format(cal.getTime());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			return null;
 		}
 	}
@@ -396,7 +396,7 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 				cal.add(Calendar.YEAR, +1911);
 			return df2.format(cal.getTime());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			return null;
 		}
 	}
@@ -414,7 +414,7 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 				cal.add(Calendar.YEAR, +1911);
 			return df2.format(cal.getTime());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			return null;
 		}
 	}
@@ -512,8 +512,8 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(serverId + " " + e);
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error(serverId + " exception");//20240503 change log message
 		}
 
 		String body = (String) msg.toString();
@@ -523,7 +523,7 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		log.debug(serverId + " exceptionCaught=" + cause.getMessage());
+		log.debug(serverId + " exception");//20240503 change log messaage
 		publishInactiveEvent();
 		ctx.close();
 		// super.exceptionCaught(ctx, cause);
@@ -604,7 +604,7 @@ public class ServerProducer extends ChannelDuplexHandler // ChannelInboundHandle
 						writeMessageWithContext(curctx, new String(result1), CharsetUtil.UTF_8);
 				}
 			}
-			result1 = null;
+			//20240510 Poor Style: Value Never Read result1 = null;
 		}
 	}
 

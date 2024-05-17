@@ -37,7 +37,7 @@ public class Big5FontImg {
 		testf = new File(glyphname);
 		if(!testf.exists())
 			throw new IOException(String.format("file %s not exist", glyphname));
-		testf = null;
+		//20240510 Poor Style: Value Never Read testf = null;
 		//----
 		/*
 		try {
@@ -88,14 +88,20 @@ public class Big5FontImg {
 		try {
 			long l = keyadr_map.get(start);
  //          System.out.println("key=" + start + " addr=" + l + ": addr * 72 = " + (l * 72) + " size=" + this.fsize);
-			fontis.skip(l);
-			if (fontis.read(rtn) != count) {
+			//20240514 MatsudairaSyuMe Unchecked Return Value
+			if (fontis.skip(l) != 1)
 				Arrays.fill(rtn, (byte) 0x0);
-//				throw new Exception("read length error");
+			else {
+				//----20240515
+				if (fontis.read(rtn) != count) {
+					Arrays.fill(rtn, (byte) 0x0);
+					//				throw new Exception("read length error");
+				}
 			}
+			//----20240515
 		} catch (Exception ex) {
 			// if any error occurs
-			ex.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak ex.printStackTrace();
 			Arrays.fill(rtn, (byte) 0x0);
 //			throw new Exception("read file error:" + ex.toString());
 		}
@@ -120,8 +126,8 @@ public class Big5FontImg {
 			long key = 0l, addr = 0l;
 			while ((i = fontkeyis.read(bs)) != -1) {
 				idx += 1;
-				key = 0l;
-				addr = 0l;
+				//20240510 Poor Style: Value Never Read key = 0l;
+				//20240510 Poor Style: Value Never Read addr = 0l;
 				key = (long) (((bs[0] & 0xFF) << 8) | (bs[1] & 0xFF));
 				addr = (long) (((bs[2] & 0xFF) << 24) | ((bs[3] & 0xFF) << 16) | ((bs[4] & 0xFF) << 8)
 						| (bs[5] & 0xFF));
@@ -130,8 +136,8 @@ public class Big5FontImg {
 			if (fontkeyis != null)
 				fontkeyis.close();
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			throw new Exception(ex.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak ex.printStackTrace();
+			throw new Exception("close or read exception");//20240503 message log
 		}
 		return toByteArray(start, 72);
 	}
@@ -147,8 +153,8 @@ public class Big5FontImg {
 				fontis.close();
 		} catch (Exception ex) {
 			// if any error occurs
-			ex.printStackTrace();
-			throw new Exception("close file error:" + ex.toString());
+			//20240503 MatsudairaSyuuMe mark for System Information Leak ex.printStackTrace();
+			throw new Exception("close file error: close exception");//20240503 change log message
 		}
 	}
 

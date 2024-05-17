@@ -404,12 +404,12 @@ public class P0880TEXT {
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("2--->[{}]len={}", new String(result), tl.getP0880TitatextLen());
-		rtn = tl.initP0880TotaheadTEXT((byte) '0');
+		tl.initP0880TotaheadTEXT((byte) '0');//20240510 Poor Style: Value Never Read take out rtn
 		result = tl.getP0880Totaheadtext();
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("3--->[{}] len={}", new String(result), tl.getP0880TotaheadtextLen());
-		rtn = tl.initP0880TotaTEXT((byte) '0');
+		tl.initP0880TotaTEXT((byte) '0');//20240510 Poor Style: Value Never Read take out rtn
 		result = tl.getP0880Totatext();
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");

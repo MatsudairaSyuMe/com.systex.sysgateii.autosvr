@@ -25,28 +25,36 @@ import io.netty.handler.timeout.IdleStateHandler;
 
 public class FASChannelPoolHandler implements ChannelPoolHandler {
 	private static Logger log = LoggerFactory.getLogger(FASChannelPoolHandler.class);
-	private ByteBuf rcvBuf = null;
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port private ByteBuf rcvBuf = null;
 	private ConcurrentHashMap<Channel, File> seqf_map = null;
-	private ServerProducer producer = null;
+	//20240516 MatsudairaSyuMe mark producer private ServerProducer producer = null;
 	private List<String> brnoList = null;
 	private List<String> wsnoList = null;
+	/*20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
 	public FASChannelPoolHandler(ByteBuf rcvBuf) {
 		this.rcvBuf = rcvBuf;
 	}
-	public FASChannelPoolHandler(ByteBuf rcvBuf, ConcurrentHashMap<Channel, File> seqfmap, List<String> brnolist, List<String> wsnolist) {
-		this.rcvBuf = rcvBuf;
+	*/
+	public FASChannelPoolHandler() {
+	}
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
+	public FASChannelPoolHandler(ConcurrentHashMap<Channel, File> seqfmap, List<String> brnolist, List<String> wsnolist) {
+		//20240516 MatsudairaSyuMe change to use private recBuf for every connect port this.rcvBuf = rcvBuf;
 		this.seqf_map = seqfmap;
 		this.brnoList = brnolist;
 		this.wsnoList = wsnolist;
 	}
-	public FASChannelPoolHandler(ByteBuf rcvBuf, ConcurrentHashMap<Channel, File> seqfmap) {
-		this.rcvBuf = rcvBuf;
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
+	public FASChannelPoolHandler(ConcurrentHashMap<Channel, File> seqfmap) {
+		//20240516 MatsudairaSyuMe change to use private recBuf for every connect port this.rcvBuf = rcvBuf;
 		this.seqf_map = seqfmap;
 	}
+	/*20240516 MatsudairaSyuMe change to use private recBuf for every connect port
 	public ByteBuf getRcvBuf() throws Exception {
 		log.debug("getRcvBuf");
 		return rcvBuf;
 	}
+	*/
 
 
 	@Override
@@ -60,8 +68,9 @@ public class FASChannelPoolHandler implements ChannelPoolHandler {
 		// TODO Auto-generated method stub
 		log.debug("channelCreated");
 		//---- 20200422 test
-		FASClientChannelHandler nf = new FASClientChannelHandler(rcvBuf, seqf_map, brnoList, wsnoList);
-		nf.addActorStatusListener(producer);
+		//20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
+		FASClientChannelHandler nf = new FASClientChannelHandler(seqf_map, brnoList, wsnoList);
+		//20240516 MatsudairaSyuMe mark nf.addActorStatusListener(producer);
 		//----
 		SocketChannel channel = (SocketChannel) ch;
 		channel.config().setKeepAlive(true);
@@ -82,12 +91,14 @@ public class FASChannelPoolHandler implements ChannelPoolHandler {
 		// TODO Auto-generated method stub
 		log.debug("channelReleased");
 	}
+	/*20240516 mark producer
 	public ServerProducer getProducer() {
 		return producer;
 	}
 	public void setProducer(ServerProducer producer) {
 		this.producer = producer;
 	}
+	*/
 
 	public List<String> getBrnoList() {
 		return this.brnoList;

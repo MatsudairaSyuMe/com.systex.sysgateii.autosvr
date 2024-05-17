@@ -171,7 +171,7 @@ public class TOTATel {
 	public int getTotalLabelLen() {
 		return this.totalabel_len;
 	}
-
+/*Poor Style: Value Never Read
 	public static void main(String[] args) throws Exception {
 		boolean rtn;
 		String msgid = "";
@@ -200,5 +200,5 @@ public class TOTATel {
 			cMsg = "-" + new String(totatext).trim();
 			log.debug("cMsg=[{}] {}", cMsg, Arrays.toString(totatext));
 		}
-	}
+	}*/
 }

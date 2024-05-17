@@ -21,9 +21,9 @@ public class TWCategory {
             System.out.println("Categories: " + Arrays.toString(twCategories));
         } catch (SQLException e) {
             System.err.println("Error categories from database");
-            e.printStackTrace();
+           //20240503 MAtsudairaSyuMe mark for System Information Leak  e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            //20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
         }
     }
 

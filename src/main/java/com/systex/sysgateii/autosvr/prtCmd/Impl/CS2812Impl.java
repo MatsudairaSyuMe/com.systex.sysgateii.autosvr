@@ -508,7 +508,7 @@ public class CS2812Impl implements Printer {
 				this.iCnt = 200;
 			}
 		}
-		data = null;
+		//20240510 Poor Style: Value Never Read data = null;
 		if (this.curState == ResetPrinterInit_3) {
 			Send_hData(PENQ);
 			data = Rcv_Data();
@@ -795,7 +795,7 @@ public class CS2812Impl implements Printer {
 		try {
 			TimeUnit.MILLISECONDS.sleep(s);
 		} catch (InterruptedException e1) { // TODO Auto-generated catch block
-			e1.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for curChkState e1.printStackTrace();
 		}
 	}
 	//20211124 MatsudairaSyuMe

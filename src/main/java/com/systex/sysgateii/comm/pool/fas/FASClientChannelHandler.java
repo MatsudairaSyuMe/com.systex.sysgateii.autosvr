@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FileUtils;//20240515 MatsudairaSyuMe
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +24,10 @@ import com.systex.sysgateii.autosvr.autoPrtSvr.Server.PrnSvr;
 import com.systex.sysgateii.autosvr.comm.Constants;
 import com.systex.sysgateii.autosvr.comm.TXP;
 import com.systex.sysgateii.autosvr.listener.ActorStatusListener;
-import com.systex.sysgateii.autosvr.telegram.S004;
+//20240516 Mark import com.systex.sysgateii.autosvr.telegram.S004;
 import com.systex.sysgateii.autosvr.util.COMM_STATE;
 import com.systex.sysgateii.autosvr.util.CharsetCnv;
+import com.systex.sysgateii.autosvr.util.StrUtil;
 import com.systex.sysgateii.autosvr.util.TelegramReg;
 import com.systex.sysgateii.autosvr.util.dataUtil;
 
@@ -52,16 +53,18 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 
 	private static final ByteBuf HEARTBEAT_SEQUENCE = Unpooled
 			.unreleasableBuffer(Unpooled.copiedBuffer("hb_request", CharsetUtil.UTF_8));
-	private static final String FASACTIVES004ID = "S004";
+	//20240516 Mark private static final String FASACTIVES004ID = "S004";
 
 	static AtomicInteger count = new AtomicInteger(1);
+	//20240516 MatsudairaSyuMe default max buffer size
+	public static final int MAXBUFSZ = 16384;
 	private ByteBuf clientMessageBuf = null;
 	private ConcurrentHashMap<Channel, File> seqf_map = null;
 	private File seqNoFile;
 	private String getSeqStr = "";
 	private String curMrkttm = "";
-	private boolean S004Start = false;
-	private S004 s004tele = null;
+	//0240516 Mark private boolean S004Start = false;
+	//20240516 Mark private S004 s004tele = null;
 	private List<String> brnoList = null;
 	private List<String> wsnoList = null;
 	//20200212 MatsudairaSyume
@@ -101,18 +104,20 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 	public void setWsnoList(List<String> wsnoList) {
 		this.wsnoList = wsnoList;
 	}
-
-	public FASClientChannelHandler(ByteBuf rcvBuf) {
-		this.clientMessageBuf = rcvBuf;
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
+	public FASClientChannelHandler() {
+		this.clientMessageBuf =  Unpooled.buffer(MAXBUFSZ);;
 	}
 
-	public FASClientChannelHandler(ByteBuf rcvBuf, ConcurrentHashMap<Channel, File> seqfmap) {
-		this.clientMessageBuf = rcvBuf;
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
+	public FASClientChannelHandler(ConcurrentHashMap<Channel, File> seqfmap) {
+		this.clientMessageBuf =  Unpooled.buffer(MAXBUFSZ);;
 		this.seqf_map = seqfmap;
 	}
 
-	public FASClientChannelHandler(ByteBuf rcvBuf, ConcurrentHashMap<Channel, File> seqfmap, List<String> brnolist, List<String> wsnolist) {
-		this.clientMessageBuf = rcvBuf;
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port 
+	public FASClientChannelHandler(ConcurrentHashMap<Channel, File> seqfmap, List<String> brnolist, List<String> wsnolist) {
+		this.clientMessageBuf =  Unpooled.buffer(MAXBUFSZ);;
 		this.seqf_map = seqfmap;
 		this.brnoList = brnolist;
 		this.wsnoList = wsnolist;
@@ -133,21 +138,48 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 		//20210112 MatsudairaSyume always initialize sequence no. from 0
 		//20220819, change to start from 0 only file not exist
 		try {
-			seqNoFile = new File("SEQNO", "SEQNO_" + clientId);
-			log.debug("seqNoFile local=" + seqNoFile.getAbsolutePath());
+			//seqNoFile = new File("SEQNO", "SEQNO_" + clientId);
+			seqNoFile =  new File("SEQNO" + File.separator + StrUtil.cleanString("SEQNO_" + String.valueOf(clientId)));
+
+			log.debug("seqNoFile local file");//20240503 change log messge
+			/*
 			if (seqNoFile.exists() == false) {
 				File parent = seqNoFile.getParentFile();
 				if (parent.exists() == false) {
-					parent.mkdirs();
+					//20240515 MatsudairaSyuMe Unchecked Return Value
+					if (parent.mkdirs() == false) {
+						log.error("fatal error while mkdir for seqNofile");
+						Thread.currentThread().interrupt();
+					}
+					//----
+				}
+				//20240515 MatsudairaSyuMe System Information Leak: Internal
+				if (seqNoFile.createNewFile() == false) {
+					log.error("fatal error while create for seqNofile");
+					Thread.currentThread().interrupt();					
+				}
+				//----20240515
+				FileUtils.writeStringToFile(seqNoFile, "0", Charset.defaultCharset());
+			}*/
+			if (seqNoFile.exists() == false) {
+				File parent = seqNoFile.getParentFile();
+				if (parent.exists() == false) {
+					if (!parent.mkdirs()) {//20240515 MatsudairaSyuMe Unchecked Return Value
+						Thread.currentThread().interrupt();
+						return;
+						//----20240515
+					}
 				}
 				seqNoFile.createNewFile();
-				FileUtils.writeStringToFile(seqNoFile, "0", Charset.defaultCharset());
+				//20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
+				FileUtils.writeStringToFile(this.seqNoFile, "0", Charset.defaultCharset());
 			}
+
 //			FileUtils.writeStringToFile(seqNoFile, "0", Charset.defaultCharset());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("fatal error while create seqNofile : {}", e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("fatal error while create seqNofile : ioException");//20240503 change log message
 		}
 		//----20210112
 		this.seqf_map.put(ctx.channel(), seqNoFile);
@@ -218,7 +250,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 							}
 							byte[] trnidbary = new byte[4];
 							clientMessageBuf.getBytes(clientMessageBuf.readerIndex() + 38, trnidbary);
-							/* 20220221 mark up		if (new String(trnidbary, CharsetUtil.UTF_8).equals(FASACTIVES004ID)) {
+							/* 20220221 mark up	if (new String(trnidbary, CharsetUtil.UTF_8).equals(FASACTIVES004ID)) {
 							log.debug("receive broadcast {} telegram", FASACTIVES004ID);
 							while (clientMessageBuf.readableBytes() >= 12) {
 								byte[] lenbary = new byte[3];
@@ -307,17 +339,17 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 										try {
 											ot.getSourceHandlerCtx().writeAndFlush(intbuf.retain()).sync();
 										}  catch (Exception e) {
-											e.printStackTrace();
+											//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 											log.error("Can't send message to PrtCli connection");
 										}
 										//20230703 MatsudairaSyuMe make sure for no direct memory leak
 										finally {
 											intbuf.release();
-											intbuf = null;
+											//20240510 Poor Style: Value Never Read intbuf = null;
 										}
 										//----20230703
-										sndmsg = null;
-										resultmsg = null;
+										//20240510 Poor Style: Value Never Read sndmsg = null;
+										//20240510 Poor Style: Value Never Read resultmsg = null;
 									} else {
 										SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
 										//									String lastTime = df.format(ot);
@@ -350,15 +382,15 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 				} else
 					log.error("not ByteBuf message");
 			} catch (Exception e) {
-				e.printStackTrace();
-				log.error(e.getMessage());
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+				log.error("messaage buffer io exception");//20240503 change log message
 			}
 			//20220819 add finally processing
 			finally {
 				if (telegramKey.trim().length() > 0 && Constants.outgoingTelegramKeyMap.containsKey(telegramKey)) {
 					log.warn("there some exception break the receive program drop the register element for telegramKey=[{}] from outgoingTelegramKeyMap!!!", telegramKey);
 					Constants.outgoingTelegramKeyMap.remove(telegramKey);
-					telegramKey = null;
+					//20240510 Poor Style: Value Never Read telegramKey = null;
 				}
 			}
 			//----
@@ -395,8 +427,8 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 			try {//20220409 change to info
 				faslog.info(String.format(fasSendPtrn, msg.length, charcnv.BIG5bytesUTF8str(Arrays.copyOfRange(msg, 12, msg.length))));
 			} catch (Exception e) {
-				e.printStackTrace();
-				log.error("send message error [{}]", e.getMessage());
+				//20240503 MatsudairaSyuMa mark for System Information Leak e.printStackTrace();
+				log.error("send message error: format exception");//20240503 change log message
 			}
 			// ----
 			ByteBuf buf = ctx.channel().alloc().buffer().writeBytes(msg);
@@ -404,20 +436,20 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 			try {
 				ctx.channel().writeAndFlush(buf.retain()).sync();
 			}  catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MataudairaSyuMe mark for System Information Leak e.printStackTrace();
 				log.error("Can't send message to fas connection");
 			}
 			//20230703 MatsudairaSyuMe make sure for no direct memory leak
 			finally {
 				buf.release();
-				buf = null;
+				//20240510 Poor Style: Value Never Readbuf = null;
 			}
 			//----
 		} else {
 			throw new IOException("Can't send message to inactive connection");
 		}
 	}
-
+	/*20240516 Mark
 	private List<String> cnvS004toR0061(byte[] src) {
 		List<String> rtnList = null;
 		byte[] rtn = src;
@@ -461,7 +493,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 		}
 		return rtnList;
 	}
-	
+
 	private void HostS004SndHost(ChannelHandlerContext ctx, int seq, String brno, String wsno, String mrkttm) {
 		String S004TITAStr = String.format(
 				"\u000f\u000f\u000f\u0000\u0001d\u0001%03d\u000f\u000f%03d%02d0\u0000006100000000000000000FU0700C8400000000000000000000000000000000000000000000000014000000000000000000000001000000000000000000000%03d000000001%4s?\u0004",
@@ -471,7 +503,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 		try {
 			sendBytes(ctx, S004TITA);
 		} catch (IOException e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	}
 	//20200215
@@ -493,6 +525,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 
 		log.debug("-publish end-");
 	}
+
     //----
 	public synchronized void addActorStatusListener(ActorStatusListener listener) {
 		log.debug(clientId + " actor status listener add");
@@ -503,6 +536,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 		log.debug(clientId + " actor status listener remove");
 		actorStatusListeners.remove(listener);
 	}
+
 	public void publishShutdownEvent() {
 		log.debug(clientId + " publish shutdown event to listener");
 		log.debug("-publish end-");
@@ -519,6 +553,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 		this.isConnected.set(false);
 		log.debug("-publish end-");
 	}
+	*/
 	//20200116 MatsudairaSyuMe
 	private byte[] cnvResultTelegram() {
 		byte[] rtn = null;

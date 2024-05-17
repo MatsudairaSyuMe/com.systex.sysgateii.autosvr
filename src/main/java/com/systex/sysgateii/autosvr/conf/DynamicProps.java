@@ -33,7 +33,7 @@ import com.systex.sysgateii.autosvr.dao.GwDao;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
+import com.systex.sysgateii.autosvr.util.DecryptUtil;//20240508
 public class DynamicProps {
 	private static Logger log = LoggerFactory.getLogger(DynamicProps.class);
 	private ReloadingFileBasedConfigurationBuilder<XMLConfiguration> builder = null;
@@ -51,7 +51,7 @@ public class DynamicProps {
 	private String auid = "";
 	private String svrip = "";
 	//----
-
+	static private String decryptedPd = ""; //20240508
 	public DynamicProps(String string) {
 		Parameters params = new Parameters();
 		//20230328 MatsudairaSyuMe fix "Path Manipulation Vulnerability"
@@ -64,8 +64,8 @@ public class DynamicProps {
 			ChkCfg(builder.getConfiguration());
 		} catch (ConfigurationException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("error :{}", e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("error : i/o exception");//20240503 change log message
 		}
 		PeriodicReloadingTrigger trigger = new PeriodicReloadingTrigger(builder.getReloadingController(), null, 5,
 				TimeUnit.SECONDS);
@@ -223,8 +223,8 @@ public class DynamicProps {
 							}
 						} catch (ConfigurationException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
-							log.error("error :{}", e.getMessage());
+							//20240503 MAtsudairaSyuMe mark for System Information Leak e.printStackTrace();
+							log.error("error : i/o exception");//20240503 change log message
 							log.info("[0000] : rateprtservice.xml is not well formed! PrnSrv");
 						}
 					}
@@ -320,12 +320,12 @@ public class DynamicProps {
 														log.debug("SERVICE parameter [{}] [{}]", idx, svrfldsary[idx]);
 														break;
 													case 4:
-														origStr = conHashMap.get("svrsubport.recvtimeout").trim();
+														//20240510 Poor Style: Value Never Read origStr = conHashMap.get("svrsubport.recvtimeout").trim();
 														conHashMap.put("svrsubport.recvtimeout", svrfldsary[idx].trim());
 														log.debug("SERVICE parameter [{}] svrsubport.recvtimeout [{}]", idx, svrfldsary[idx]);
 														break;
 													case 5:
-														origStr = conHashMap.get("system.logpath").trim();
+														//20240520 Poor Style: Value Never Read origStr = conHashMap.get("system.logpath").trim();
 														conHashMap.put("system.logpath", svrfldsary[idx].trim());
 														log.debug("SERVICE parameter [{}] set system.logpath [{}]", idx, svrfldsary[idx]);
 														break;
@@ -345,7 +345,7 @@ public class DynamicProps {
 										for (String s : fasflds) {
 											s = s.trim();
 											fasfld = s;
-											origStr = conHashMap.get("svrsubport.svrip").trim();
+											//20240520 Poor Style: Value Never Read origStr = conHashMap.get("svrsubport.svrip").trim();
 											conHashMap.put("svrsubport.svrip", fasfld);
 											log.debug("current fasfld set svrsubport.svrip [{}]", fasfld);
 										}
@@ -438,8 +438,8 @@ public class DynamicProps {
 								jsel2ins.CloseConnect();
 								jsel2ins = null;
 							} catch (Exception e) {
-								e.printStackTrace();
-								log.info("monitorThread read database error [{}]", e.toString());
+								//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+								log.info("monitorThread read database error exception");//20240503 change log message
 							}
 
 						}
@@ -488,7 +488,7 @@ public class DynamicProps {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public void ChkCfg(XMLConfiguration config) throws ConfigurationException {
+	private final void ChkCfg(XMLConfiguration config) throws ConfigurationException {  //20240503 change to private final void for Code Correctness: Constructor Invokes Overridable Function
 
 		DefaultExpressionEngine engine = new DefaultExpressionEngine(DefaultExpressionEngineSymbols.DEFAULT_SYMBOLS);
 		// 指定表達示引擎
@@ -496,7 +496,17 @@ public class DynamicProps {
 		synchronized (this) {
 			Map<Object, Object> cfg = new ConfigurationMap(config);
 //			cfg.entrySet();
-			//20201116 
+			//20201116
+			//20240508
+			if (config.containsKey("system.db[@pass]")) {
+				String encryptedPd = config.getString("system.db[@pass]");
+				try {
+					this.decryptedPd = DecryptUtil.decryptPd(encryptedPd);
+				} catch (Exception e) {
+					log.error("decryptPd fail");
+				}
+			}
+			//----
 			for (@SuppressWarnings("rawtypes")
 			Map.Entry entry : cfg.entrySet()) {
 				//20200420 add logpath
@@ -726,12 +736,12 @@ public class DynamicProps {
 												log.debug("SERVICE parameter [{}] [{}]", idx, svrfldsary[idx]);
 												break;
 											case 4:
-												origStr = conHashMap.get("svrsubport.recvtimeout").trim();
+												//20240520 Poor Style: Value Never Read origStr = conHashMap.get("svrsubport.recvtimeout").trim();
 												conHashMap.put("svrsubport.recvtimeout", svrfldsary[idx].trim());
 												log.debug("SERVICE parameter [{}] svrsubport.recvtimeout [{}]", idx, svrfldsary[idx]);
 												break;
 											case 5:
-												origStr = conHashMap.get("system.logpath").trim();
+												//20240520 Poor Style: Value Never Read origStr = conHashMap.get("system.logpath").trim();
 												conHashMap.put("system.logpath", svrfldsary[idx].trim());
 												log.debug("SERVICE parameter [{}] set system.logpath [{}]", idx, svrfldsary[idx]);
 												break;
@@ -751,7 +761,7 @@ public class DynamicProps {
 									for (String s : fasflds) {
 										s = s.trim();
 										fasfld = s;
-										origStr = conHashMap.get("svrsubport.svrip").trim();
+										//20240520 Poor Style: Value Never Read origStr = conHashMap.get("svrsubport.svrip").trim();
 										conHashMap.put("svrsubport.svrip", fasfld);
 										log.debug("current fasfld set svrsubport.svrip [{}]", fasfld);
 									}
@@ -836,8 +846,8 @@ public class DynamicProps {
 						jsel2ins.CloseConnect();
 						jsel2ins = null;
 					} catch (Exception e) {
-						e.printStackTrace();
-						log.info("monitorThread read database error [{}]", e.toString());
+						//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+						log.info("monitorThread read database error");//20240503 change log message
 					}
 
 				}
@@ -860,8 +870,8 @@ public class DynamicProps {
 		/**/
 	}
 
-	public void ChkCfg() throws ConfigurationException {
-	}
+	/*20240503 MatsudairaSyuuMe mark up for Code Correctness: Constructor Invokes Overridable Function public void ChkCfg() throws ConfigurationException {
+	}  */
 
 	public ConcurrentHashMap<String, String> getConHashMap() {
 		return conHashMap;
@@ -1116,8 +1126,8 @@ public class DynamicProps {
 					jsel2ins.CloseConnect();
 					jsel2ins = null;
 				} catch (Exception e) {
-					e.printStackTrace();
-					log.info("read database error [{}]", e.toString());
+					//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+					log.info("read database error");//20240503 change log message
 				}
 			}
 		}
@@ -1136,5 +1146,12 @@ public class DynamicProps {
 			}
 		}
 		return lastcfgPrtMapList;
+	}
+
+	/**20240508
+	 * @return the encryptedPd
+	 */
+	public static String getDecryptedPd() {
+		return decryptedPd;
 	}
 }

@@ -362,9 +362,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	// public PrtCli(ConcurrentHashMap<String, Object> map, Timer timer)
 	public PrtCli(ConcurrentHashMap<String, Object> map, RouteConnection prnsvrdispatcher, Timer timer)
 	{
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		this.setByDate(sdf.format(new Date()));
-
+		//20240503 mark up SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		this.byDate = (new SimpleDateFormat("yyyyMMdd").format(new Date()));//20240503 to local parameter
+		//20240503 Code Correctness: Constructor Invokes Overridable Function
 		this.brws = (String) map.get("brws");
 		this.type = (String) map.get("type");
 		this.autoturnpage = (String) map.get("autoturnpage");
@@ -441,9 +441,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3) + byDate, "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
 //20230704 MatsudairaSyuMe use ConsoleAppender		this.atlog = LogUtil.getDailyLogger(PrnSvr.logPath, this.clientId + "AT" + this.brws.substring(3), "info", "[TID:%X{PID} %d{yyyy/MM/dd HH:mm:ss:SSS}]:[%X{WSNO}]:[%thread]:[%class{0} %M|%L]:%msg%n");
 		this.atlog = LoggerFactory.getLogger(ch.qos.logback.core.ConsoleAppender.class);
-		atlog.info("=============[Start]=============");
-		atlog.info("------MainThreadId={}------", pid);
-		atlog.info("------Call MaintainLog OK------");
+		//20240503 mark up for no use atlog.info("=============[Start]=============");
+		//20240503 mark up for no use atlog.info("------MainThreadId={}------", pid);
+		//20240503 mark up for no use atlog.info("------Call MaintainLog OK------");
 
 		if (this.type.equals("AUTO28")) {
 			atlog.info("load Auto Printer type AUTO28");
@@ -502,12 +502,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			jsel2ins = null;
 			/**/ //----
 		} catch (Exception e) {
-			log.error("Address format error!!! {}", e.getMessage());
+			log.error("Address format error!!! exception");//20240503 change log message
 		}
 		//20210630 MatsudairaSyuMe for Path Manipulation, 20210716 Often Misused: Authentication
         //String[] saddr = this.rmtaddr.getAddress().getHostAddress().split("\\.");
 		String result = cnvIPv4Addr2Str(this.remoteHostAddr,this.rmtaddr.getPort());;
-		log.debug("==>remote seqno result=[{}]", result);
+		log.debug("==>remote seqno convert from ip");//20240503 change log message
 		//20210324 MatsudairaSyume initialize sequence no. from 0 at first time build
 		//20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
 		this.seqNoFile = "SEQNO" + File.separator + StrUtil.cleanString("SEQNO" + result);
@@ -533,7 +533,20 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			if (tmpSeqNoFile.exists() == false) {
 				File parent = tmpSeqNoFile.getParentFile();
 				if (parent.exists() == false) {
-					parent.mkdirs();
+					if (!parent.mkdirs()) {//20240515 MatsudairaSyuMe Unchecked Return Value
+						log.error("PrtCli  error!!! can not create parent direct!!! stop thread!!!");
+						PrnSvr.closeNode(this.brws, true);
+						LogUtil.stopLog((ch.qos.logback.classic.Logger) amlog);
+						LogUtil.stopLog((ch.qos.logback.classic.Logger) aslog);
+						LogUtil.stopLog((ch.qos.logback.classic.Logger) atlog);
+						amlog = null;
+						aslog = null;
+						atlog = null;
+						timer.cancel();
+						Thread.currentThread().interrupt();
+						return;
+						//----20240515
+					}
 				}
 				tmpSeqNoFile.createNewFile();
 				//20240211 MatsudairaSyuMe use com.systex.sysgateii.autosvr.util.FileUtils
@@ -543,7 +556,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				this.setSeqNo = 0L;
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error!!! create or open seqno file SEQNO_ error");
 		}
 		//----20210324
@@ -576,8 +589,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			jsel2ins = null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.debug("update status table {} error:", PrnSvr.statustbname, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.debug("update status table {} error:", PrnSvr.statustbname);
 		}
 		PeriodDayEndSchedule();  //20211203 MatsudairasyuMe set day end check log schedule
 		//20230314 MatsudairaSyuMe, 20230325 add svrid
@@ -605,24 +618,25 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//20200827 converto to UTF-8 message
 //			aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, new String(msg)));
 			// 20210714 MatsudairaSyuMe Log Forging
-			String cnvStr = "";
+			/*20240510 Poor Style: Value Never Read String cnvStr = "";
 			try {
 				cnvStr = charcnv.BIG5bytesUTF8str(msg);
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MAtsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			} finally {
 				if (cnvStr == null || cnvStr.trim().length() == 0)
 					cnvStr = new String(msg);
-			}
+			}*/
 			try {//20210803 MAtsydairaSyuMe change to use ESAPI for Log Forging, 20230314 change to use time stamp parameter
 				if (((startIdleMode == true) && ((System.currentTimeMillis() - this.lastCheckTime) >= (PrnSvr.getChgidleTime() * 1000))) || ((startIdleMode == false)))
-					aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, StrUtil.convertValidLog(cnvStr)));
+//					aslog.info(String.format("SEND %s[%04d]:%s", this.curSockNm, msg.length, StrUtil.convertValidLog(new String(msg, msg.length))));
+					aslog.info( "SEND {}[{}]:{}", this.curSockNm, String.format("%04d",msg.length), new String(msg, 0, msg.length, java.nio.charset.Charset.forName("BIG5")));
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 				log.error("aslog data format error");
 			}
 			//----
-			cnvStr = null;
+			//20240510 Poor Style: Value Never Read cnvStr = null;
 			//----
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(msg);
 			//channel_.writeAndFlush(buf);
@@ -630,11 +644,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			try {
 				channel_.writeAndFlush(buf.retain()).sync();
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 				log.error("Can't send message to Passbook Printer");
 			}
 			buf.release();
-			buf = null;
+			//20240510 Poor Style: Value Never Read buf = null;
 			//20230703 MatsudairaSyuMe make sure for no direct memory leak
 		} else {
 			throw new IOException("Can't send message to inactive connection");
@@ -724,8 +738,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							}
 							MDC.put("WSNO", brws.substring(3));
 							MDC.put("PID", pid);
-							atlog.info("Error , please check ... [{}:{}:{}]", rmtaddr.getAddress().toString(),
-									rmtaddr.getPort(), localaddr.getPort());
+							//20240503 mark for no used atlog.info("Error , please check ... [{}:{}:{}]", rmtaddr.getAddress().toString(),
+							//		rmtaddr.getPort(), localaddr.getPort());
 							clientMessageBuf.clear();
 //							if (!future.channel().isActive()) {
 //							      prtcliFSM(firstOpenConn);
@@ -879,7 +893,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			tmpsockno = secureRandomGenerator.nextInt(9999);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("SecureRandom error:NoSuchAlgorithmException");
 		} finally {
 			if (tmpsockno == 0)
@@ -970,8 +984,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			} else // if
 				log.warn("not ByteBuf");
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.toString());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("channelRead error"); //20240503 change log message
 		} finally {
 			ReferenceCountUtil.release(msg);
 			// 若是有配置等待鎖，則解鎖
@@ -1025,7 +1039,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			jsel2ins = null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.debug("update status table {} error:", PrnSvr.statustbname, e.getMessage());
 		}
 		// 20230522 MasudairaSyuMe register last time read data from pass book print
@@ -1035,7 +1049,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		log.debug(clientId + " exceptionCaught=" + cause.getMessage());
+		log.debug(clientId + " exception"); //20240503 change log message
 		// 20230522 MasudairaSyuMe register last time read data from pass book print
 		this.lastTimeFromPrt = 0l;
 		if (cause instanceof ConnectException) {
@@ -1133,7 +1147,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		try {
 			TimeUnit.MILLISECONDS.sleep(s);
 		} catch (InterruptedException e1) { // TODO Auto-generated catch block
-			e1.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e1.printStackTrace();
 		}
 	}
 
@@ -1296,7 +1310,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	            pasname = "        ";  
 	        }
 	    } catch (Exception e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 		}
 	    // 處理外幣存摺和黃金存摺
 	    switch (chkcatagory) {
@@ -1482,12 +1496,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			this.nline = Integer.parseInt(this.cline);
 			this.npage = Integer.parseInt(this.cpage);
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 				amlog.info("[{}][{}][{}]:13存摺格式錯誤！", brws, "        ", this.account);
 				//20231116
-		            	InsertAMStatus(brws, " ", this.account, "13存摺格式錯誤！");
-		            	//----
-				atlog.info("MSR format ERROR！！[{}]", account);
+		        InsertAMStatus(brws, " ", this.account, "13存摺格式錯誤！");
+		        //----
+				//atlog.info("MSR format ERROR！！[{}]", account);
 				iFig = 0;
 				rtn = false;
 			}
@@ -1605,7 +1619,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							dsptb = new byte[s];
 							System.arraycopy(tmpdsp, 0, dsptb, 0, s);
 						}
-						tmpdsp = null;
+						//20240510 Poor Style: Value Never Read tmpdsp = null;
 					}
 					/*20230316 mark up
 					if (DscptMappingTable.m_Dscpt2.containsKey(desc))
@@ -1917,7 +1931,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----20240327
 			//----
 		} catch (Exception e) {
-			log.debug("error--->p0080text convert error", e.getMessage());
+			log.debug("error--->p0080text convert error: exception");//20240503 change log message
 			rtn = false;
 			this.curState = FORMATPRTDATAERROR;
 		}
@@ -1946,7 +1960,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//----
 		String pbpr_date = String.format("%9s", " "); // 日期 9
 		String pbpr_wsno = String.format("%5s", " "); // 櫃檯機編號 5
-		String pbpr_crdblog = String.format("%36s", " "); // 摘要+支出收入金額 36
+		//20240510 Poor Style: Value Never Read String pbpr_crdblog = String.format("%36s", " "); // 摘要+支出收入金額 36
 		String pbpr_crdb = String.format("%36s", " "); // 摘要+支出收入金額 36
 		String pbpr_crdbT = String.format("%16s", " "); // 摘要+支出收入金額 36
 		String pbpr_dscpt = String.format("%16s", " "); // 摘要 16 byte big
@@ -1994,7 +2008,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			{
 			//----20240327
 				//處理日期格式
-				pr_data = "";
+				//20240510 Poor Style: Value Never Read pr_data = "";
 				pbpr_date = String.format("%8s", (Integer.parseInt(new String (q0880DataFormat.getTotaTextValueSrc("date", fc_arr.get(this.cur_arr_idx))).trim()) - 19110000));
 				pr_data = pbpr_date;
 				//處理櫃檯機編號
@@ -2030,7 +2044,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					pbpr_crdbT = pbpr_crdbT + dTxamtcnvStr + "  ";
 					
 //20200903			pbpr_crdblog = pbpr_crdblog + dataUtil.rfmtdbl(dTxamt, TXP.AMOUNT1) + "  ";
-					pbpr_crdblog = pbpr_crdblog + dTxamtcnvStr + "  ";
+					//20240510 Poor Style: Value Never Read pbpr_crdblog = pbpr_crdblog + dTxamtcnvStr + "  ";
 					//20200903
 					atlog.info(": FcDataFormat() -- 支出 obuff=[{}]", dTxamtcnvStr);
 					//----
@@ -2054,7 +2068,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 					pbpr_crdbT = pbpr_crdbT + "  " + dTxamtcnvStr;
 
-					pbpr_crdblog = pbpr_crdblog + "   " + dTxamtcnvStr;
+					//20240510 Poor Style: Value Never Read pbpr_crdblog = pbpr_crdblog + "   " + dTxamtcnvStr;
 					//20200903
 					atlog.info(": FcDataFormat() -- 收入 obuff=[{}]", dTxamtcnvStr);
 					//----
@@ -2227,7 +2241,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----20240327
 			//----
 		} catch (Exception e) {
-			log.debug("error--->q0880text convert error", e.getMessage());
+			log.debug("error--->q0880text convert error: exception");//20240503 change log message
 			rtn = false;
 			this.curState = FORMATPRTDATAERROR;
 		}
@@ -2256,7 +2270,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//----
 		String pbpr_date = String.format("%8s", " "); // 日期 8
 		String pbpr_wsno = String.format("%5s", " "); // 櫃檯機編號 5
-		String pbpr_crdblog = String.format("%36s", " "); // 摘要+支出收入金額 36
+		//20240510 Poor Style: Value Never Read String pbpr_crdblog = String.format("%36s", " "); // 摘要+支出收入金額 36
 		String pbpr_crdb = String.format("%36s", " "); // 摘要+支出收入金額 36
 		String pbpr_crdbT = String.format("%10s", " "); // 摘要
 		String pbpr_dscpt = String.format("%10s", " "); // 摘要 10 byte big
@@ -2377,7 +2391,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					
 					pbpr_crdbT = pbpr_crdbT + " " + dataUtil.rfmtdbl(dTxamt, TXP.GRAM1) + "         ";//20210324 MatsudairaSyume delete 1 space
 					
-					pbpr_crdblog = pbpr_crdblog + " " + dataUtil.rfmtdbl(dTxamt, TXP.GRAM1) + "         ";//20210324 MatsudairaSyume delete 1 space
+					//20240510 Poor Style: Value Never Read pbpr_crdblog = pbpr_crdblog + " " + dataUtil.rfmtdbl(dTxamt, TXP.GRAM1) + "         ";//20210324 MatsudairaSyume delete 1 space
 					//----
 				} else {
 					//收入
@@ -2393,7 +2407,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					
 					pbpr_crdbT = pbpr_crdbT + "          " + dataUtil.rfmtdbl(dTxamt, TXP.GRAM1);//20210324 MatsudairaSyume delete 1 space
 					
-					pbpr_crdblog = pbpr_crdblog + "          " + dataUtil.rfmtdbl(dTxamt, TXP.GRAM1);//20210324 MatsudairaSyume delete 1 space
+					//20240510 Poor Style: Value Never Read pbpr_crdblog = pbpr_crdblog + "          " + dataUtil.rfmtdbl(dTxamt, TXP.GRAM1);//20210324 MatsudairaSyume delete 1 space
 					//----
 
 				}
@@ -2582,7 +2596,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----20240327
 			//----
 		} catch (Exception e) {
-			log.debug("error--->p0880text convert error", e.getMessage());
+			log.debug("error--->p0880text convert error : exception");//20240503 change log messaage
 			rtn = false;
 			this.curState = FORMATPRTDATAERROR;
 		}
@@ -2718,8 +2732,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.debug("{} {} {} WMSRFormat exception {}", brws, catagory, account, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.debug("{} {} {} WMSRFormat exception", brws, catagory, account);//20240503 change log message
 		}
 
 		return rtn;
@@ -2759,8 +2773,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.debug("{} {} {} WMSRFormat exception {}", brws, catagory, account, e.getMessage());
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.debug("{} {} {} WMSRFormat exception", brws, catagory, account); //20240503 change log message
 		}
 
 		return rtn;
@@ -3042,8 +3056,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("telegram  DataDEL error on tita label: {}", e.getMessage());
+			//20240503 MAtsudairaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("telegram  DataDEL error on tita label");  //20240503 change log message
 		}
 		return rtn;
 	}
@@ -3480,8 +3494,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 				log.debug("4.3--->gl_arr.size=[{}]", gl_arr.size());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("telegram   error on tita label: {}", e.getMessage());
+			//20240503 MatsudaireaSyuMe mark for System Information Leak e.printStackTrace();
+			log.error("telegram   error on tita label"); //20240503 change log message
 		}
 		return rtn;
 	}
@@ -5689,14 +5703,14 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			if (tbsdy != null && tbsdy.length() >= 7)
 				this.fepdd = tbsdy.substring(tbsdy.length() - 2).getBytes();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//20240503 MAtsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("update state table {} error:{}", PrnSvr.svrtbsdytbname, e.getMessage());
 		} finally {
 /*20220525 ,20230517 MatsudairaSyuMe take out mark for connect once*/
 			try {
 				jsel2ins.CloseConnect();
 			} catch (Exception e) {
-				e.printStackTrace();
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 				log.error("close connect to table {} error:{}", PrnSvr.svrtbsdytbname, e.getMessage());
 			}
 			jsel2ins = null;
@@ -5757,8 +5771,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-				log.debug("set event errot error e:[{}]", e.toString());
+				//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+				log.debug("set start event errot error");//20240503 change log message
 			}
 			//--
 			//20201004
@@ -5842,8 +5856,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					//20231212----
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
-					log.debug("insert am error status table error e:[{}]", e.toString());
+					//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
+					log.debug("insert am error status table error"); //20240503 change log message
 				}
 		//20231212
 			}
@@ -5949,11 +5963,11 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						log.warn("stable still not trigger OSM please check stable and restart [{}]", this.brws);
 						amlog.info("[{}][{}][{}]:97補摺機太久無回應且stable沒有發出警訊，請儘快重啟連線並同時檢查stable程式", brws, "        ", "            ");
 					} else {
-						log.info("stable already trigger OSM please restart [{}] asap!!!", this.brws);
-						amlog.info("[{}][{}][{}]:97補摺機太久無回應，請儘快重啟連線", brws, "        ", "            ");
-					}
+						log.warn("stable already trigger OSM please restart [{}] asap!!!", this.brws);//20240515 System Information Leak: Internal
+						amlog.info("[{}][{}][{}]:97補摺機太久無回應，請儘快重啟連線", this.brws, "        ", "            ");//20240503 change log message
+						}
 				} catch (Exception e) {
-					log.error("ERROR!!! check alart file  error {}", e.getMessage());
+					log.error("ERROR!!! check alart file  error exception");//20240516 MatsudairaSyuMe mark for System Information Leak: Internal
 					//20231222 MatsudairaSyuMe use random number
 					//20240201 Use SecureRandom //Random rand = new Random();
 					//20240219 改用LONG型態
@@ -5974,7 +5988,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error!!! create or open brws alart file error");
 		}
 	}
@@ -5991,7 +6005,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					log.debug("alart file=[{}] delete failly", alartf.getAbsolutePath());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error!!! delete brws alart file error");
 		}
 	}
@@ -6004,7 +6018,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			rtnSeq = secureRandomGenerator.nextInt(99999998);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("SecureRandom error:NoSuchAlgorithmException");
 		} finally {
 			if (rtnSeq == 0)
@@ -6027,7 +6041,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			FileUtils.writeStringToFile(this.seqNoFile, Long.toString(this.setSeqNo));
 			log.info("{} back up seq file {} seqno={}", nid, this.seqNoFile, Long.toString(this.setSeqNo));
 		} catch (IOException e) {
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error!!! create or open seqno file SEQNO_ error {}", nid);
 		}
 	}

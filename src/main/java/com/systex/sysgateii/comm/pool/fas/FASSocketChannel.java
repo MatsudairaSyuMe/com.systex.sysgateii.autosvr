@@ -40,9 +40,12 @@ public class FASSocketChannel {
 			"127.0.0.1:15000=127.0.0.1:15102", "127.0.0.1:15000=127.0.0.1:15103" };
 //	private static final String[] NODES = new String[] { "127.0.0.1:15000=127.0.0.1:15101"};
 //	private static final String[] NODES = new String[] { "127.0.0.1:15000"};
-	private static ByteBuf rcvBuf = Unpooled.buffer(16384);
+	//20240516 MatsudairaSyuMe change to use private recBuf for every connect port private static ByteBuf rcvBuf = Unpooled.buffer(16384);
 	private static ConcurrentHashMap<Channel, File> seqf_map = new ConcurrentHashMap<Channel, File>();
+	/*20240516 MatsudairaSyuMe change to use private recBuf for every connect port
 	private static final ChannelPoolHandler CPH = new FASChannelPoolHandler(rcvBuf, seqf_map);
+	*/
+	private static final ChannelPoolHandler CPH = new FASChannelPoolHandler(seqf_map);
 	private static final int DEFAULT_PORT = 15_000;
 	private static final long TEST_TIME_SECONDS = 20;
 	private static final int CONN_ATTEMPTS = 4;
@@ -52,11 +55,12 @@ public class FASSocketChannel {
 	private NonBlockingConnPool connPool;
 	EventLoopGroup group;
 
-	public FASSocketChannel(String nodes[], ServerProducer producer, List<String> brnolist, List<String> wsnolist) throws ConnectException, IllegalArgumentException, InterruptedException {
+//	public FASSocketChannel(String nodes[], ServerProducer producer, List<String> brnolist, List<String> wsnolist) throws ConnectException, IllegalArgumentException, InterruptedException {
+	public FASSocketChannel(String nodes[], List<String> brnolist, List<String> wsnolist) throws ConnectException, IllegalArgumentException, InterruptedException {
 		group = new NioEventLoopGroup();
 		final Bootstrap bootstrap = new Bootstrap().group(group).channel(NioSocketChannel.class);
 		//---- 20200422 test
-		((FASChannelPoolHandler)CPH).setProducer(producer);
+		//20240516 mark producer ((FASChannelPoolHandler)CPH).setProducer(producer);
 		((FASChannelPoolHandler)CPH).setBrnoList(brnolist);
 		((FASChannelPoolHandler)CPH).setWsnoList(wsnolist);
 		//----
@@ -78,9 +82,11 @@ public class FASSocketChannel {
 	public void setConnPool(NonBlockingConnPool connPool) {
 		this.connPool = connPool;
 	}
+	/*20240516 MatsudairaSyuMe change to use private recBuf for every connect port
 	public ByteBuf getrcvBuf() {
 		return this.rcvBuf;
 	}
+	*/
 	public ConcurrentHashMap<Channel, File> getseqfMap() {
 		return this.seqf_map;
 	}

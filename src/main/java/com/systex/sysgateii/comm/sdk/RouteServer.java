@@ -24,14 +24,14 @@ public class RouteServer implements Runnable {
 	private static Logger log = LoggerFactory.getLogger(RouteServer.class);
 	private String IP = "localhost";
 	private int port = 5555;
-	private static int timeout = 30000;
+	private static int timeout = 30000;  //20240503 MatsudairaSyuuMe mark up for Code Correctness
 	//static RouteServer brokerserver;
 	private int bufferSize = Integer.parseInt(System.getProperty("bufferSize", Constants.DEF_CHANNEL_BUFFER_SIZE + ""));
 	public RouteServer (String _IP, int _port, int _tout) {
 		this.IP = _IP;
 		this.port = _port;
 		//brokerserver = new RouteServer();
-		this.setTimeout(_tout);
+		RouteServer.timeout = _tout;//20240503 MatsudairaSyuuMe mark up for Code Correctness: use set RouteServer.timeout
 	}
 
 	/*
@@ -110,7 +110,7 @@ public class RouteServer implements Runnable {
 			future.channel().closeFuture().sync();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//20240503 MatsudairaSyuMe mark for log.info( e.printStackTrace();
 			log.error("RouteServer run error");
 		} finally {
 			bossGroup.shutdownGracefully();

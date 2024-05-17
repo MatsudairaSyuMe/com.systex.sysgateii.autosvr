@@ -189,7 +189,7 @@ public class CharsetCnv {
 			s[0] = (byte)0xA4; s[1] = (byte)0xA4;
 			out.println("s=" + cc.ChkAddFont((((int)((s[0] & 0xff))<<8)+((int)(s[1] & 0xff)))));
 		} catch (Exception e) {
-			System.err.println(e);
+			System.err.println("convert Error");//20240503 MatsudairaSyuMe change log message
 		}
 	}
 }

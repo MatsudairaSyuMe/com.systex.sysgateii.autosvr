@@ -39,7 +39,7 @@ public class DataConvert {
 //			_rtnStr += (DatatypeConverter.printHexBinary(_a) + (i == (array.length - 1) ? "" : " "));
 			_rtnStr += (bytesToHex(_a) + (i == (array.length - 1) ? "" : " "));
 		}
-		_a = null;
+		//20240510 Poor Style: Value Never Read _a = null;
 		return _rtnStr;
 	}
 
