@@ -1,5 +1,6 @@
 package com.systex.sysgateii.autosvr.util;
 
+import java.nio.charset.Charset;
 //20210702 MatsudairasyuMe import for Log Forging
 import java.text.Normalizer;
 import java.text.NumberFormat;
@@ -44,7 +45,7 @@ public class StrUtil {
 		byte[] orgByteArr = org.getBytes();
 		System.arraycopy(orgByteArr, 0, newArr, 0, orgByteArr.length);
 
-		return new String(newArr);
+		return new String(newArr, Charset.forName("UTF-8"));
 	}
 
 	public static String padSpace(String org, int len) {
@@ -86,7 +87,7 @@ public class StrUtil {
 		byte[] orgByteArr = org.getBytes();
 		System.arraycopy(orgByteArr, 0, newArr, newArr.length - orgByteArr.length, orgByteArr.length);
 
-		return new String(newArr);
+		return new String(newArr, Charset.forName("UTF-8"));
 	}
 
 	//20210702 MatsudairasyuMe function for Log Forging

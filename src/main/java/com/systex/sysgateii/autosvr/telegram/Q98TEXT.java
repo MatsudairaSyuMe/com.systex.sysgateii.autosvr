@@ -128,7 +128,7 @@ public class Q98TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 	
 	public void setValueRtoLfill(String fieldN, String setsV, byte fillV) throws Exception {
@@ -146,7 +146,7 @@ public class Q98TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 
 	public void setValue(String fieldN, String setsV) throws Exception {
@@ -211,7 +211,7 @@ public class Q98TEXT {
 		}
 		log.debug("q98titatext_lens={}", q98titatext_len);
 	}
-	public static void main(String[] args) throws Exception {
+	/*public static void main(String[] args) throws Exception {
 		boolean rtn;
 		Q98TEXT tl = new Q98TEXT();
 		rtn = tl.initQ98TitaTEXT((byte) '0');
@@ -220,6 +220,6 @@ public class Q98TEXT {
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("2--->[{}]len={}", new String(result), tl.getQ98TitatextLen());
-	}
+	}*/
 
 }

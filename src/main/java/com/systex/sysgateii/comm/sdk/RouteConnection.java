@@ -20,6 +20,7 @@ import io.netty.handler.logging.LoggingHandler;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.charset.Charset;
 import java.util.Timer;
 import java.util.TimerTask;
 //20220905 MatsudairaSyuMe RouteConnection using as Dispatcher
@@ -91,7 +92,7 @@ public class RouteConnection {
 
 	public boolean send(byte[] msg) {  //20220819 MatsudairaSyuMe send TRANSFER data add COMM_STATE.TRANSF
 		//20220923 this.rtnmsg = null;
-		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
+		if (channel_ != null && channel_.isActive() && (msg != null && msg.length > 0)) {//20240523 prevent Redundant Null Check
 			//20220818 MatsudairaSyuMe add 2 bytes length before msg as real send message
 			byte[] sndmsg = new byte [msg.length + 3];  //total send msgary is 2 byte length + 1 byte COMM_STATE.TRANSF + msg
 			sndmsg[0] = (byte) (sndmsg.length / 256);
@@ -99,7 +100,7 @@ public class RouteConnection {
 			sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
 			System.arraycopy(msg, 0, sndmsg, 3, msg.length);
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(sndmsg);
-			log.debug("send to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg));
+			log.debug("send to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg, Charset.forName("UTF-8")));
 			//20230217 MatsudairaSyume make sure for write and flush synchronize mode
 			try {
 				channel_.writeAndFlush(buf.retain()).sync();
@@ -127,7 +128,7 @@ public class RouteConnection {
 	}
 	public boolean sendCANCEL(byte[] msg) {  //20220819 MatsudairaSyuMe send COMM_STATE.CANCEL command and telegramKey
 		//20220923 this.rtnmsg = null;
-		if (channel_ != null && channel_.isActive() && (msg != null || msg.length == 0)) {
+		if (channel_ != null && channel_.isActive() && (msg != null && msg.length > 0)) {//20240523 prevent Redundant Null Check
 			//20220905 MatsudairaSyuMe
 			String telegramKey = dataUtil.getTelegramKey(msg);
 			if (this.incomingTelegramMap.containsKey(telegramKey)) {
@@ -142,7 +143,7 @@ public class RouteConnection {
 			sndmsg[2] = (byte) COMM_STATE.CANCEL.Getid();
 			System.arraycopy(msg, 0, sndmsg, 3, msg.length);
 			ByteBuf buf = channel_.alloc().buffer().writeBytes(sndmsg);
-			log.debug("send CANCEL command to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg));
+			log.debug("send CANCEL command to RouteServer len=[{}] sndmsg:[{}]", sndmsg.length, new String(sndmsg, Charset.forName("UTF-8")));
 			//20230217 MatsudairaSyume make sure for write and flush synchronize mode
 			try {
 				channel_.writeAndFlush(buf.retain()).sync();

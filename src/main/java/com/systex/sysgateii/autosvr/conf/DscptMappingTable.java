@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -166,7 +167,7 @@ public class DscptMappingTable {
 									else
 										tmpb2 = new byte[tmpb.length - start];
 									System.arraycopy(tmpb, start, tmpb2, 0, tmpb2.length);
-									m_Dscpt2.put(new String(tmph, 0, j).trim(), tmpb2);
+									m_Dscpt2.put(new String(tmph, 0, j, Charset.forName("BIG-5")).trim(), tmpb2);
 									//								System.out.println("len=" + tmpb2.length + " :" + new String(tmpb2));
 									break;
 								}
@@ -188,7 +189,8 @@ public class DscptMappingTable {
 				//			InputStreamReader isr = new InputStreamReader(new FileInputStream(filename), "Big5");
 				isr = new InputStreamReader(new FileInputStream(filename), "Big5");
 				reader = new BufferedReader(isr);
-				String line = reader.readLine();
+				String line = reader.readLine();//20240523 prevent Redundant Null Check
+				if (reader != null)
 				while (line != null) {
 					line = line.trim();
 					if (line.length() > 0 && !line.substring(0, 1).equals("#")) {
@@ -242,12 +244,12 @@ public class DscptMappingTable {
 		}
 	}
 	//----
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		//pstmt.setObject(1, bserviceID, java.sql.Types.BINARY); 
 		DscptMappingTable d = new DscptMappingTable ("DMTABLE.INI");
 		System.out.println(d.m_Dscpt.size());
 		System.out.println(d.m_Dscpt.get("000E6"));
 		System.out.println(new String(d.m_Dscpt2.get("000E6")));
 		System.out.println(Arrays.toString(d.m_Dscpt2.get("M66")) + ": len=" + d.m_Dscpt2.get("M66").length + " :" + new String(d.m_Dscpt2.get("M66")));
-	}
+	}*/
 }

@@ -131,7 +131,7 @@ public class CharsetCnv {
 //        byte[] utf8Encoded = utfinput.getBytes(UTF8); 
 		String decoded = utfinput;
 		big5Encoded = decoded.getBytes(BIG5);
-		return new String(big5Encoded);
+		return new String(big5Encoded, BIG5);
 	}
 
 	public String UTF8bytesBIG5str(byte[] utfinput) throws Exception {
@@ -152,7 +152,7 @@ public class CharsetCnv {
 		big5Encoded = decoded.getBytes(BIG5);
 		return big5Encoded;
 	}
-
+/*
 	public static void main(final String[] arguments) {
 		CharsetCnv cc = new CharsetCnv();
 		CharsetCnv.getEncoding();
@@ -162,18 +162,20 @@ public class CharsetCnv {
 			out.println("UTF8 " + src);
 			byte[] srcb = src.getBytes();
 			for (int i = 0; i < srcb.length; i++)
-				out.println(String.format("%02x ", srcb[i] & 0xff));
+				out.println(String.format("%02x ", srcb[i] & 0xff));*/
 			/*
 			 * String r = cc.UTF8BIG5str(src); out.println("摩根太證息 Encoding UTF8BIG5str: " +
 			 * r);
 			 */
+	/*
 			byte[] b = cc.UTF8BIG5bytes(src);
 			out.println("UTF8 摩根太證息 Encoding BIG5UTF8bytes: ");
 			for (int i = 0; i < b.length; i++)
-				out.println(String.format("%02x ", b[i] & 0xff));
+				out.println(String.format("%02x ", b[i] & 0xff));*/
 			/*
 			 * out.println("big5 摩根太證息 Encoding BIG5UTF8str: " + cc.BIG5UTF8str(r));
 			 */
+	/*
 			out.println("摩根太證息 Encoding bytes: " + new String(b));
 			out.println("big5 摩根太證息 Encoding BIG5bytesUTF8str: " + cc.BIG5bytesUTF8str(b));
 			byte s[] = {(byte)0x81, (byte)0x39};
@@ -191,5 +193,5 @@ public class CharsetCnv {
 		} catch (Exception e) {
 			System.err.println("convert Error");//20240503 MatsudairaSyuMe change log message
 		}
-	}
+	}*/
 }

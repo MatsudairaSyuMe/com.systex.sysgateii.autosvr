@@ -1,5 +1,6 @@
 package com.systex.sysgateii.autosvr.prtCmd.Impl;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -109,8 +110,8 @@ public class CS2812Impl implements Printer {
 	private byte[] TURN_NEXT = {STX,(byte)4,MI_DATA,CC,(byte)0x56,(byte)0x00,ETX,(byte)((byte)4+MI_DATA+CC+(byte)0x56+(byte)0x00+ETX)}; //0xa7 翻後一頁
 
 	private byte[] inBuff = new byte[128];
-	private byte[] curmsdata;
-	private byte[] curbarcodedata;
+	//20240520 Dead Code: Unused Field private byte[] curmsdata;
+	//20240520 Dead Code: Unused Field private byte[] curbarcodedata;
 
 	private boolean sendINIT = false;
 	private byte[] init = new byte[6 + 1];
@@ -365,7 +366,7 @@ public class CS2812Impl implements Printer {
 				if (rcv_len <= pc.clientMessageBuf.readableBytes()) {
 					rtn = new byte[rcv_len];
 					pc.clientMessageBuf.readBytes(rtn);
-					atlog.info("[{}]-[{}]", rcv_len, new String(rtn));
+					//atlog.info("[{}]-[{}]", rcv_len, new String(rtn));
 					return rtn;
 				}
 			}
@@ -465,7 +466,7 @@ public class CS2812Impl implements Printer {
 	public boolean ResetPrinter() {
 		// TODO Auto-generated method stub
 		log.debug("{} {} {} ResetPrinterInit curState={}", brws, "", "", this.curState);
-		if (this.curState == ResetPrinterInit_START) {
+		/*if (this.curState == ResetPrinterInit_START) {
 			amlog.info("[{}][{}][{}]:00補摺機重置中..", brws, "        ", "            ");
 			if (Send_hData(PENQ) != 0)
 				return false;
@@ -542,7 +543,7 @@ public class CS2812Impl implements Printer {
 		if (curState == ResetPrinterInit_FINISH) {
 			amlog.info("[{}][{}][{}]:00補摺機重置完成！", brws, "        ", "            ");
 			return true;
-		} else
+		} else*/
 			return false;
 	}
 
@@ -779,7 +780,7 @@ public class CS2812Impl implements Printer {
 		// TODO Auto-generated method stub
 		if (data == null || data.length == 0)
 			return -1;
-		if (new String(data).contains("DIS")) {
+		if (new String(data, Charset.forName("US-ASCII")).contains("DIS")) {
 			amlog.info("[{}][{}][{}]:94補摺機斷線！", brws, "        ", "            ");
 			return -2;
 		}

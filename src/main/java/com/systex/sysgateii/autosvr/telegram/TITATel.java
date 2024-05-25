@@ -217,7 +217,7 @@ public class TITATel {
         } else
             ntb = setbV;
         setValue(fieldN, ntb);
-        System.gc();
+      //20240517 Code Correctness: Call to System.gc()  System.gc();
     }
     public void setValueRtoLfill(String fieldN, String setsV, byte fillV) throws Exception {
         setValueRtoLfill(fieldN, setsV.getBytes(), fillV);
@@ -233,7 +233,7 @@ public class TITATel {
         } else
             ntb = setbV;
         setValue(fieldN, ntb);
-        System.gc();
+      //20240517 Code Correctness: Call to System.gc() System.gc();
     }
 
     public void setValue(String fieldN, String setsV) throws Exception {

@@ -1,5 +1,7 @@
 package com.systex.sysgateii.autosvr.comm;
 
+import java.nio.charset.Charset;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,7 @@ public class TxIdleStateHandler extends IdleStateHandler {
 
 				p = new byte[8];
 				System.arraycopy(b, 6, p, 0, p.length);
-				pcode = new String(p);
+				pcode = new String(p, Charset.forName("UTF-5"));
 				log.debug("PCODE=" + pcode);
 
 				String s = DataConvert.bytesToHex(b);

@@ -109,7 +109,7 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 			InetSocketAddress localnodeAddr = null;
 			//20210204 MatsudairaSyuMe
 			final String logStr = String.format("node-->[%s]", node);
-			LOG.debug(logStr);
+			LOG.atDebug().setMessage(logStr).log();//20240517 change for Log Forging(debug)
 			nodePars.init();
 			try {
 				nodePars.CheckAddrT(node, "=", false);

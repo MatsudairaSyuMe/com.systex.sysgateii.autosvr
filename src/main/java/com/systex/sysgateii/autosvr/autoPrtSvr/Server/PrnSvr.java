@@ -161,7 +161,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 //		fasDespacther = setfassvr;
 		log.info("[0000]:------Call MaintainLog OK------");
 		//20201115 mark atlog
-		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+		//20240523 Poor Style: Value Never Read RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
 		//20240510 Poor Style: Value Never Read String jvmName = bean.getName();
 		//20240503 mark for no use String pid = jvmName.split("@")[0];
 		MDC.put("WSNO", "0000");
@@ -279,7 +279,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 								if(cmd != null && cmd.length > 0)
 									for (String s: cmd) {
 										s = s.trim();
-										log.debug("current row cmd [{}]", s);
+										log.atDebug().setMessage("current row cmd [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 										if (s.length() > 0 && s.indexOf(',') > -1) {
 											String[] cmdary = s.split(",");
 											//20201006
@@ -294,9 +294,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 												boolean createNode = false;
 												boolean restartAlreadyStop = false;
 												if (DateTimeUtil.MinDurationToCurrentTime(3,cmdary[3])) {
-													log.debug("brws=[{}] keep in cmd table longer then 3 minutes will be cleared",cmdary[0]);
+													log.atDebug().setMessage("brws=[{}] keep in cmd table longer then 3 minutes will be cleared").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 													if (cmdary[1].trim().length() > 0) {
-														log.debug("brws=[{}] cmd[{}] not execute will be marked fail in cmdhis",cmdary[0], cmdary[1]);
+														log.atDebug().setMessage("brws=[{}] cmd[{}] not execute will be marked fail in cmdhis").addArgument(cmdary[0]).addArgument( cmdary[1]).log();//20240517 change for Log Forging(debug)
 														/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 														if (cmdhiscon == null)
 															cmdhiscon = new GwDao(PrnSvr.dburl, PrnSvr.dbuser, PrnSvr.dbpass, false);
@@ -338,7 +338,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 												//----
 												for (String ss: cmdary)
 													log.debug("cmd[{}]=[{}]",idx++, ss);
-												String curcmd = cmdary[1].trim().toUpperCase();
+												String curcmd = ""; curcmd = cmdary[1].trim().toUpperCase();//20240523 prevent Redundant Null Check
 												//20201026 for cmdhis
 												if (curcmd != null && curcmd.length() > 0) {
 													/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
@@ -356,7 +356,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 																sts = "2";
 															createNode = false;
 														} else {
-															log.debug("!!! cmd object node=[{}] not in nodeList will be created", cmdary[0]);
+															log.atDebug().setMessage("!!! cmd object node=[{}] not in nodeList will be created").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 															createNode = true;
 														}
 													}
@@ -364,14 +364,14 @@ public class PrnSvr implements MessageListener<byte[]> {
 													//20201028 check sno if command already insert to cmdhis
 													String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
 //													log.debug("chksno=[{}]",chksno);
-													if (chksno != null && chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {
+													if (chksno != null && chksno.length > 0 && chksno[0] != null && Integer.parseInt(chksno[0].trim()) > -1) {//20240523 prevent Redundant Null Check
 														for (String sss: chksno)
-															log.debug("sno[{}] already exist",sss);
+															log.atDebug().setMessage("sno[{}] already exist").addArgument(sss).log();//20240517 change for Log Forging(debug)
 														//20210413 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison change equals to 
 														if (curcmd.equalsIgnoreCase("RESTART")) { // current command is RESTART check cmdhis if already done STOP
 															for (int i = 0; i < chksno.length; i++) {
-																String chkcmdresult = cmdhiscon.SELONEFLD(PrnSvr.devcmdhistbname, "CMDRESULT", "SNO", chksno[0], false);
-																log.debug("table sno=[{}] cmdhis cmd is RESTART and cmdresult=[{}]", chksno[i], chkcmdresult);
+																String chkcmdresult = ""; chkcmdresult = cmdhiscon.SELONEFLD(PrnSvr.devcmdhistbname, "CMDRESULT", "SNO", chksno[0], false);//20240523 prevent Redundant Null Check
+																log.atDebug().setMessage("table sno=[{}] cmdhis cmd is RESTART and cmdresult=[{}]").addArgument(chksno[i]).addArgument(chkcmdresult).log();//20240517 change for Log Forging(debug)
 																if (chkcmdresult != null && chkcmdresult.trim().length() > 0 && chkcmdresult.equals("STOP")) {
 																	if (!restartAlreadyStop) {
 																		sno = null; // prepared to start new node
@@ -381,7 +381,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 																		sno = new String[1];
 																		sno[0] = chksno[i];																																				
 																	}
-																	log.debug("table son=[{}] chksno=[{}] cmdhis cmd is RESTART and cmdresult=[{}] restartAlreadyStop=[{}]", sno, chksno[i], chkcmdresult, restartAlreadyStop);
+																	log.atDebug().setMessage("table son=[{}] chksno=[{}] cmdhis cmd is RESTART and cmdresult=[{}] restartAlreadyStop=[{}]").addArgument(sno).addArgument(chksno[i]).addArgument(chkcmdresult).addArgument(restartAlreadyStop).log();//20240517 change for Log Forging(debug)
 																} else {
 																// current command is RESTART and waiting to STOP or already set ACTIVE waiting to finish
 																	sno = new String[1];
@@ -406,7 +406,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 													//----
 												}
 												//----
-												log.debug("table sno=[{}] createNode=[{}] restartAlreadyStop=[{}]", (sno == null ? 0: sno[0]), createNode, restartAlreadyStop);
+												log.atDebug().setMessage("table sno=[{}] createNode=[{}] restartAlreadyStop=[{}]").addArgument((sno == null ? 0: sno[0])).addArgument(createNode).addArgument(restartAlreadyStop).log();//20240517 change for Log Forging(debug)
 												//20210413 MatsudairaSyuMe prevent Null Dereference
 												if (sno == null) {
 													sno = new String[1];
@@ -525,11 +525,11 @@ public class PrnSvr implements MessageListener<byte[]> {
 													}
 													break;
 												default:
-													log.debug("!!! cmd object node=[{}] cmd [{}] ignore", cmdary[0], cmdary[1]);
+													log.atDebug().setMessage("!!! cmd object node=[{}] cmd [{}] ignore").addArgument(cmdary[0]).addArgument(cmdary[1]).log();//20240517 change for Log Forging(debug)
 													break;
 												}
 											} else
-												log.debug("!!! cmd object node=[{}] format error !!!", cmdary[0]);													
+												log.atDebug().setMessage("!!! cmd object node=[{}] format error !!!").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)													
 										} else {
 											// 20210714 MatsudairaSyuMe Log Forging
 											//final String chks = StrUtil.convertValidLog(s);
@@ -590,11 +590,11 @@ public class PrnSvr implements MessageListener<byte[]> {
 		log.debug("start current threadMap size=[{}]", getMe().threadMap.size());
 		log.debug("start current nodeList size=[{}]", getMe().nodeList.size());
 		if (!getMe().nodeList.containsKey(nid))
-			log.debug("!!! cmd object node=[{}] not found in nodeList !!!", nid);
+			log.atDebug().setMessage("!!! cmd object node=[{}] not found in nodeList !!!").addArgument(nid).log();//20240517 change for Log Forging(debug)
 		else {
 			synchronized(getMe())
 			{
-				log.debug("!!! start to remove node=[{}] !!!", nid);
+				log.atDebug().setMessage("!!! start to remove node=[{}] !!!").addArgument(nid).log();//20240517 change for Log Forging(debug)
 				Thread t = getMe().threadMap.get(nid);
 				try {
 					t.interrupt();
@@ -627,7 +627,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 				log.error("!!! cmd object node already in nodeList please STOP this node before START !!!"); //chknid
 				return ret;
 			} else
-				log.debug("!!! cmd object node=[{}] not in nodeList will be created", nid);
+				log.atDebug().setMessage("!!! cmd object node=[{}] not in nodeList will be created").addArgument(nid).log();//20240517 change for Log Forging(debug)
 		}
 		//20201021 mark
 		log.debug("start current threadMap size=[{}] nodeList size=[{}]", getMe().threadMap.size(), getMe().nodeList.size());
@@ -641,9 +641,9 @@ public class PrnSvr implements MessageListener<byte[]> {
 			log.info("lastcfglist.size() == [{}]", lastcfglist.size());
 			for(int i=0; i < lastcfglist.size(); i++) {
 				ConcurrentHashMap<String, Object> newcfgMap = lastcfglist.get(i);
-				log.debug("check brws cmd [{}] lastcfglist [{}]", nid, newcfgMap.get("brws"));
+				log.atDebug().setMessage("check brws cmd [{}] lastcfglist [{}]").addArgument(nid).addArgument(newcfgMap.get("brws")).log();//20240517 change for Log Forging(debug)
 				if (nid.trim().equals(newcfgMap.get("brws"))) {
-					log.debug("prepare to create node brws [{}]", newcfgMap.get("brws"));
+					log.atDebug().setMessage("prepare to create node brws [{}]").addArgument(newcfgMap.get("brws")).log();//20240517 change for Log Forging(debug)
 					//20210628 use MDP
 //					PrtCli conn = new PrtCli(newcfgMap, fasDespacther, new Timer());
 					//20220905 MatsudairaSyuMe using RouteConnection as dispatcher
@@ -754,7 +754,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 		log.debug("receive timeout is ={} mili-seconds", setResponseTimeout);
 		MDC.put("WSNO", "0000");
 		MDC.put("PID", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		//20240523 Poor Style: Value Never Read SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		//202450510 Poor Style: Value Never Read String byDate = sdf.format(new Date());
 		//20201115
 		//----
@@ -765,7 +765,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 //20230522 MatsudairaSyuMe change the tns path from /biscon/tns to /tns
 			big5funt = new Big5FontImg(File.separator + "tns" + File.separator + "FontTable_low.bin", File.separator + "tns" + File.separator +  "FontData_All.bin");
 			//----
-				p_fun_flag.set(true);
+			p_fun_flag.set(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();

@@ -153,7 +153,7 @@ public class P0080TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 	
 	public void setValueRtoLfill(String fieldN, String setsV, byte fillV) throws Exception {
@@ -171,7 +171,7 @@ public class P0080TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 
 	public void setValue(String fieldN, String setsV) throws Exception {

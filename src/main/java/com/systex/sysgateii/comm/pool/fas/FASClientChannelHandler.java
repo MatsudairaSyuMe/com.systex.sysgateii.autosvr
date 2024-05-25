@@ -299,7 +299,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 							byte[] resultmsg = cnvResultTelegram();
 							//20220221 MatsudairSyuMe drop non-service telegram
 							//	2023017 MatsudairaSyuMe					String checkTRN = new String(trnidbary, StandardCharsets.UTF_8);
-							String checkTRN = new String(trnidbary);
+							String checkTRN = new String(trnidbary, Charset.forName("UTF-8"));
 							if ((trnidbary[0] == (byte)'S') || (trnidbary[0] == (byte)'T'))
 							{
 								log.warn("receive TOTA-MSGID=[{}] non-service telegram drop it !!!", checkTRN);
@@ -331,7 +331,7 @@ public class FASClientChannelHandler extends ChannelInboundHandlerAdapter {
 										sndmsg[1] = (byte) (sndmsg.length % 256);
 										sndmsg[2] = (byte) COMM_STATE.TRANSF.Getid();
 										System.arraycopy(resultmsg, 0, sndmsg, 3, resultmsg.length);
-										log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg));
+										log.debug("send to RouteConnection sndmsg:[{}]", new String(sndmsg, Charset.forName("UTF-8")));
 										//20230703 MatsudairaSyume make sure for write and flush synchronize mode and check direct memory leak 
 										//ot.getSourceHandlerCtx().writeAndFlush(Unpooled.wrappedBuffer(sndmsg));
 										ByteBuf intbuf = Unpooled.wrappedBuffer(sndmsg);

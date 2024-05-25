@@ -269,7 +269,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private byte[] reReadcusid = null;
 	//----
 	//20210627 mark
-	private FASSvr dispatcher;
+	//20240520 Dead Code: Unused Field private FASSvr dispatcher;
 	private boolean alreadySendTelegram = false;
 	//20210122
 	private boolean PRT_CLI_TITA_TOTA_START = false;
@@ -309,7 +309,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//----
 	List<ActorStatusListener> actorStatusListeners = new ArrayList<ActorStatusListener>();
 
-	private long startTime;
+	private long startTime, now;//20240520 for Dead Code: Unused Field
 	//20200722
 	private long stateStartTime;
 	//----
@@ -965,11 +965,11 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					//20220429 MatsuairaSyuMe mark up log
 					if (startIdleMode == true) {
 						if ((System.currentTimeMillis() - this.lastCheckTime) > (PrnSvr.getChgidleTime() * 1000)) { //20230314 change to use parameter curTime
-							aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary)));
+							aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary, Charset.forName("UTF-8"))));
 							this.lastCheckTime = System.currentTimeMillis();
 						}
 					} else
-						aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary)));
+						aslog.info(String.format("RECV %s[%04d]:%s", this.curSockNm, buf.readableBytes(), new String(asary, Charset.forName("UTF-8"))));
 					//----
 					if (clientMessageBuf.readerIndex() > (clientMessageBuf.capacity() / 2)) {
 						clientMessageBuf.discardReadBytes();
@@ -1257,9 +1257,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		chkdg = (short) (9 - (sum % 9));
 		if (chkdg == (short) cussrc[TXP.ACTNO_LEN - 1] - 48)
 			rtn = true;
-		else {
-			atlog.info("actno[{}] chkdg[{}] error!", new String(cussrc), chkdg);
-		}
+		//else {
+		//	atlog.info("actno[{}] chkdg[{}] error!", new String(cussrc), chkdg);
+		//}
 		return rtn;
 	}
 
@@ -1274,7 +1274,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//----
 	
 	private void setpasname(byte[] cussrc) {
-		String chkcatagory = new String(cussrc, 3, 3);
+		String chkcatagory = new String(cussrc, 3, 3, Charset.forName("UTF-8"));
 		String chkcusid = "";
 		boolean negiative = false;
 		boolean allzero = true;
@@ -1287,7 +1287,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				pasname = "台幣存摺";
 				 log.info("Set pasname to 台幣存摺 for category: {}", chkcatagory);
 				//20230220 MatsudairaSyuMe check pb msr balance if <0000000000000 change to +0000000000000
-				chkcusid = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN);
+				chkcusid = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN, Charset.forName("UTF-8"));
 				negiative = false;
 				allzero = true;
 				i = 0;
@@ -1304,7 +1304,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				if (negiative && allzero) // balance is zero but sign is minus
 					cusid[TXP.ACTNO_LEN + TXP.ACFILLER_LEN + j] = (byte)'0';
-				log.info("WOW !!!! after check pb msr neiactive and all zero [{}] [{}] new cusid[{}] !!!", negiative, allzero, new String(cusid));
+				log.info("WOW !!!! after check pb msr neiactive and all zero [{}] [{}] new cusid[{}] !!!", negiative, allzero, new String(cusid, Charset.forName("UTF-8")));
 				//---- end 20230220
 	        } else {
 	            pasname = "        ";  
@@ -1386,7 +1386,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		//----20230323
 		//20200611
 		if (iEnd == 0)
-			this.account = new String(cussrc, 0, TXP.ACTNO_LEN);
+			this.account = new String(cussrc, 0, TXP.ACTNO_LEN, Charset.forName("UTF-8"));
 		//----
 		if (!chk_Account(cussrc)) {
 			rtn = false;
@@ -1398,14 +1398,14 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			SetSignal(firstOpenConn, !firstOpenConn, "0000000000", "0000000001");
 			return rtn;
 		}
-		log.debug("[{}]", new String(cussrc));
+		log.debug("[{}]", new String(cussrc, Charset.forName("UTF-8")));
 		/*************** check MSR's apno ***************/
 		if (iEnd == 1) {
 			//20200611, 20220914 MatsudairaSyuMe add differential message
-			if (!new String(cussrc, 0, TXP.ACTNO_LEN).equals(this.account)) {
-				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！翻頁後應置入帳號 [{}]", brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN), this.account);
+			if (!new String(cussrc, 0, TXP.ACTNO_LEN, Charset.forName("UTF-8")).equals(this.account)) {
+				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！翻頁後應置入帳號 [{}]", brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN, Charset.forName("UTF-8")), this.account);
 				//20231116
-				InsertAMStatus(brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN), "13存摺帳號錯誤！");
+				InsertAMStatus(brws, pasname, new String(cussrc, 0, TXP.ACTNO_LEN, Charset.forName("UTF-8")), "13存摺帳號錯誤！");
 				//----
 
 				rtn = false;
@@ -1417,19 +1417,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		this.cpage = "";
 		this.cline = "";
 		// 20240412 add TW passbook's category from DB
-    	String[] twCategories = TWCategory.getTwCategories(); log.debug("twCategories={}", twCategories);
+    	String[] twCategories = TWCategory.getTwCategories();log.atDebug().setMessage("twCategories={}").addArgument(twCategories).log();//20240517 change for Log Forging(debug)
         Set<String> categorySet = new HashSet<>(Arrays.asList(twCategories)); 
         if (categorySet.contains(catagory)) {  
-			this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN); // !< 帳號保留 MSR for PB/FC len 4
-			this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
+			this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN, Charset.forName("UTF-8")); // !< 帳號保留 MSR for PB/FC len 4
+			this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN, Charset.forName("UTF-8")); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
 			//20200709 add for atlog
-			String atlogmsrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + 1, TXP.MSRBAL_LEN - 1); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
-			this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
-			this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
+			//20240521 String atlogmsrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + 1, TXP.MSRBAL_LEN - 1, Charset.forName("UTF-8")); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12, PB 13 + 1正負號 
+			this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN, Charset.forName("UTF-8")); // !< 行次 MSR for PB/FC/GL len 2
+			this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN, Charset.forName("UTF-8")); // !< 頁次 MSR for PB/FC/GL len 2
 			this.bkseq = new String(cussrc,
-					TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.BKSEQ_LEN); // !< 領用序號 MSR for PB len 1, FC len 2
+					TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.BKSEQ_LEN, Charset.forName("UTF-8")); // !< 領用序號 MSR for PB len 1, FC len 2
 			// 20200709 change to use atlogmsrbal for atlog
-			atlog.info("台幣存摺 PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, atlogmsrbal, cline, cpage, bkseq);
+			//20240521atlog.info("台幣存摺 PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, atlogmsrbal, cline, cpage, bkseq);
 			iFig = TXP.PBTYPE;
         
 //		switch (catagory) {
@@ -1461,31 +1461,31 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			case "701":
 			case "702":
 			case "703":
-				this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN); // !< 帳號保留 MSR for PB/FC len 4
-				this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
-				this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
+				this.actfiller = new String(cussrc, TXP.ACTNO_LEN, TXP.ACFILLER_LEN, Charset.forName("UTF-8")); // !< 帳號保留 MSR for PB/FC len 4
+				this.msrbal = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN, TXP.MSRBAL_LEN, Charset.forName("UTF-8")); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
+				this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN, TXP.LINE_LEN, Charset.forName("UTF-8")); // !< 行次 MSR for PB/FC/GL len 2
 				this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN,
-						TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
+						TXP.PAGE_LEN, Charset.forName("UTF-8")); // !< 頁次 MSR for PB/FC/GL len 2
 				this.pbver = new String(cussrc,
-						TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.PBVER_LEN); // !< 領用序號 MSR for PB len 1, FC len 2
-				atlog.info("外幣存摺 FC_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, msrbal, cline, cpage, pbver);
+						TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.PBVER_LEN, Charset.forName("UTF-8")); // !< 領用序號 MSR for PB len 1, FC len 2
+				//20240521 atlog.info("外幣存摺 FC_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, actfiller, msrbal, cline, cpage, pbver);
 				iFig = TXP.FCTYPE;
 				break;
 			case "071":
 			case "072":
-				this.msrbal = new String(cussrc, TXP.ACTNO_LEN, TXP.MSRBALGL_LEN); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
-				this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN, TXP.LINE_LEN); // !< 行次 MSR for PB/FC/GL len 2
-				this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN); // !< 頁次 MSR for PB/FC/GL len 2
-				this.no = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.NO_LEN); // !< 存摺號碼 MSR for GL len 9
-				atlog.info("黃金存摺 GL_MSR [{}]/[{}]/[{}]/[{}]/[{}]", account, msrbal, cline, cpage, no);
+				this.msrbal = new String(cussrc, TXP.ACTNO_LEN, TXP.MSRBALGL_LEN, Charset.forName("UTF-8")); // !< 磁條餘額 MSR for PB/FC len 14, GL len 12
+				this.cline = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN, TXP.LINE_LEN, Charset.forName("UTF-8")); // !< 行次 MSR for PB/FC/GL len 2
+				this.cpage = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN, TXP.PAGE_LEN, Charset.forName("UTF-8")); // !< 頁次 MSR for PB/FC/GL len 2
+				this.no = new String(cussrc, TXP.ACTNO_LEN + TXP.MSRBALGL_LEN + TXP.LINE_LEN + TXP.PAGE_LEN, TXP.NO_LEN, Charset.forName("UTF-8")); // !< 存摺號碼 MSR for GL len 9
+				//20240521 atlog.info("黃金存摺 GL_MSR [{}]/[{}]/[{}]/[{}]/[{}]", account, msrbal, cline, cpage, no);
 				iFig = TXP.GLTYPE;
 				break;
 			default:
 				amlog.info("[{}][{}][{}]:13存摺帳號錯誤！[{}](非台幣/外幣/黃金存摺)", brws, pasname, this.account);
-		            	//20231116
-		            	InsertAMStatus(brws, pasname, this.account, "13存摺帳號錯誤！(非台幣/外幣/黃金存摺)");
-		            	//----
-				atlog.info("ERROR！！ PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, "", "", cline, cpage, bkseq);
+		        //20231116
+		        InsertAMStatus(brws, pasname, this.account, "13存摺帳號錯誤！(非台幣/外幣/黃金存摺)");
+		        //----
+				//20240521 atlog.info("ERROR！！ PB_MSR [{}]/[{}]/[{}]/[{}]/[{}]/[{}]", account, "", "", cline, cpage, bkseq);
 				iFig = 0;
 				rtn = false;
 				break;
@@ -1536,7 +1536,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String pr_datalog = ""; //  80
 		String pr_data = ""; //  80
 		//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
-		byte[] crossskipbytes = null;
+		byte[] crossskipbytes = {};//20240520 MatsudairaSyuMe don't set null for Null Dereference
 		//----20240327
 
 		if (this.curState == STARTPROCTLM) {
@@ -1579,7 +1579,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//20210420 MatsudairaSymMe reduse one space
 //				pr_data = " ";
 				pr_data = "";
-				pbpr_date = new String (p0080DataFormat.getTotaTextValueSrc("date", pb_arr.get(this.cur_arr_idx))).trim();
+				pbpr_date = new String (p0080DataFormat.getTotaTextValueSrc("date", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim();
 				if (Integer.parseInt(pbpr_date) > 1000000)
 					pbpr_date = String.format("%9s", Integer.parseInt(pbpr_date));  //20200731 adjust local's Date format
 				else {
@@ -1587,8 +1587,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				pr_data = pr_data + pbpr_date;
 				//處理櫃檯機編號
-				pbpr_wsno = String.format("%5s%2s",new String (p0080DataFormat.getTotaTextValueSrc("trmno", pb_arr.get(this.cur_arr_idx))).trim()
-				,new String (p0080DataFormat.getTotaTextValueSrc("tlrno", pb_arr.get(this.cur_arr_idx))).trim());
+				pbpr_wsno = String.format("%5s%2s",new String (p0080DataFormat.getTotaTextValueSrc("trmno", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()
+				,new String (p0080DataFormat.getTotaTextValueSrc("tlrno", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim());
 				pr_data = pr_data + " " + pbpr_wsno;
 				//處理摘要
 				byte dtype[] = p0080DataFormat.getTotaTextValueSrc("dsptype", pb_arr.get(this.cur_arr_idx));
@@ -1598,7 +1598,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					dsptb = p0080DataFormat.getTotaTextValueSrc("dsptext", pb_arr.get(this.cur_arr_idx));
 					dsptb = FilterBig5(dsptb);
 				} else {
-					String desc = new String(p0080DataFormat.getTotaTextValueSrc("dscpt", pb_arr.get(this.cur_arr_idx))).trim();
+					String desc = new String(p0080DataFormat.getTotaTextValueSrc("dscpt", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim();
 					//20230316 MatsudairaSyuMe read Dscpt from table TB_AUDM
 					byte[] tmpdsp = null;
 					if (jsel2ins == null)
@@ -1693,8 +1693,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				if (crdb[0] == (byte)'0') {
 					//支出
 					String samtbuf = "";
-					samtbuf = new String(p0080DataFormat.getTotaTextValueSrc("stxamt", pb_arr.get(this.cur_arr_idx)));
-					dTxamt = Double.parseDouble(new String(p0080DataFormat.getTotaTextValueSrc("txamt", pb_arr.get(this.cur_arr_idx))).trim()) / 100.0;
+					samtbuf = new String(p0080DataFormat.getTotaTextValueSrc("stxamt", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+					dTxamt = Double.parseDouble(new String(p0080DataFormat.getTotaTextValueSrc("txamt", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) / 100.0;
 					if (samtbuf.equals("-"))
 						dTxamt *= -1.0;
 //					NumberFormat format =  new DecimalFormat("#####,###,##0.00        ");
@@ -1718,8 +1718,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				} else {
 					//收入
 					String samtbuf = "";
-					samtbuf = new String(p0080DataFormat.getTotaTextValueSrc("stxamt", pb_arr.get(this.cur_arr_idx)));
-					dTxamt = Double.parseDouble(new String(p0080DataFormat.getTotaTextValueSrc("txamt", pb_arr.get(this.cur_arr_idx))).trim()) / 100.0;
+					samtbuf = new String(p0080DataFormat.getTotaTextValueSrc("stxamt", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+					dTxamt = Double.parseDouble(new String(p0080DataFormat.getTotaTextValueSrc("txamt", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) / 100.0;
 					if (samtbuf.equals("-"))
 						dTxamt *= -1.0;
 //					NumberFormat format =  new DecimalFormat("#####,###,##0.00   ");
@@ -1756,8 +1756,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				pr_datalog = pr_datalog + String.format("%35s", pbpr_crdblog);
 				//處理結存
 				String sbalbuff = "";
-				sbalbuff = new String(p0080DataFormat.getTotaTextValueSrc("spbbal", pb_arr.get(this.cur_arr_idx)));
-				dTxamt = Double.parseDouble(new String(p0080DataFormat.getTotaTextValueSrc("pbbal", pb_arr.get(this.cur_arr_idx))).trim()) / 100.0;
+				sbalbuff = new String(p0080DataFormat.getTotaTextValueSrc("spbbal", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+				dTxamt = Double.parseDouble(new String(p0080DataFormat.getTotaTextValueSrc("pbbal", pb_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) / 100.0;
 				if (sbalbuff.equals("-"))
 					dTxamt *= -1.0;
 //				NumberFormat format =  new DecimalFormat("*####,###,##0.00");
@@ -1769,13 +1769,13 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				byte[] nl = new byte[2];
 				nl[0] = (byte)0x0d;
 				nl[1] = (byte)0x0a;
-				pr_data = pr_data + " " + pbpr_balance + new String(nl);
+				pr_data = pr_data + " " + pbpr_balance + new String(nl, Charset.forName("UTF-8"));
 				
-				pbpr_crdbT = pbpr_crdbT + " " +  pbpr_balance + new String(nl);
+				pbpr_crdbT = pbpr_crdbT + " " +  pbpr_balance + new String(nl, Charset.forName("UTF-8"));
 				
 				pr_datalog = pr_datalog + " " + pbpr_balance;
 				log.debug("pbpr_date=[{}] pbpr_wsno=[{}] pbpr_dscpt=[{}] pbpr_crdb=[{}] pbpr_balance=[{}] pr_data=[{}] pbpr_crdbT=[{}]", pbpr_date, pbpr_wsno, pbpr_dscpt, pbpr_crdb, pbpr_balance, pr_data, pbpr_crdbT);
-				log.debug("pr_datalog=[{}]", pr_datalog);
+				log.atDebug().setMessage("pr_datalog=[{}]").addArgument(pr_datalog).log();//20240517 change for Log Forging(debug)
 				//20200826
 				// 20210723 MatsudairaSyuMe Log Forging, 20210802
 				//String chkpr_datalog = "";
@@ -1832,7 +1832,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				log.debug("after skip line------------tl+i=[{}] total=[{}] i + 1=[{}] pb_arr.size()=[{}] Integer.parseInt(con)=[{}]", tl+this.cur_arr_idx, total, this.cur_arr_idx + 1, pb_arr.size(), Integer.parseInt(con));   //20200603 test
 				//20200915
-				byte[] skipbytes =	prt.GetSkipLineBuf();
+				byte[] skipbytes = {}; skipbytes = prt.GetSkipLineBuf();//20240523 prevent Redundant Null Check
 				byte[] sndbary = new byte[pr_dataprev.getBytes().length + pbpr_crdbT.getBytes().length];
 				System.arraycopy(pr_dataprev.getBytes(), 0, sndbary, 0, pr_dataprev.getBytes().length);
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
@@ -1968,7 +1968,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String pr_datalog = ""; // 80
 		String pr_data = ""; // 80
 		//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
-		byte[] crossskipbytes = null;
+		byte[] crossskipbytes = {}; //20240520 MatsudairaSyuMe don't set null for Null Dereference
 		//----20240327
 
 		if (this.curState == STARTPROCTLM) {
@@ -2009,19 +2009,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			//----20240327
 				//處理日期格式
 				//20240510 Poor Style: Value Never Read pr_data = "";
-				pbpr_date = String.format("%8s", (Integer.parseInt(new String (q0880DataFormat.getTotaTextValueSrc("date", fc_arr.get(this.cur_arr_idx))).trim()) - 19110000));
+				pbpr_date = String.format("%8s", (Integer.parseInt(new String (q0880DataFormat.getTotaTextValueSrc("date", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) - 19110000));
 				pr_data = pbpr_date;
 				//處理櫃檯機編號
-				pr_data = pr_data + " " + new String(q0880DataFormat.getTotaTextValueSrc("kinbr", fc_arr.get(this.cur_arr_idx)))
-					+ new String(q0880DataFormat.getTotaTextValueSrc("trmseq", fc_arr.get(this.cur_arr_idx)));
+				pr_data = pr_data + " " + new String(q0880DataFormat.getTotaTextValueSrc("kinbr", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"))
+					+ new String(q0880DataFormat.getTotaTextValueSrc("trmseq", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 				byte[] dsptb = q0880DataFormat.getTotaTextValueSrc("dscptx", fc_arr.get(this.cur_arr_idx));
 				String pr_dataprev = pr_data;
 				dsptb = FilterBig5(dsptb);  //摘要
 				pbpr_crdbT = String.format("%16s"," "); // 摘要 template(16 bytes)
 				pr_data = pr_data + String.format("%-16s", new String(dsptb, "BIG5"));
 				//處理幣別
-				pbpr_crdbT = pbpr_crdbT + new String(q0880DataFormat.getTotaTextValueSrc("curcd", fc_arr.get(this.cur_arr_idx)));
-				pr_data = pr_data + new String(q0880DataFormat.getTotaTextValueSrc("curcd", fc_arr.get(this.cur_arr_idx)));
+				pbpr_crdbT = pbpr_crdbT + new String(q0880DataFormat.getTotaTextValueSrc("curcd", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+				pr_data = pr_data + new String(q0880DataFormat.getTotaTextValueSrc("curcd", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 
 				//處理支出收入金額
 				double dTxamt = 0.0;
@@ -2029,8 +2029,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				if (crdb[0] == (byte)'1') {
 					//支出
 					String samtbuf = "";
-					samtbuf = new String(q0880DataFormat.getTotaTextValueSrc("hcode", fc_arr.get(this.cur_arr_idx)));
-					dTxamt = Double.parseDouble(new String(q0880DataFormat.getTotaTextValueSrc("txamt", fc_arr.get(this.cur_arr_idx))).trim()) / 100.0;
+					samtbuf = new String(q0880DataFormat.getTotaTextValueSrc("hcode", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+					dTxamt = Double.parseDouble(new String(q0880DataFormat.getTotaTextValueSrc("txamt", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) / 100.0;
 					if (samtbuf.equals("1"))
 						dTxamt *= -1.0;
 					//20200903 add for convert dTxamt
@@ -2051,8 +2051,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				} else {
 					//收入
 					String samtbuf = "";
-					samtbuf = new String(q0880DataFormat.getTotaTextValueSrc("hcode", fc_arr.get(this.cur_arr_idx)));
-					dTxamt = Double.parseDouble(new String(q0880DataFormat.getTotaTextValueSrc("txamt", fc_arr.get(this.cur_arr_idx))).trim()) / 100.0;
+					samtbuf = new String(q0880DataFormat.getTotaTextValueSrc("hcode", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+					dTxamt = Double.parseDouble(new String(q0880DataFormat.getTotaTextValueSrc("txamt", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) / 100.0;
 					if (samtbuf.equals("1"))
 						dTxamt *= -1.0;
 					//20200903 add for convert dTxamt
@@ -2075,8 +2075,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				pr_datalog = pr_data;
 				//處理結存
-				log.debug("--->q0880text pbbal src [{}]", new String(q0880DataFormat.getTotaTextValueSrc("pbbal", fc_arr.get(this.cur_arr_idx))).trim());
-				dTxamt = Double.parseDouble(new String(q0880DataFormat.getTotaTextValueSrc("pbbal", fc_arr.get(this.cur_arr_idx))).trim()) / 100.0;
+				log.debug("--->q0880text pbbal src [{}]", new String(q0880DataFormat.getTotaTextValueSrc("pbbal", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim());
+				dTxamt = Double.parseDouble(new String(q0880DataFormat.getTotaTextValueSrc("pbbal", fc_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")).trim()) / 100.0;
 				//20200903
 				atlog.info(": FcDataFormat() -- dbal=[{}]",dTxamt);
 				//----
@@ -2089,9 +2089,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				byte[] nl = new byte[2];
 				nl[0] = (byte)0x0d;
 				nl[1] = (byte)0x0a;
-				pr_data = pr_data + pbpr_balance + new String(nl);
+				pr_data = pr_data + pbpr_balance + new String(nl, Charset.forName("UTF-8"));
 				
-				pbpr_crdbT = pbpr_crdbT + pbpr_balance + new String(nl);
+				pbpr_crdbT = pbpr_crdbT + pbpr_balance + new String(nl, Charset.forName("UTF-8"));
 			
 				pr_datalog = pr_datalog + pbpr_balance;
 				log.debug("pbpr_date=[{}] pbpr_wsno=[{}] pbpr_dscpt=[{}] pbpr_crdb=[{}] pbpr_balance=[{}] pr_data=[{}] pbpr_crdbT=[{}]", pbpr_date, pbpr_wsno, pbpr_dscpt, pbpr_crdb, pbpr_balance, pr_data, pbpr_crdbT);
@@ -2142,7 +2142,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				log.debug("after skip line------------tl+i=[{}] total=[{}] i+1=[{}] fc_arr.size()=[{}]", tl+this.cur_arr_idx, total, this.cur_arr_idx+1, fc_arr.size());   //20200603 test
 				//20200915
-				byte[] skipbytes =	prt.GetSkipLineBuf();
+				byte[] skipbytes = {}; skipbytes = prt.GetSkipLineBuf();//20240534 prevent Redundant Null Check
 				byte[] sndbary = new byte[pr_dataprev.getBytes().length + pbpr_crdbT.getBytes().length];
 				System.arraycopy(pr_dataprev.getBytes(), 0, sndbary, 0, pr_dataprev.getBytes().length);
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
@@ -2278,7 +2278,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		String pr_datalog = ""; // 80
 		String pr_data = ""; // 列印資料 80
 		//20240327 MatsidairaSyuMe skip line for print cross 12 to 13 line 
-		byte[] crossskipbytes = null;
+		byte[] crossskipbytes = {};//20240520 MatsudairaSyuMe don't set null for Null Dereference
 		//----20240327
 		//20200904
 		atlog.info(": GlDataFormat() -- m_gArr.Count=[{}]", gl_arr.size());
@@ -2326,12 +2326,12 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//20210127 MatsudairaSyume add back 1 space
 				pr_data = " ";
 				//----
-				pbpr_date = pr_data + new String(p0880DataFormat.getTotaTextValueSrc("txday", gl_arr.get(this.cur_arr_idx)));
+				pbpr_date = pr_data + new String(p0880DataFormat.getTotaTextValueSrc("txday", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 				pr_data = pr_data + pbpr_date;
 
 				//空格(2)+櫃台機編號
-				pr_data = pr_data + " " + new String(p0880DataFormat.getTotaTextValueSrc("kinbr", gl_arr.get(this.cur_arr_idx)))
-					+ new String(p0880DataFormat.getTotaTextValueSrc("trmseq", gl_arr.get(this.cur_arr_idx)));
+				pr_data = pr_data + " " + new String(p0880DataFormat.getTotaTextValueSrc("kinbr", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"))
+					+ new String(p0880DataFormat.getTotaTextValueSrc("trmseq", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 				byte[] dsptb = p0880DataFormat.getTotaTextValueSrc("dscptx", gl_arr.get(this.cur_arr_idx));
 				String pr_dataprev = pr_data;
 				dsptb = FilterBig5(dsptb);
@@ -2344,8 +2344,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				//空格(1)+幣別(NT/US)(2)+單價(7)
 				//單價(4.2)
 				//20210127 MatshdairaSyume cut back to 1 space
-				pbpr_crdbT = pbpr_crdbT + " " + new String(p0880DataFormat.getTotaTextValueSrc("curcd", gl_arr.get(this.cur_arr_idx)));
-				pr_data = pr_data + " " + new String(p0880DataFormat.getTotaTextValueSrc("curcd", gl_arr.get(this.cur_arr_idx)));
+				pbpr_crdbT = pbpr_crdbT + " " + new String(p0880DataFormat.getTotaTextValueSrc("curcd", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
+				pr_data = pr_data + " " + new String(p0880DataFormat.getTotaTextValueSrc("curcd", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 				//----
 
 				//20200731 Matsudaira check for null value!!!!!!
@@ -2359,21 +2359,21 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					}
 					chkidx++;
 				}
-				log.debug("--->p0880text price src [{}] and filled [{}]", new String(pricechk).trim(), filled ? "yes":"no");
+				log.debug("--->p0880text price src [{}] and filled [{}]", new String(pricechk, Charset.forName("UTF-8")).trim(), filled ? "yes":"no");
 //				double price = Double.parseDouble(new String(p0880DataFormat.getTotaTextValueSrc("price", gl_arr.get(this.cur_arr_idx))).trim()) / 100.0;
-				double price = Double.parseDouble(new String(pricechk).trim()) / 100.0;
+				double price = Double.parseDouble(new String(pricechk, Charset.forName("UTF-8")).trim()) / 100.0;
 				//----
 				pbpr_crdbT = pbpr_crdbT + dataUtil.rfmtdbl(price, "ZZZ9.99");
 				pr_data = pr_data + dataUtil.rfmtdbl(price, "ZZZ9.99");
 
 				//處理支出(回售/提領)黃金數
 				
-				String wamtbuff = new String(p0880DataFormat.getTotaTextValueSrc("withsign", gl_arr.get(this.cur_arr_idx)))
-					+ new String(p0880DataFormat.getTotaTextValueSrc("withdraw", gl_arr.get(this.cur_arr_idx)));
+				String wamtbuff = new String(p0880DataFormat.getTotaTextValueSrc("withsign", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"))
+					+ new String(p0880DataFormat.getTotaTextValueSrc("withdraw", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 
 				//處理存入黃金數
-				String damtbuff = new String(p0880DataFormat.getTotaTextValueSrc("deposign", gl_arr.get(this.cur_arr_idx)))
-						+ new String(p0880DataFormat.getTotaTextValueSrc("deposit", gl_arr.get(this.cur_arr_idx)));
+				String damtbuff = new String(p0880DataFormat.getTotaTextValueSrc("deposign", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"))
+						+ new String(p0880DataFormat.getTotaTextValueSrc("deposit", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8"));
 
 				//處理支出收入金額
 				double dTxamt = 0.0;
@@ -2425,28 +2425,28 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					}
 					chkidx++;
 				}
-				log.debug("--->p0880text avebal src [{}] and filled [{}]", new String(avebalchk).trim(), filled ? "yes":"no");
+				log.debug("--->p0880text avebal src [{}] and filled [{}]", new String(avebalchk, Charset.forName("UTF-8")).trim(), filled ? "yes":"no");
 //				dTxamt = Double.parseDouble(new String(p0880DataFormat.getTotaTextValueSrc("avebal", gl_arr.get(this.cur_arr_idx))).trim()) / 100.0;
 				//----
-				dTxamt = Double.parseDouble(new String(avebalchk).trim()) / 100.0;
+				dTxamt = Double.parseDouble(new String(avebalchk, Charset.forName("UTF-8")).trim()) / 100.0;
 				log.debug("--->p0880text avebal float [{}]", dTxamt);
 				pbpr_balance = dataUtil.rfmtdbl(dTxamt, TXP.GRAM2);
 				log.debug("--->p0880text avebal convert=[{}]", pbpr_balance);
 				//20200731 Matsudaira check for null value!!!!!!
 //				tx_area.put("avebal", new String(p0880DataFormat.getTotaTextValueSrc("avebal", gl_arr.get(this.cur_arr_idx))));
-				tx_area.put("avebal", new String(avebalchk));
+				tx_area.put("avebal", new String(avebalchk, Charset.forName("UTF-8")));
 				//----
 				
-				tx_area.put("nbday", new String(p0880DataFormat.getTotaTextValueSrc("txday", gl_arr.get(this.cur_arr_idx))));
-				tx_area.put("nbseq", new String(p0880DataFormat.getTotaTextValueSrc("nbseq", gl_arr.get(this.cur_arr_idx))));
-				tx_area.put("kinbr", new String(p0880DataFormat.getTotaTextValueSrc("kinbr", gl_arr.get(this.cur_arr_idx))));
+				tx_area.put("nbday", new String(p0880DataFormat.getTotaTextValueSrc("txday", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")));
+				tx_area.put("nbseq", new String(p0880DataFormat.getTotaTextValueSrc("nbseq", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")));
+				tx_area.put("kinbr", new String(p0880DataFormat.getTotaTextValueSrc("kinbr", gl_arr.get(this.cur_arr_idx)), Charset.forName("UTF-8")));
 				
 				byte[] nl = new byte[2];
 				nl[0] = (byte)0x0d;
 				nl[1] = (byte)0x0a;
- 			   pr_data = pr_data + " " + pbpr_balance + new String(nl);
+ 			    pr_data = pr_data + " " + pbpr_balance + new String(nl, Charset.forName("UTF-8"));//20240521
 				
-				pbpr_crdbT = pbpr_crdbT + " " +  pbpr_balance + new String(nl);
+				pbpr_crdbT = pbpr_crdbT + " " +  pbpr_balance + new String(nl, Charset.forName("UTF-8"));//20240521
 				
 				pr_datalog = pr_datalog + " " + pbpr_balance;
 				log.debug("pbpr_date=[{}] pbpr_wsno=[{}] pbpr_dscpt=[{}] pbpr_crdb=[{}] pbpr_balance=[{}] pr_data=[{}] pbpr_crdbT=[{}]", pbpr_date, pbpr_wsno, pbpr_dscpt, pbpr_crdb, pbpr_balance, pr_data, pbpr_crdbT);
@@ -2497,7 +2497,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				}
 				log.debug("after skip line------------tl+i=[{}] total=[{}] i+1=[{}] gl_arr.size()=[{}]", tl+this.cur_arr_idx, total, this.cur_arr_idx+1, gl_arr.size());   //20200603 test
 				//20200915
-				byte[] skipbytes =	prt.GetSkipLineBuf();
+				byte[] skipbytes = {}; skipbytes = prt.GetSkipLineBuf();//20240523 prevent Redundant Null Check
 				byte[] sndbary = new byte[pr_dataprev.getBytes().length + pbpr_crdbT.getBytes().length];
 				System.arraycopy(pr_dataprev.getBytes(), 0, sndbary, 0, pr_dataprev.getBytes().length);
 				System.arraycopy(pbpr_crdbT.getBytes(), 0, sndbary, pr_dataprev.getBytes().length, pbpr_crdbT.getBytes().length);
@@ -2621,7 +2621,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		Arrays.fill(wline, (byte) 0x0);
 		Arrays.fill(wpage, (byte) 0x0);
 		byte c_Msr[] = tx_area.get("c_Msr").getBytes();
-		log.debug("{} {} {} WMSRFormat before to write flag={} PBTYPE {} MSR [{}]", brws, catagory, account, start, this.iFig, new String(c_Msr));
+		log.debug("{} {} {} WMSRFormat before to write flag={} PBTYPE {} MSR [{}]", brws, catagory, account, start, this.iFig, new String(c_Msr, Charset.forName("UTF-8")));
 		if (start) {
 			if (this.iFig == TXP.PBTYPE) {
 				if (p0080DataFormat == null)
@@ -2644,8 +2644,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				System.arraycopy(c_Msr, 26, wpage, 0, 2);
 				iCnt = gl_arr.size();
 			}
-			l = Integer.parseInt(new String(wline));
-			p = Integer.parseInt(new String(wpage));
+			l = Integer.parseInt(new String(wline, Charset.forName("UTF-8")));
+			p = Integer.parseInt(new String(wpage, Charset.forName("UTF-8")));//20240521
 			if ((l - 1) + iCnt >= 24) {  //20210401 if ((l - 1) + iCnt == 24) change to if ((l - 1) + iCnt >= 24)
 				if ((l - 1) + iCnt > 24) {
 					log.debug("WMSRFormat (l - 1) + iCnt > 24 before {}", iCnt);
@@ -2673,10 +2673,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							13);
 					System.arraycopy(String.format("%02d", l).getBytes(), 0, c_Msr, 30, 2);
 					System.arraycopy(String.format("%02d", p).getBytes(), 0, c_Msr, 32, 2);
-log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new String(c_Msr));
+					log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new String(c_Msr, Charset.forName("UTF-8")));
 
 					System.arraycopy("0".getBytes(), 0, c_Msr, 16, 1);
-					if (new String(spbbal).equals("-")) {
+					if (new String(spbbal, Charset.forName("UTF-8")).equals("-")) {
 						for (int tidx = 17; tidx < (TXP.ACTNO_LEN + TXP.ACFILLER_LEN + TXP.MSRBAL_LEN); tidx++) {
 							if (c_Msr[tidx] != (byte)'0') {
 								c_Msr[tidx - 1] = (byte)'-';
@@ -2685,7 +2685,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						}
 					}
 					//---- 20221102
-					tx_area.put("c_Msr", new String(c_Msr));
+					tx_area.put("c_Msr", new String(c_Msr, Charset.forName("UTF-8")));
 				}
 				rtn = prt.MS_Write(start, brws, account, c_Msr);//20200712 add for test
 				if (p > TXP.PB_MAX_PAGE) this.changeLightOnLastPage = true; //20220927
@@ -2699,7 +2699,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							13);
 					System.arraycopy(String.format("%02d", l).getBytes(), 0, c_Msr, 30, 2);
 					System.arraycopy(String.format("%02d", p).getBytes(), 0, c_Msr, 32, 2);
-					tx_area.put("c_Msr", new String(c_Msr));
+					tx_area.put("c_Msr", new String(c_Msr, Charset.forName("UTF-8")));
 					//20200528
 					tx_area.put("pbcol", String.format("%02d", l));
 					tx_area.put("pbpage", String.format("%02d", p));
@@ -2716,7 +2716,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							9);
 					System.arraycopy(String.format("%02d", l).getBytes(), 0, c_Msr, 24, 2);
 					System.arraycopy(String.format("%02d", p).getBytes(), 0, c_Msr, 26, 2);
-					tx_area.put("c_Msr", new String(c_Msr));
+					tx_area.put("c_Msr", new String(c_Msr, Charset.forName("UTF-8")));
 					//20200528
 					tx_area.put("lineno", String.format("%02d", l));
 					tx_area.put("pageno", String.format("%02d", p));
@@ -2738,7 +2738,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 
 		return rtn;
 	}
-
+/*
 	private boolean WMSRFormat(boolean start, int setPage)
 	{
 		boolean rtn = false;
@@ -2748,7 +2748,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		Arrays.fill(wline, (byte) 0x0);
 		Arrays.fill(wpage, (byte) 0x0);
 		byte c_Msr[] = tx_area.get("c_Msr").getBytes();
-		log.debug("{} {} {} WMSRFormat before to write flag={} PBTYPE {} MSR [{}] change page [{}]", brws, catagory, account, start, this.iFig, new String(c_Msr), p);
+		log.debug("{} {} {} WMSRFormat before to write flag={} PBTYPE {} MSR [{}] change page [{}]", brws, catagory, account, start, this.iFig, new String(c_Msr, Charset.forName("UTF-8")), p);
 		p = setPage;
 		try {
 			switch (this.iFig) {
@@ -2778,7 +2778,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		}
 
 		return rtn;
-	}
+	}*/
 	/*********************************************************
 	*	FilterBig5() : filter the chinese control code       *
 	*   function     : 去除中文控制碼                        *
@@ -2820,7 +2820,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 	*   parameter 2  : dsptext length                        *
 	*   return_code  : dsptext                               *
 	*********************************************************/
-
+/*
 	private byte[] FilterChi(byte[] dsptext, int dsplen) {
 		int pt = 0;
 
@@ -2836,7 +2836,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		if (pt > dsplen)
 			dsptext[dsplen - 1] = 0x20;
 		return dsptext;
-	}
+	}*/
 //20200902 	private byte[] DataDEL(int iVal, int ifig, String mbal) {
 	private byte[] DataDEL(int iVal, int currentifig, String mbal) {
 		byte[] rtn = null;
@@ -2911,7 +2911,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 //					String scnt = String.format("%04d", pb_arr.size());
 					p85text.setValue("delcnt", String.format("%04d", pb_arr.size()));
 //					p85text.setValue("fnbdtl", pb_arr.get(pb_arr.size() - 1)); 20200523 change to pb_arr = 0
-					log.debug("3 pb_arr {} [{}]", 0, new String(pb_arr.get(0)));
+					log.debug("3 pb_arr {} [{}]", 0, charcnv.BIG5bytesUTF8str(pb_arr.get(0)));//20240520 Code Correctness: Byte Array to String Conversion
 					//20200523
 					set_str = set_str + tx_area.get("npbbal") + String.format("%04d", pb_arr.size());
 					byte[] set_arr = new byte[p85text.getP85TitatextLen() - set_str.getBytes().length];
@@ -2922,7 +2922,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					//----
 					rtn = tital.mkTITAmsg(tital.getTitalabel(), p85text.getP85Titatext());
 //					log.debug("P85 tita len={} [{}] len={} [{}]len={} [{}]", rtn.length, new String(rtn), tital.getTitalabel().length, new String(tital.getTitalabel()),p85text.getP85Titatext().length, new String(p85text.getP85Titatext()));
-					log.debug("P85 tita len={} [{}]", rtn.length, new String(rtn));
+					log.debug("P85 tita len={} [{}]", rtn.length, charcnv.BIG5bytesUTF8str(rtn));//20240520 Code Correctness: Byte Array to String Conversion
 				}
 				//***** Compose Q98 TITA *****//
 				//20200902 change to currentifig
@@ -2941,7 +2941,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					tital.setValue("nbcd", "3");
 					//20200528
 //					log.debug("fc_arr size() - 1={} [{}]", fc_arr.size() - 1, new String(fc_arr.get(fc_arr.size() - 1)));
-					log.debug("fc_arr {} [{}]", 0, new String(fc_arr.get(0)));
+					log.debug("fc_arr {} [{}]", 0, charcnv.BIG5bytesUTF8str(fc_arr.get(0)));
 					String sm = this.msrbal.substring(1);
 					//20200827
 //					atlog.info("fArr[0]=[{}]",sm);
@@ -2966,7 +2966,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					q98text.setValue("pbpage", tx_area.get("pbpage"));
 
 					rtn = tital.mkTITAmsg(tital.getTitalabel(), q98text.getQ98Titatext());
-					log.debug("Q98 tita [{}]", new String(rtn));
+					log.debug("Q98 tita [{}]", new String(rtn, Charset.forName("UTF-8")));
 				}
 				//***** Compose Pxx TITA *****//
 				//20200902 change to currentifig
@@ -2986,8 +2986,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					else
 						tital.setValue("crdb", "0");
 					tital.setValue("nbcd", "8");
-					log.debug("gl_arr size() - 1={} [{}]", gl_arr.size() - 1, new String(gl_arr.get(gl_arr.size() - 1)));
-					log.debug("gl_arr {} [{}]", 0, new String(gl_arr.get(0)));
+					log.debug("gl_arr size() - 1={} [{}]", gl_arr.size() - 1, new String(gl_arr.get(gl_arr.size() - 1), Charset.forName("UTF-8")));
+					log.debug("gl_arr {} [{}]", 0, charcnv.BIG5bytesUTF8str(gl_arr.get(0)));
 					String sm = "0" + this.msrbal;
 					//20200827
 //					atlog.info("gArr[0]=[{}]",sm);
@@ -3015,7 +3015,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					p1885text.setValue("end", "$");
 
 					rtn = tital.mkTITAmsg(tital.getTitalabel(), p1885text.getP1885Titatext());
-					log.debug("P1885 tita [{}]", new String(rtn));
+					log.debug("P1885 tita [{}]", new String(rtn, Charset.forName("UTF-8")));
 				//20200810
 					//20200902 change to currentifig
 				} else if (currentifig == TXP.C0099TYPE) {
@@ -3037,7 +3037,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					tital.setValue("dscpt", "S99  ");
 					String tita_text = "        ";
 					rtn = tital.mkTITAmsg(tital.getTitalabel(), tita_text.getBytes());
-					log.debug("TxFlow : DataINQ() -- rtn=[{}]", new String(rtn));
+					log.debug("TxFlow : DataINQ() -- rtn=[{}]", new String(rtn, Charset.forName("UTF-8")));
 				}
 				//----
 			} else { //iVal == RECVFHOST
@@ -3067,8 +3067,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 //20200902	private byte[] DataINQ(int iVal, int ifig, String dCount, byte[] opttotatext)
 	private byte[] DataINQ(int iVal, int currentifig, String dCount, byte[] opttotatext)
 	{
-		// optotatext only used while iVal == TXP.RECVFHOST mode
-		byte[] rtn = null;
+		// optotatext only used while iVal == TXP.RECVFHOST mode, 20240523 prevent Redundant Null Check
+		byte[] rtn = null;if (iVal != TXP.SENDTHOST && (opttotatext == null || opttotatext.length == 0)) {log.error("0 TXP.RECVFHOST--> opttotatext == null or opttotatext.length == 0");return new byte[0];}
 		P0080TEXT p0080text = null;
 		Q0880TEXT q0880text = null;
 		P0880TEXT p0880text = null;
@@ -3220,7 +3220,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					tx_area.put("lineno", this.cline);
 					tx_area.put("pageno", this.cpage);
 					rtn = tital.mkTITAmsg(tital.getTitalabel(), p0880text.getP0880Titatext());
-					log.debug("TxFlow : DataINQ() -- rtn={}", new String(rtn));
+					log.debug("TxFlow : DataINQ() -- rtn={}", new String(rtn, Charset.forName("UTF-8")));
 				//20200810
 				} else if (currentifig == TXP.C0099TYPE) {   //20200902 change to currentifig
 //					memcpy(TITA_BASIC.aptype,"C00",sizeof(TITA_BASIC.aptype)+sizeof(TITA_BASIC.apcode));
@@ -3242,7 +3242,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					tital.setValue("dscpt", "S99  ");
 					String tita_text = "        ";
 					rtn = tital.mkTITAmsg(tital.getTitalabel(), tita_text.getBytes());
-					log.debug("TxFlow : DataINQ() -- rtn=[{}]", new String(rtn));
+					log.debug("TxFlow : DataINQ() -- rtn=[{}]", new String(rtn, Charset.forName("UTF-8")));
 				}
 				//----
 			} else { //iVal == RECVFHOST
@@ -3251,10 +3251,10 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					p0080text = new P0080TEXT();
 					byte[] texthead = Arrays.copyOfRange(opttotatext, 0, p0080text.getP0080TotaheadtextLen());
 					p0080text.copyTotaHead(texthead);
-					con = new String(p0080text.getHeadValue("nbcnt"));
+					con = new String(p0080text.getHeadValue("nbcnt"), Charset.forName("UTF-8"));
 					log.debug("P0080totahead rtn={} tota.nbcnt={} tota.nbdelcnt={}",
-							new String(texthead), con,
-							new String(p0080text.getHeadValue("nbdelcnt")));
+							new String(texthead, Charset.forName("UTF-8")), con,
+							new String(p0080text.getHeadValue("nbdelcnt"), Charset.forName("UTF-8")));
 					if (Integer.parseInt(con) > this.pbavCnt) {
 						//if (全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數) Eject!
 						SetSignal(firstOpenConn, !firstOpenConn, "0000000000","0000000001");
@@ -3265,11 +3265,11 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
                                 		//----
 						rtn = new byte[0];
 					} else {
-						int nCnt = Integer.parseInt(new String(p0080text.getHeadValue("nbdelcnt")));
+						int nCnt = Integer.parseInt(new String(p0080text.getHeadValue("nbdelcnt"), Charset.forName("UTF-8")));
 						int iCnt = Integer.parseInt(dCount);
 						atlog.info("iCnt=[{}] nCnt=[{}]", iCnt, nCnt);
 						//20200523
-						tx_area.put("bkseq", new String(p0080text.getHeadValue("totabkseq")));
+						tx_area.put("bkseq", new String(p0080text.getHeadValue("totabkseq"), Charset.forName("UTF-8")));
 						//----
 						if (opttotatext.length > texthead.length) {
 							int j = 0;
@@ -3282,12 +3282,12 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 								p0080text.copyTotaText(text, j);
 								byte[] plus = {'+'};
 								for (int i = 0; i < j; i++) {
-									double dTxamt = Double.parseDouble(new String(p0080text.getTotaTextValue("txamt", i))) / 100.0;
+									double dTxamt = Double.parseDouble(new String(p0080text.getTotaTextValue("txamt", i), Charset.forName("UTF-8"))) / 100.0;
 									if (dTxamt == 0)
 										p0080text.setTotaTextValue("stxamt", plus, i);
-									atlog.info("m_pArr[{}]=[{}]", i, new String(p0080text.getTotaTexOc(i)));
-									log.info("i = [{}] txamt={} dTxamt={} stxamt={} text=[{}]", i, new String(p0080text.getTotaTextValue("txamt", i)), dTxamt, new String(p0080text.getTotaTextValue("stxamt", i)), new String(p0080text.getTotaTexOc(i)));
-															}
+									//20240521 mark atlog.info("m_pArr[{}]=[{}]", i, new String(p0080text.getTotaTexOc(i)));
+									log.info("i = [{}] txamt={} dTxamt={} stxamt={} text=[{}]", i, charcnv.BIG5bytesUTF8str(p0080text.getTotaTextValue("txamt", i)), dTxamt, charcnv.BIG5bytesUTF8str(p0080text.getTotaTextValue("stxamt", i)), charcnv.BIG5bytesUTF8str(p0080text.getTotaTexOc(i)));
+								}//----20240521 Code Correctness: Byte Array to String Conversion
 								this.pb_arr.addAll(p0080text.getTotaTextLists());
 								rtn = text;
 								log.debug("{} {} {} :TxFlow : () -- pb_arr.size={}", brws, catagory, account, pb_arr.size());
@@ -3296,8 +3296,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 								log.debug("{} {} {} :TxFlow : after () -- dCount=[{}]", brws, catagory, account, this.dCount);
 								//Print Data
 								// 20200523
-								tx_area.put("snpbbal", new String(p0080text.getTotaTextValue("spbbal", nCnt - 1)));
-								tx_area.put("npbbal", new String(p0080text.getTotaTextValue("pbbal", nCnt - 1)));
+								tx_area.put("snpbbal", new String(p0080text.getTotaTextValue("spbbal", nCnt - 1), Charset.forName("UTF-8")));
+								tx_area.put("npbbal", new String(p0080text.getTotaTextValue("pbbal", nCnt - 1), Charset.forName("UTF-8")));
 								log.debug("{} {} {} :TxFlow : () -- bkseq=[{}] snbbal=[{}] nbbal=[{}]", brws, catagory, account,
 										tx_area.get("bkseq"), tx_area.get("snpbbal"), tx_area.get("npbbal"));
 								// -----
@@ -3311,9 +3311,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					q0880text = new Q0880TEXT();
 					byte[] texthead = Arrays.copyOfRange(opttotatext, 0, q0880text.getQ0880TotaheadtextLen());
 					q0880text.copyTotaHead(texthead);
-					con = new String(q0880text.getHeadValue("nbcnt"));
+					con = new String(q0880text.getHeadValue("nbcnt"), Charset.forName("UTF-8"));
 					log.debug("Q0880totahead rtn={} tota.nbcnt={}",
-							new String(texthead), con);
+							new String(texthead, Charset.forName("UTF-8")), con);
 					if (Integer.parseInt(con) > this.pbavCnt) {
 						//if (全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數) Eject!
 						SetSignal(firstOpenConn, !firstOpenConn, "0000000000","0000000001");
@@ -3325,7 +3325,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						rtn = new byte[0];
 					} else {
 						totCnt = Integer.parseInt(con);
-						atlog.info("begin=[{}] totCnt=[{}]", begin,	totCnt);
+						//atlog.info("begin=[{}] totCnt=[{}]", begin,	totCnt);
 						if (opttotatext.length > texthead.length) {
 							int j = 0;
 							byte[] text = Arrays.copyOfRange(opttotatext, q0880text.getQ0880TotaheadtextLen(),
@@ -3356,18 +3356,18 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 									for (i = 0; i < dataCnt; i++) {
 										// 20080923 , txday[0] == '0'
 										if (q0880text.getTotaTextValue("totatxday", i) == null
-												|| new String(q0880text.getTotaTextValue("totatxday", i)).trim()
+												|| new String(q0880text.getTotaTextValue("totatxday", i), Charset.forName("UTF-8")).trim()
 														.length() == 0
 												|| Integer.parseInt(
-														new String(q0880text.getTotaTextValue("totatxday", i))) == 0)
+														new String(q0880text.getTotaTextValue("totatxday", i), Charset.forName("UTF-8"))) == 0)
 											break;
 										this.fc_arr.add(q0880text.getTotaTexOc(i));
 										//20200903 convert to utf8 charcnv.BIG5bytesUTF8str
 //										atlog.info("m_fArr[{}]=[{}]", begin + i, new String(q0880text.getTotaTexOc(i)));
-										atlog.info("m_fArr[{}]=[{}]", begin + i, charcnv.BIG5bytesUTF8str(q0880text.getTotaTexOc(i)));
+										//atlog.info("m_fArr[{}]=[{}]", begin + i, charcnv.BIG5bytesUTF8str(q0880text.getTotaTexOc(i)));
 										//----
-										//20200523
-										log.info("fc_arr [{}]=[{}]", begin + i, new String(q0880text.getTotaTexOc(i)));
+										//20200523, 20240521 
+										log.info("fc_arr [{}]=[{}]", begin + i, charcnv.BIG5bytesUTF8str(q0880text.getTotaTexOc(i)));
 										//----
 									}
 									if (i == 0) {
@@ -3376,10 +3376,10 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 										log.info("i == 0");
 										//----
 									} else {
-										tx_area.put("txday", new String(q0880text.getTotaTextValue("totatxday", i - 1)));
-										tx_area.put("txseq", new String(q0880text.getTotaTextValue("totatxseq", i - 1)));
-										tx_area.put("pbbal", new String(q0880text.getTotaTextValue("pbbal", i - 1)));
-										atlog.info("tx_area->txday=[{}] tx_area->txseq=[{}]",tx_area.get("txday"), tx_area.get("txseq"));
+										tx_area.put("txday", new String(q0880text.getTotaTextValue("totatxday", i - 1), Charset.forName("UTF-8")));
+										tx_area.put("txseq", new String(q0880text.getTotaTextValue("totatxseq", i - 1), Charset.forName("UTF-8")));
+										tx_area.put("pbbal", new String(q0880text.getTotaTextValue("pbbal", i - 1), Charset.forName("UTF-8")));
+										//atlog.info("tx_area->txday=[{}] tx_area->txseq=[{}]",tx_area.get("txday"), tx_area.get("txseq"));
 										rtn = text;
 										log.debug("{} {} {} :TxFlow : () -- fc_arr.size={}", brws, catagory, account,
 												fc_arr.size());
@@ -3399,21 +3399,21 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					p0880text = new P0880TEXT();
 					byte[] texthead = Arrays.copyOfRange(opttotatext, 0, p0880text.getP0880TotaheadtextLen());
 					p0880text.copyTotaHead(texthead);
-					con = new String(p0880text.getHeadValue("nbcnt"));
+					con = new String(p0880text.getHeadValue("nbcnt"), Charset.forName("UTF-8"));
 					log.debug("P0880totahead rtn={} tota.nbcnt={}",
-							new String(texthead), con);
+							new String(texthead, Charset.forName("UTF-8")), con);
 					if (Integer.parseInt(con) > this.pbavCnt) {
 						//if (全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數) Eject!
 						SetSignal(firstOpenConn, !firstOpenConn, "0000000000","0000000001");
 						Sleep(1000);
 						amlog.info("[{}][{}][{}]:54全部未登摺之資料筆數[{}] > 存摺總剩餘可列印之資料筆數[{}]！", brws, pasname, this.account, con, this.pbavCnt);
-                                		//20231116
-                                		InsertAMStatus(brws, pasname, this.account, "54全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數");
-                                		//----
+                        //20231116
+                        InsertAMStatus(brws, pasname, this.account, "54全部未登摺之資料筆數 > 存摺總剩餘可列印之資料筆數");
+                        //----
 						rtn = new byte[0];
 					} else {
 						totCnt = Integer.parseInt(con);
-						atlog.info("begin=[{}] totCnt=[{}]",begin,totCnt);
+						//atlog.info("begin=[{}] totCnt=[{}]",begin,totCnt);
 						if (opttotatext.length > texthead.length) {
 							int j = 0;
 							byte[] text = Arrays.copyOfRange(opttotatext, p0880text.getP0880TotaheadtextLen(),
@@ -3445,17 +3445,17 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 									for (i = 0; i < dataCnt; i++) {
 										// 20080923 , txday[0] == '0'
 										if (p0880text.getTotaTextValue("txday", i) == null
-												|| new String(p0880text.getTotaTextValue("txday", i)).trim()
+												|| new String(p0880text.getTotaTextValue("txday", i), Charset.forName("UTF-8")).trim()
 														.length() == 0
 												|| Integer.parseInt(
-														new String(p0880text.getTotaTextValue("txday", i))) == 0)
+														new String(p0880text.getTotaTextValue("txday", i), Charset.forName("UTF-8"))) == 0)
 											break;
 										this.gl_arr.add(p0880text.getTotaTexOc(i));
 										//20200903 convert to utf8 charcnv.BIG5bytesUTF8str
 //										atlog.info("m_gArr[{}]=[{}]",begin + i, new String(p0880text.getTotaTexOc(i)));
 										atlog.info("m_gArr[{}]=[{}]",begin + i, charcnv.BIG5bytesUTF8str(p0880text.getTotaTexOc(i)));
 										//20200523
-										log.info("gl_arr [{}]=[{}]",begin + i, new String(p0880text.getTotaTexOc(i)));
+										log.info("gl_arr [{}]=[{}]",begin + i, new String(p0880text.getTotaTexOc(i), Charset.forName("UTF-8")));
 										//----
 									}
 									if (i == 0) {
@@ -3464,9 +3464,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 										log.info("i == 0");
 										//----
 									} else {
-										tx_area.put("txday", new String(p0880text.getTotaTextValue("txday", i - 1)));
-										tx_area.put("nbseq", new String(p0880text.getTotaTextValue("nbseq", i - 1)));
-										tx_area.put("avebal", new String(p0880text.getTotaTextValue("avebal", i - 1)));
+										tx_area.put("txday", new String(p0880text.getTotaTextValue("txday", i - 1), Charset.forName("UTF-8")));
+										tx_area.put("nbseq", new String(p0880text.getTotaTextValue("nbseq", i - 1), Charset.forName("UTF-8")));
+										tx_area.put("avebal", new String(p0880text.getTotaTextValue("avebal", i - 1), Charset.forName("UTF-8")));
 										log.debug("[{} {} {} : DataINQ() -- tx_area->txday=[{}] tx_area->nbseq=[{}] tx_area->avebal=[{}]",
 												brws, catagory, account, tx_area.get("txday"), tx_area.get("nbseq"), tx_area.get("avebal"));
 										rtn = text;
@@ -4170,8 +4170,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							log.error("ERROR while get total label mtype {}" + e.getMessage());
 						}
 					} else {
-						long now = System.currentTimeMillis();
-						if ((now - startTime) > responseTimeout) {
+						this.now = System.currentTimeMillis();//20240520 Dead Code: Unused Field
+						if ((this.now - this.startTime) > responseTimeout) {
 							//20210112 MatsudairaSyume
 							/* 20210116 MatsudairaSyuMe
 							if (!this.dispatcher.getFASSvr().isCurrConnNull())
@@ -4209,7 +4209,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 							//20230406 MattsudairaSyuMe
 						} else {
 							//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
-							log.warn("WARN!!! not yet received data from host {} dispatcher.isTITA_TOTA_START()={} alreadySendTelegram={}", now - startTime, this.isTITA_TOTA_START(), alreadySendTelegram);
+							log.warn("WARN!!! not yet received data from host {} dispatcher.isTITA_TOTA_START()={} alreadySendTelegram={}", this.now - this.startTime, this.isTITA_TOTA_START(), alreadySendTelegram);
 							//----
 							rtn = 0;
 						}
@@ -4221,8 +4221,8 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			//20230331 MatsudairaSyuMe check timeout
 			//20230406 MatudiraSyuMe mark Up for always check timeout
 			//if (this.curState == RECVTLM && this.Send_Recv_DATAInq == true && this.passSNDANDRCVTLM == true && alreadySendTelegram == false) {
-				long now = System.currentTimeMillis();
-				if ((now - startTime) > responseTimeout) {
+				this.now = System.currentTimeMillis();//20240520 Dead Code: Unused Field
+				if ((this.now - this.startTime) > responseTimeout) {
 					this.curState = EJECTAFTERPAGEERROR;
 					log.error("2 ERROR!!! received data from host timeout {}", responseTimeout);
 					amlog.info("[{}][{}][{}]:05中心存摺補登資料接收電文逾時2 {}", brws, pasname, this.account, responseTimeout);
@@ -4244,7 +4244,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					rtn = -1;
 					break;
 				} else
-					log.debug("2 not yet received data from host Waiting <<{}>>", now - startTime);				
+					log.debug("2 not yet received data from host Waiting <<{}>>", this.now - this.startTime);				
 			//20230406 MatsudairaSyuMe Mark Up for always check timeout }
 			//20230331 MatsudairaSyuMe end
 		} while (this.iCount < iCon);
@@ -5003,9 +5003,9 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 					if ((r == 0 && this.isTITA_TOTA_START() == false && this.alreadySendTelegram == false)
 							|| (this.curState == EJECTAFTERPAGEERROR)) {
 						//----
-						long now = System.currentTimeMillis();
+						this.now = System.currentTimeMillis();//20240520 for Dead Code: Unused Field
 						//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCli
-						if (((now - startTime) > responseTimeout) || (this.curState == EJECTAFTERPAGEERROR)) {
+						if (((this.now - this.startTime) > responseTimeout) || (this.curState == EJECTAFTERPAGEERROR)) {
 						//----
 							//this.curState = EJECTAFTERPAGEERROR;
 							if (this.curState == EJECTAFTERPAGEERROR) {
@@ -5038,7 +5038,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 										brws, catagory, account);
 							}
 						}
-						log.debug("startTime={} new={} (now - startTime) ={}", this.startTime, now, (now - startTime));
+						log.debug("startTime={} new={} (now - startTime) ={}", this.startTime, this.now, (this.now - this.startTime));
 					}
 				}
 			} else {
@@ -5056,16 +5056,16 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 						if ((r == 0 && this.isTITA_TOTA_START() == false && this.alreadySendTelegram == false)
 								|| (this.curState == EJECTAFTERPAGEERROR)) {
 							//----
-							long now = System.currentTimeMillis();
+							this.now = System.currentTimeMillis();//20240520 for Dead Code: Unused Field
 							//20210112 mark by MatsudairaSyuMe TITA_TOTA_START flag checking change to PrtCl
-							if (((now - startTime) > responseTimeout) || (this.curState == EJECTAFTERPAGEERROR)) {
+							if (((this.now - this.startTime) > responseTimeout) || (this.curState == EJECTAFTERPAGEERROR)) {
 							//----
 								this.curState = EJECTAFTERPAGEERROR;
 								//20210108
 								//20210116 MatsudairaSyume this.dispatcher.releaseConn();
 								//----
 								//20220121 MatsudairaSyuMe
-								if ((now - startTime) > responseTimeout) {
+								if ((this.now - this.startTime) > responseTimeout) {
 								    log.error("ERROR!!! received data from host timeout {}", responseTimeout);
 								    amlog.info("[{}][{}][{}]:62存摺刪除補登資料失敗！[{}]接電文逾時", brws, pasname, this.account,
 										responseTimeout);
@@ -5091,7 +5091,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 											brws, catagory, account);
 								}
 							}
-							log.debug("startTime={} new={} (now - startTime) ={}", this.startTime, now, (now - startTime));
+							log.debug("startTime={} new={} (now - startTime) ={}", this.startTime, this.now, (this.now - this.startTime));
 						}
 					}
 				}
@@ -5699,7 +5699,7 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 			//20201115
 //			String tbsdy = jsel2ins.SELONEFLD(PrnSvr.svrtbsdytbname, selfld, PrnSvr.svrtbsdytbmkey, PrnSvr.bkno, true).trim();  20220613
 			String tbsdy = jsel2ins.SELTBSDY_R(PrnSvr.svrtbsdytbname, selfld, PrnSvr.svrtbsdytbmkey, PrnSvr.bkno, false).trim();
-			log.debug("current tbsdy [{}]", tbsdy);
+			log.atDebug().setMessage("current tbsdy [{}]").addArgument(tbsdy).log();//20240517 change for Log Forging(debug)
 			if (tbsdy != null && tbsdy.length() >= 7)
 				this.fepdd = tbsdy.substring(tbsdy.length() - 2).getBytes();
 		} catch (Exception e) {
@@ -5735,11 +5735,11 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
 		case ACTIVE:// 被通知要開啟
 			//20201004
 			if (this.curMode == evt.ACTIVE) {
-				log.debug("current mode already in ACTIVE [{}]",this.curMode);
+				log.atDebug().setMessage("current mode already in ACTIVE [{}]").addArgument(this.curMode).log();//20240517 change for Log Forging(debug)
 				return;
 			}
 			//----
-			log.debug(getId() + ">>> ACTIVE sno=[{}]", sno);
+			log.atDebug().setMessage("{}>>> ACTIVE sno=[{}]").addArgument(getId()).addArgument(sno).log();//20240517 change for Log Forging(debug)
 			this.curMode = evt;
 			//20200909 update cmd table
 			try {
@@ -6059,5 +6059,21 @@ log.debug(" before transfer write new PBTYPE line={} page={} MSR {}", l, p, new 
         }
         return mark;
     }
+    
+    //20240522 MatsudairaSyuMe for Dead Code: Unused Field
+	public long getStartTime() {
+		return this.startTime;
+	}
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+	public long getNow() {
+		return this.now;
+	}
+	public void setNow(long now) {
+		this.now = now;
+	}
+	//----20240522
+
 }
 

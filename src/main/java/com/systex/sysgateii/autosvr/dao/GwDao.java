@@ -72,7 +72,7 @@ public class GwDao {
 		if (fromTblName == null || fromTblName.trim().length() == 0 || field == null || field.trim().length() == 0
 				|| keyname == null || keyname.trim().length() == 0)
 			throw new Exception("given table name or field or keyname error =>" + fromTblName);
-		log.debug(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		log.atDebug().setMessage(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval)).log();//20240517 change for Log Forging(debug)
 		String keyset = "", keyset2 = "";
 		String[] keynameary = keyname.split(",");
 		String[] keyvalueary = selkeyval.split(",");
@@ -97,7 +97,7 @@ public class GwDao {
 
 		//20210122 MatsudairaSyuMe
 		String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
-		log.debug("UPSERT selstr [{}]-->[{}]", selstr, wowstr);
+		log.atDebug().setMessage("UPSERT selstr [{}]-->[{}]").addArgument(selstr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 
 
 		//----
@@ -234,7 +234,7 @@ public class GwDao {
 		if (fromTblName == null || fromTblName.trim().length() == 0 || field == null || field.trim().length() == 0
 				|| keyname == null || keyname.trim().length() == 0)
 			throw new Exception("given table name or field or keyname error =>" + fromTblName);
-		log.debug(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		log.atDebug().setMessage(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval)).log();//20240517 change for Log Forging(debug)
 		
 		String keyset = "";
 		String[] keynameary = keyname.split(",");
@@ -385,7 +385,7 @@ public class GwDao {
 				|| keyname == null || keyname.trim().length() == 0)
 			return rtnVal;
 		try {
-			log.debug("keyname = keyvalue=[{}]",  keyname + "=" + keyvalue);
+			log.atDebug().setMessage("keyname = keyvalue=[{}]").addArgument(keyname + "=" + keyvalue).log();//20240517 change for Log Forging(debug)
 			String keyset = "";
 			String[] keynameary = keyname.split(",");
 			String[] keyvalueary = keyvalue.split(",");
@@ -412,7 +412,7 @@ public class GwDao {
 			String selstr = "SELECT " + fieldn + " FROM " + fromTblName + " where " + keyset;
 			//20210122 MatsudairaSyuMe
 			String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
-			log.debug("SELONEFLD selstr [{}]-->[{}]",selstr, wowstr);
+			log.atDebug().setMessage("SELONEFLD selstr [{}]-->[{}]").addArgument(selstr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 			/*20210505 MatsudairaSyuMe Access Control: Database
 			PreparedStatement stmt = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
 			//----
@@ -454,7 +454,7 @@ public class GwDao {
 			//20240503 MatsudairaMe mark for System Information Leak e.printStackTrace();
 			log.error("error : exception");//20240503 change log message
 		}
-		log.debug("return SELONEFLD=[{}]", rtnVal);
+		log.atDebug().setMessage("return SELONEFLD=[{}]").addArgument(rtnVal).log();//20240517 change for Log Forging(debug)
 		return rtnVal;
 	}
 	//----
@@ -503,7 +503,7 @@ public class GwDao {
 			String selstr = "SELECT " + fieldsn + " FROM " + fromTblName + " where " + keyset;
 			//20210122 MatsudairaSyuMe
 			String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
-			log.debug("SELMFLD selstr [{}]-->[{}]", selstr, wowstr);
+			log.atDebug().setMessage("SELMFLD selstr [{}]-->[{}]").addArgument(selstr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 			/*20210505 MatsudairaSyuMe Access Control: Database
 			PreparedStatement stmt = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
 			//----
@@ -633,13 +633,13 @@ public class GwDao {
 
 	//20210118 MatsudairaSyuMe delete change for vulnerability scanning sql injection defense
 	public String[] INSSELChoiceKey(String fromTblName, String field, String selupdval, String keyname, String selkeyval, boolean usekey, boolean verbose) throws Exception {
-		String[] rtnVal = null;
+		String[] rtnVal = {};//20240523 prevent Redundant Null Check
 		columnNames = new Vector<String>();
 		columnTypes = new Vector<Integer>();
 		if (fromTblName == null || fromTblName.trim().length() == 0 || field == null || field.trim().length() == 0
 				|| keyname == null || keyname.trim().length() == 0)
 			throw new Exception("given table name or field or keyname error =>" + fromTblName);
-		log.debug(String.format("first test Select from table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		log.atDebug().setMessage(String.format("first test Select from table %s... where %s=%s", fromTblName, keyname, selkeyval)).log();//20240517 change for Log Forging(debug)
 		String keyset = "";
 		String selstr = "";
 		String[] keynameary = keyname.split(",");
@@ -666,7 +666,7 @@ public class GwDao {
 		}
 		//20210122 MatsudairaSyuMe
 		String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
-		log.debug("sqlstr=[{}]-->[{}] selupdval value [{}] selkeyval [{}]", selstr, wowstr, selupdval, selkeyval);
+		log.atDebug().setMessage("sqlstr=[{}]-->[{}] selupdval value [{}] selkeyval [{}]").addArgument(selstr).addArgument(wowstr).addArgument(selupdval).addArgument(selkeyval).log();//20240517 change for Log Forging(debug)
 		//----
 
 		String[] valary = selupdval.split(",");
@@ -811,7 +811,7 @@ public class GwDao {
 			} else {
 				java.sql.Statement stmt2 = selconn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT);
 				rs = ((java.sql.Statement) stmt2).executeQuery(Des.decodeValue(Constants.DEFKNOCKING, wowstr1));//20210202 MatsudairaSyuMe
-				log.debug("executeUpdate()");
+				log.atDebug().setMessage("executeUpdate()").log();//20240517 change for Log Forging(debug)
 				int idx = 0;
 				
 				//20210426 MatsudairaSyuMe prevent Null Dereference
@@ -850,7 +850,7 @@ public class GwDao {
 			throws Exception {
 		if (fromTblName == null || fromTblName.trim().length() == 0 || keyname == null || keyname.trim().length() == 0)
 			throw new Exception("given table name or field or keyname error =>" + fromTblName);
-		log.debug(String.format("delete table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		log.atDebug().setMessage(String.format("delete table %s... where %s=%s", fromTblName, keyname, selkeyval)).log();//20240517 change for Log Forging(debug)
 		String[] keynameary = keyname.split(",");
 		String[] keyvalueary = selkeyval.split(",");
 		String[] valary = selkeyval.split(",");
@@ -875,7 +875,7 @@ public class GwDao {
 			deletesql = deletesql + keyname + " = " + selkeyval;
 		//20210122 MatsudairaSyuMe
 		String wowstr = Des.encode(Constants.DEFKNOCKING, deletesql);
-		log.debug("DELETETB deletesql=[{}]-->[{}] ", deletesql, wowstr);
+		log.atDebug().setMessage("DELETETB deletesql=[{}]-->[{}] ").addArgument(deletesql).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 		//----
 
 		for (int i = 0; i < keyvalueary.length; i++) {
@@ -1318,7 +1318,7 @@ public class GwDao {
 		if (fromTblName == null || fromTblName.trim().length() == 0 || field == null || field.trim().length() == 0
 				|| keyname == null || keyname.trim().length() == 0)
 			throw new Exception("given table name or field or keyname error =>" + fromTblName);
-		log.debug(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval));
+		log.atDebug().setMessage(String.format("Select from table %s... where %s=%s", fromTblName, keyname, selkeyval)).log();//20240517 change for Log Forging(debug)
 		String keyset = "";
 		int row = 0;
 		boolean updateMode = false;
@@ -1348,12 +1348,12 @@ public class GwDao {
 						+ keyset;
 			}
 			String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevSelSqlStr);
-			log.debug("UPSERT_R selstr [{}]-->[{}]", this.preparedDevSelSqlStr, wowstr);
+			log.atDebug().setMessage("UPSERT_R selstr [{}]-->[{}]").addArgument(this.preparedDevSelSqlStr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 			//20240503 mark up updval log.debug("UPSERT_R update value [{}]", updval);
 			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevInsSqlStr);
-			log.debug("UPSERT_R insstr [{}]-->[{}]", this.preparedDevInsSqlStr, wowstr);
+			log.atDebug().setMessage("UPSERT_R insstr [{}]-->[{}]").addArgument(this.preparedDevInsSqlStr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevUpdSqlStr);
-			log.debug("UPSERT_R updstr [{}]-->[{}]", this.preparedDevUpdSqlStr, wowstr);
+			log.atDebug().setMessage("UPSERT_R updstr [{}]-->[{}]").addArgument(this.preparedDevUpdSqlStr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 
 			if (initType) {
 				try {
@@ -1438,7 +1438,7 @@ public class GwDao {
 						startidx +=1;
 					}
 					row = this.reusedDevUpdpreparedStatement.executeUpdate();
-					log.debug("record exist using update:{} result=[{}]", this.preparedDevUpdSqlStr, row);
+					log.atDebug().setMessage("record exist using update:{} result=[{}]").addArgument(this.preparedDevUpdSqlStr).addArgument(row).log();//20240517 change for Log Forging(debug)
 					this.reusedDevUpdpreparedStatement.clearParameters();
 				} else {
 					startidx = 1;
@@ -1639,7 +1639,7 @@ public class GwDao {
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error SELTBSDY_R : exception");//20240503 change log message
 		}
-		log.debug("return SELTBSDY_R=[{}]", rtnVal);
+		log.atDebug().setMessage("return SELTBSDY_R=[{}]").addArgument(rtnVal).log();//20240517 change for Log Forging(debug)
 		return rtnVal;
 	}
 	private PreparedStatement reusedDeletepreparedStatement = null;
@@ -1759,7 +1759,7 @@ public class GwDao {
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error : exception");//20240503 change log message
 		}
-		log.debug("return SELONEFLDBary={}", rtnVal);
+		log.atDebug().setMessage("return SELONEFLDBary={}").addArgument(rtnVal).log();//20240517 change for Log Forging(debug)
 		return rtnVal;
 	}
 

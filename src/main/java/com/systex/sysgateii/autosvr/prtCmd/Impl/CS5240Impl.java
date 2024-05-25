@@ -2,6 +2,7 @@ package com.systex.sysgateii.autosvr.prtCmd.Impl;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -351,7 +352,7 @@ public class CS5240Impl implements Printer {
 			return -3;
 		try {
 			pc.sendBytes(buff);
-			atlog.info("[{}]-[{}{}", buff.clone().length,new String(buff, "US-ASCII"), "]");
+			atlog.info("[{}]-[{}{}", buff.clone().length,new String(buff, "UTF-8"), "]");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
@@ -465,7 +466,7 @@ public class CS5240Impl implements Printer {
 				amlog.info("[{}][{}][{}]:95補摺機無回應！", brws, "        ", "            ");
 				this.curChkState = CheckStatus_FINISH;
 				pc.close();
-			} else if (data != null && !new String(data).equals("DIS"))
+			} else if (data != null && !new String(data, Charset.forName("UTF-8")).equals("DIS"))
 				this.curChkState = CheckStatus_FINISH;
 		}
 		return data;
@@ -485,7 +486,7 @@ public class CS5240Impl implements Printer {
 				if (rcv_len <= pc.clientMessageBuf.readableBytes()) {
 					rtn = new byte[rcv_len];
 					pc.clientMessageBuf.readBytes(rtn);
-					atlog.info("[{}]-[{}]",rcv_len,new String(rtn));
+					//atlog.info("[{}]-[{}]",rcv_len,new String(rtn));
 					return rtn;
 				}
 			}
@@ -979,7 +980,7 @@ public class CS5240Impl implements Printer {
 				this.curState = ResetPrinterInit_START;
 				ResetPrinterInit();
 				pc.close();
-			} else if (data != null && !new String(data).equals("DIS")) {
+			} else if (data != null && !new String(data, Charset.forName("UTF-8")).equals("DIS")) {
 				if (data[1] == (byte)'s') {
 					if (data[2] == (byte)(0x7f & 0xff)) {
 						iCnt = 0;
@@ -1012,7 +1013,7 @@ public class CS5240Impl implements Printer {
 						byte[] tmpb = new byte[lastidx - 2];
 						System.arraycopy(data, 2, tmpb, 0, tmpb.length);
 						this.curmsdata = tmpb;
-						System.gc();
+						//20240517 Code Correctness: Call to System.gc() System.gc();
 					} else {
 						iCnt = 0;
 						amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-1格式錯誤)", brws, "        ", "            ");
@@ -1047,7 +1048,7 @@ public class CS5240Impl implements Printer {
 					*/
 					if (data.length > 4 && data[1] == (byte)'r' && data[2] == (byte)'6' && data[3] == (byte)'2' && data[4] == (byte)'3') {
 						Send_hData(S5240_CANCEL);
-						amlog.info("[{}][{}][{}]:95硬體錯誤代碼4[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));		
+						amlog.info("[{}][{}][{}]:95硬體錯誤代碼4[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1, Charset.forName("UTF-8")));		
 						ResetPrinter();
 					}
 					byte[] nr = new byte[1];
@@ -1073,7 +1074,7 @@ public class CS5240Impl implements Printer {
 			} else {
 				this.curState = MS_Read_FINISH;
 				log.debug("MS_Read 3 ===<><>{} chkChkState {}", this.curState, this.curChkState);
-				atlog.info("ms_read data=[{}]",new String(this.curmsdata));
+				//atlog.info("ms_read data=[{}]",new String(this.curmsdata));
 				return this.curmsdata;
 			}
 		}
@@ -1178,7 +1179,7 @@ public class CS5240Impl implements Printer {
 						//20240510 Poor Style: Value Never Read String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
 						//20240110 mark pc.InsertAMStatus(brws, "", "", s);
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ",
-								new String(data, 1, data.length - 1));
+								new String(data, 1, data.length - 1, Charset.forName("UTF-8")));
 						Send_hData(S5240_CANCEL); // special for S5020
 					} else {  //20230309
 						log.debug("{} {} eject paper", brws, wsno);
@@ -1236,7 +1237,7 @@ public class CS5240Impl implements Printer {
 						amlog.info("[{}][{}][{}]:94硬體故障", brws, "        ", "            ");
 						break;
 					}
-					atlog.info("first data is {}",new String(data));
+					//atlog.info("first data is {}",new String(data));
 				}
 			}
 		}
@@ -1587,7 +1588,7 @@ public class CS5240Impl implements Printer {
 			} else {
 				this.curState = MS_Write_START;
 				this.curmsdata = null;
-				System.gc();
+				//20240517 Code Correctness: Call to System.gc() System.gc();
 				int i = 0;
 				for (i = 0; i < buff.length; i++)
 					if (buff[i] == (byte) 0x0)
@@ -1665,7 +1666,7 @@ public class CS5240Impl implements Printer {
 			Sleep(200);
 			this.iCnt++;
 			log.debug("4 ===<><>{} chkChkState {} {}", this.curState, this.curChkState, data);
-			while (null != (data = Rcv_Data()) && !new String(data).equals("DIS")) {
+			while (null != (data = Rcv_Data()) && !new String(data, Charset.forName("UTF-8")).equals("DIS")) {
 				if (data[2] == (byte) 'P') {
 					log.debug("MS_Write 5 ===<><>{} chkChkState {}", this.curState, this.curChkState);
 					this.curState = MS_Write_FINISH;
@@ -1695,7 +1696,7 @@ public class CS5240Impl implements Printer {
 //							return false;
 //						Sleep(50);
 //						data = Rcv_Data(5);
-						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3(MSW)[{}]", brws, pasname, account, new String(data));
+						amlog.info("[{}][{}][{}]:95硬體錯誤代碼3(MSW)[{}]", brws, pasname, account, new String(data, Charset.forName("UTF-8")));
 						//20201119
 						//20240110 mark pc.InsertAMStatus(brws, pasname, account, "95硬體錯誤代碼3(MSW)"+new String(data));
 						//----
@@ -1764,7 +1765,7 @@ public class CS5240Impl implements Printer {
 							byte[] nr = new byte[1];
 							nr[0] = (byte)'W';
 							this.curmsdata = nr;
-							amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
+							amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1, Charset.forName("UTF-8")));
 							String s = "94補摺機狀態錯誤！磁條寫入時回傳硬體錯誤碼代碼:" + toAsciiStr(data);
 							pc.InsertAMStatus(brws, "", "", s);
 							Send_hData(S5240_CANCEL);
@@ -2041,7 +2042,7 @@ public class CS5240Impl implements Printer {
 						amlog.info("[{}][{}][{}]:94硬體故障", brws, "        ", "            ");
 						break;
 					}
-					atlog.info("first data is {}",new String(data));
+					//atlog.info("first data is {}",new String(data));
 				}
 			}
 		}
@@ -2085,7 +2086,7 @@ public class CS5240Impl implements Printer {
 				//20201216
 				//20240510 Poor Style: Value Never Read String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
 				//20240110 mark pc.InsertAMStatus(brws, "", "", s);
-				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));
+				amlog.info("[{}][{}][{}]:95硬體錯誤代碼3[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1, Charset.forName("UTF-8")));
 //				Send_hData(S5240_CANCEL);  //special for S5020
 				//----
 				//20220923 special for r427
@@ -2168,7 +2169,7 @@ public class CS5240Impl implements Printer {
 			Sleep(50);
 			data = Rcv_Data(5);
 			// 20091002 , show error code
-			amlog.info("[{}][{}][{}]:95硬體錯誤代碼1[{}]", brws, "        ", "            ",  new String(data, 1, data.length - 1));		
+			amlog.info("[{}][{}][{}]:95硬體錯誤代碼1[{}]", brws, "        ", "            ",  new String(data, 1, data.length - 1, Charset.forName("UTF-8")));		
 			/*20201208 mark
 			ResetPrinter();
 			this.curState = ResetPrinterInit_START;
@@ -2257,7 +2258,7 @@ public class CS5240Impl implements Printer {
 			data = Rcv_Data(5);
 
 			// 20091002 , show error code
-			amlog.info("[{}][{}][{}]:95硬體錯誤代碼4[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1));		
+			amlog.info("[{}][{}][{}]:95硬體錯誤代碼4[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1, Charset.forName("UTF-8")));		
 /*20201208 mark
 			ResetPrinter();
 			this.curState = ResetPrinterInit_START;
@@ -2309,7 +2310,7 @@ public class CS5240Impl implements Printer {
 					nr[0] = (byte)'X';
 				this.curmsdata = nr;
 				amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ",
-						new String(data, 1, data.length - 1));
+						new String(data, 1, data.length - 1, Charset.forName("UTF-8")));
 				//20240420 add private toAsciiStr
 				//				String s = "95硬體錯誤代碼" + new String(data, 1, data.length - 1);
 				String s = "";
@@ -2490,7 +2491,7 @@ public class CS5240Impl implements Printer {
 				return 0;
 			}
 			if (data[2] != (byte)'4' && data[2] != (byte)'P' && data[2] != (byte)'2') {
-				if (new String(data).equals("DIS")) {
+				if (new String(data, Charset.forName("UTF-8")).equals("DIS")) {
 					amlog.info("[{}][{}][{}]:94補摺機斷線", brws, "        ", "            ");		
 					this.curChkState = CheckStatus_FINISH;
 					return 0;
@@ -2518,7 +2519,7 @@ public class CS5240Impl implements Printer {
 			Sleep(200);
 			this.iCnt++;
 //			if (data != null && !new String(data).equals("DIS")) {
-			while (null != (data = Rcv_Data()) && !new String(data).equals("DIS")) {
+			while (null != (data = Rcv_Data()) && !new String(data, Charset.forName("UTF-8")).equals("DIS")) {
 //				log.debug("ReadBarcode 2.2 ===<><> data={} s={}", data, (byte)'s');
 
 				if ( data[1] == 'r' && data[2] == (byte)'P') {
@@ -2716,7 +2717,7 @@ public class CS5240Impl implements Printer {
 		// TODO Auto-generated method stub
 		if (data == null || data.length == 0)
 			return -1;
-		if (new String(data).contains("DIS")) {
+		if (new String(data, Charset.forName("UTF-8")).contains("DIS")) {
 			amlog.info("[{}][{}][{}]:94補摺機斷線！", brws, "        ", "            ");		
 			return -2;
 		}
@@ -2790,7 +2791,7 @@ public class CS5240Impl implements Printer {
 				this.curState = ResetPrinterInit_START;
 				ResetPrinterInit();
 				pc.close();
-			} else if (data != null && !new String(data).equals("DIS")) {
+			} else if (data != null && !new String(data, Charset.forName("UTF-8")).equals("DIS")) {
 				if (data[1] == (byte)'s') {
 					if (data[2] == (byte)(0x7f & 0xff)) {
 						iCnt = 0;
@@ -2808,7 +2809,7 @@ public class CS5240Impl implements Printer {
 						byte[] tmpb = new byte[lastidx - 2];
 						System.arraycopy(data, 2, tmpb, 0, tmpb.length);
 						this.curmsdata = tmpb;
-						System.gc();
+						//20240517 Code Correctness: Call to System.gc() System.gc();
 					} else {
 						iCnt = 0;
 						amlog.info("[{}][{}][{}]:94補摺機狀態錯誤！(MSR-1格式錯誤)", brws, "        ", "            ");
@@ -2852,7 +2853,7 @@ public class CS5240Impl implements Printer {
 			} else {
 				this.curState = MS_Read_FINISH;
 				log.debug("MS_CheckAndRead 6 ===<><>{} chkChkState {}", this.curState, this.curChkState);
-				atlog.info("ms_read data=[{}]",new String(this.curmsdata));
+				//atlog.info("ms_read data=[{}]",new String(this.curmsdata));
 				return this.curmsdata;
 			}
 		}
@@ -2868,7 +2869,7 @@ public class CS5240Impl implements Printer {
 		for (int i = 0; i < b.length; i++)
 			if ((int)(b[i] & 0xff) < 32 || (int)(b[i] & 0xff) > 126)
                 b[i] = (byte)'.';
-		rtn = new String(b);
+		rtn = new String(b, Charset.forName("US-ASCII"));
 		return rtn;
 	}
 	//----20240420

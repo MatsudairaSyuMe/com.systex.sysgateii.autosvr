@@ -67,18 +67,20 @@ public class FileUtils {
 				raf.seek(f.length());
 				raf.write(content);
 				res = true;
+				raf.close();//20240520 Poor Error Handling: Throw Inside Finallythrow new IOException(String.format("ERROR close %s -->%s !!!", path, ie.getMessage()));
 			}
 		} catch (Exception e) {
+			if (raf != null) raf.close();
 			throw new IOException(String.format("ERROR write %s -->%s !!!", path, e.getMessage()));
-		} finally {
-			if (raf != null) {
-				try {
-					raf.close();
-				} catch (IOException ie) {
-					throw new IOException(String.format("ERROR close %s -->%s !!!", path, ie.getMessage()));
-				}
-			}
-		}
+		}//20240520 Poor Error Handling: Throw Inside Finally finally {
+//			if (raf != null) {
+//				try {
+//					raf.close();
+//				} catch (IOException ie) {
+//					throw new IOException(String.format("ERROR close %s -->%s !!!", path, ie.getMessage()));
+//				}
+//			}
+//		}
 		return res;
 	}
 	public static boolean writeStringToFile(String path, String content, boolean append) throws IOException
@@ -115,10 +117,11 @@ public class FileUtils {
 				amt = r.read(buf);
 			}
 			streamString =  sb.toString();
+			r.close();
 		} catch (IOException ioe) {
 			throw new IOException(String.format("ERROR read %s !!!", filePath));
 		} finally {
-			fis.close();
+			if (fis != null) try { fis.close();} catch (IOException e) {}
 		}
 		return streamString;
 	}

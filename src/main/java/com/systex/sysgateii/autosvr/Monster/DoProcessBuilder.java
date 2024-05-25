@@ -87,7 +87,7 @@ public class DoProcessBuilder {
 			boolean chkOk = false;
 			int arg1idx = -1;
 			for (arg1idx = 0; arg1idx <TrustedArg1.length; arg1idx++) {
-				log.debug("runArgs1 running is {} chkOk={} chkS={}", runArgs1, chkOk, TrustedArg1[arg1idx].trim());
+				log.atDebug().setMessage("runArgs1 running is {} chkOk={} chkS={}").addArgument(runArgs1).addArgument(chkOk).addArgument(TrustedArg1[arg1idx].trim()).log();//20240517 change for Log Forging(debug
 				if (runArgs1.equals(TrustedArg1[arg1idx].trim())) {
 					chkOk = true;
 					break;
@@ -98,16 +98,16 @@ public class DoProcessBuilder {
 				if (StrUtil.isNumeric(runArgs3.trim()))
 					chkOk = true;
 			}
-			log.debug("runArgs0={} {} runArgs2={} {} chkOk={}", runArgs0, TrustedCmd,
-					runArgs2, TrustedArg2,chkOk);
+			log.atDebug().setMessage("runArgs0={} {} runArgs2={} {} chkOk={}").addArgument(runArgs0).addArgument(TrustedCmd
+					).addArgument(runArgs2).addArgument(TrustedArg2).addArgument(chkOk).log();//20240517 change for Log Forging(debug)
 			// 20210320 MatsudairaSyuMe for command injection
 			runArgs3 = runArgs3.trim();
 			Pattern FILTER_PATTERN = Pattern.compile("[0-9]+");
 			if (!FILTER_PATTERN.matcher(runArgs3).matches()) {
-				log.debug("input:{} not match", runArgs3);
+				log.atDebug().setMessage("input:{} not match").addArgument(runArgs3).log();//20240517 change for Log Forging(debug)
 				chkOk = false;
 			} else
-				log.debug("inpit:{} ok", runArgs3);
+				log.atDebug().setMessage("input:{} ok").addArgument( runArgs3).log();//20240517 change for Log Forging(debug)
 			String[] origsary = runArgs3.split("");
 			String cnvs = "";
 			for (String s : origsary) {

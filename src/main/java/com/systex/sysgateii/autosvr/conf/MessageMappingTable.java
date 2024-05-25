@@ -40,8 +40,9 @@ public class MessageMappingTable {
 			//20210413 MatsudairaSyuMe prevent Unreleased Resource
 			isr = new InputStreamReader(new FileInputStream(filename));
 			reader = new BufferedReader(isr);
-			String line = reader.readLine();
-			while (line != null) {
+			String line = reader.readLine();//20240523 prevent Redundant Null Check
+			if (reader != null)
+				while (line != null) {
 				line = line.trim();
 				if (line.length() > 0 && !line.substring(0, 1).equals("#") && line.contains("=")) {
 					if (line.lastIndexOf('=') != (line.length() - 1)) {

@@ -71,8 +71,8 @@ public class ipAddrPars {
 					this.formatError = true;
 			}
 		}
-		log.debug("result ====> remoteAddr: {}  remotePort:{}  localAddr:{}  localPort:", this.remoteHostAddr,
-				this.remotePort, this.localHostAddr);
+		log.atDebug().setMessage("result ====> remoteAddr: {}  remotePort:{}  localAddr:{}  localPort:").addArgument(this.remoteHostAddr).addArgument(
+				this.remotePort).addArgument(this.localHostAddr).log();//20240517 change for Log Forging(debug)
 		if (!this.formatError) {
 			this.remotenodeAddr = new InetSocketAddress(this.remoteHostAddr, this.remotePort);
 			iterator = this.localPortList.iterator();

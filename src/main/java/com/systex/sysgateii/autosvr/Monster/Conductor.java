@@ -71,14 +71,14 @@ public class Conductor implements Runnable {
 			if (svrflds != null && svrflds.length > 0) {
 				for (String s : svrflds) {
 					s = s.trim();
-					log.debug("current svrfld [{}]", s);
+					log.atDebug().setMessage("current svrfld [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 					if (s.length() > 0 && s.indexOf(',') > -1) {
 						String[] svrfldsary = s.split(",");
 						for (int idx = 0; idx < svrfldsary.length; idx++) {
 							log.debug("idx:[{}]=[{}]", idx, svrfldsary[idx].trim());
 						}
 					} else if (s.length() > 0) {
-						log.debug("get SERVICE [{}] in service table [{}]", s, svrprmtb);
+						log.atDebug().setMessage("get SERVICE [{}] in service table [{}]").addArgument(s).addArgument(svrprmtb).log();//20240517 change for Log Forging(debug)
 						// 20210302 MatsudairsSyuMe
 //						String[] setArg = {"bin/autosvr", "start", "--svrid", s};
 //						DoProcessBuilder dp = new DoProcessBuilder(setArg);
@@ -194,18 +194,18 @@ public class Conductor implements Runnable {
 							// 20210302 MatsudairaSyuMe check row command not null
 							if (s != null && s.trim().length() > 0) {
 								s = s.trim();
-								log.debug("current row cmd [{}]", s);
+								log.atDebug().setMessage("current row cmd [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 								if (s.length() > 0 && s.indexOf(',') > -1) {
 									String[] cmdary = s.split(",");
-									if (cmdary.length > 1) {
+									if (cmdary != null && cmdary.length > 1) {//20240523 prevent Redundant Null Check
 										int idx = 0;
 										sno = null;
 										boolean createNode = false;
 										boolean restartAlreadyStop = false;
 										if (DateTimeUtil.MinDurationToCurrentTime(3, cmdary[2])) {
-											log.debug(
-													"brws=[{}] keep in cmd table longer then 3 minutes will be cleared",
-													cmdary[0]);
+											log.atDebug().setMessage(
+													"brws=[{}] keep in cmd table longer then 3 minutes will be cleared"
+													).addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 											if (cmdary[1].trim().length() > 0) {
 												// 20210204 MatsudairaSyuMe
 												final String logStr = String.format(
@@ -214,7 +214,7 @@ public class Conductor implements Runnable {
 														((cmdary == null) || (cmdary.length < 2) || (cmdary[1] == null))
 																? ""
 																: cmdary[1]);
-												log.debug(logStr);
+												log.atDebug().setMessage(logStr).log();//20240517 change for Log Forging(debug)
 												/*
 												 * 20220607 MatsudairaSyuMe/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 												if (cmdhiscon == null)
@@ -262,7 +262,7 @@ public class Conductor implements Runnable {
 										// ----
 										for (String ss : cmdary)
 											log.debug("cmd[{}]=[{}]", idx++, ss);
-										String curcmd = cmdary[1].trim().toUpperCase();
+										String curcmd = "";curcmd = cmdary[1].trim().toUpperCase();//20240523 prevent Redundant Null Check
 										// svrcmdhis
 										if (curcmd != null && curcmd.length() > 0) {
 											/*
@@ -283,7 +283,7 @@ public class Conductor implements Runnable {
 															"!!! cmd object node=[%s] not in nodeList will be created",
 															cmdary[0]);
 //											log.debug("!!! cmd object node=[{}] not in nodeList will be created", cmdary[0]);
-													log.debug(logStr);
+													log.atDebug().setMessage(logStr).log();//20240517 change for Log Forging(debug)
 													createNode = true;
 												}
 											}
@@ -295,9 +295,9 @@ public class Conductor implements Runnable {
 													false);
 //									log.debug("chksno=[{}]",chksno);
 											if (chksno != null && chksno.length > 0
-													&& Integer.parseInt(chksno[0].trim()) > -1) {
+													&& Integer.parseInt(chksno[0].trim()) > -1) {//20240523 check null first for preventing Redundant Null Check
 												for (String sss : chksno)
-													log.debug("sno[{}] already exist", sss);
+													log.atDebug().setMessage("sno[{}] already exist").addArgument(sss).log();//20240517 change for Log Forging(debug)
 												// 20210413 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent
 												// Comparison change equals to
 												if (curcmd.equalsIgnoreCase("RESTART")) { // current command is RESTART
@@ -306,10 +306,10 @@ public class Conductor implements Runnable {
 													for (int i = 0; i < chksno.length; i++) {
 														String chkcmdresult = cmdhiscon.SELONEFLD(svrcmdhistbname,
 																"CMDRESULT", "SNO", chksno[0], false);
-														log.debug(
-																"table sno=[{}] svrcmdhis cmd is RESTART and cmdresult=[{}]",
-																chksno[i], chkcmdresult);
-														if (chkcmdresult != null && chkcmdresult.trim().length() > 0
+														log.atDebug().setMessage(
+																"table sno=[{}] svrcmdhis cmd is RESTART and cmdresult=[{}]"
+																).addArgument(chksno[i]).addArgument(chkcmdresult).log();
+														if (chkcmdresult != null//20240517 change for Log Forging(debug)
 																&& chkcmdresult.equals("STOP")) {
 															if (!restartAlreadyStop) {
 																sno = null; // prepared to start new node
@@ -318,9 +318,9 @@ public class Conductor implements Runnable {
 																sno = new String[1];
 																sno[0] = chksno[i];
 															}
-															log.debug(
-																	"table son=[{}] chksno=[{}] svrcmdhis cmd is RESTART and cmdresult=[{}] restartAlreadyStop=[{}]",
-																	sno, chksno[i], chkcmdresult, restartAlreadyStop);
+															log.atDebug().setMessage(
+																	"table son=[{}] chksno=[{}] svrcmdhis cmd is RESTART and cmdresult=[{}] restartAlreadyStop=[{}]"
+																	).addArgument(sno).addArgument(chksno[i]).addArgument(chkcmdresult).addArgument(restartAlreadyStop).log();//20240517 change for Log Forging(debug)
 														} else {
 															// current command is RESTART and waiting to STOP or already
 															// set ACTIVE waiting to finish
@@ -358,7 +358,7 @@ public class Conductor implements Runnable {
 										final String logStr = String.format(
 												"table sno=[%s] createNode=[%s] restartAlreadyStop=[%s]",
 												(sno == null ? 0 : sno[0]), createNode, restartAlreadyStop);
-										log.debug(logStr);
+										log.atDebug().setMessage(logStr).log();//20240517 change for Log Forging(debug)
 										/*
 										 * 20220607 MatsudairaSyuMe //20210302 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 										 if (cmdhiscon == null)
@@ -372,7 +372,7 @@ public class Conductor implements Runnable {
 										// ----
 										// 20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent
 										// Comparison
-										int selCmd = Constants.UNKNOWN;
+										int selCmd = Constants.UNKNOWN;if (curcmd != null) {
 										if (curcmd.toUpperCase(Locale.ENGLISH).equals("START"))
 											selCmd = Constants.START;
 										else if (curcmd.toUpperCase(Locale.ENGLISH).equals("STOP"))
@@ -402,8 +402,8 @@ public class Conductor implements Runnable {
 												int row = jdawcon.UPDT(cmdtbname, "CMD,CMDRESULT,CMDRESULTTIME",
 														"'','START','" + t + "'", "SVRID, IP",
 														cmdary[0] + ",'" + getSvrip() + "'");
-												log.debug("total {} records update", row);
-												log.debug("cmd object node=[{}] already active!!!!", cmdary[0]);
+												log.atDebug().setMessage("total {} records update").addArgument(row).log();//20240517 change for Log Forging(debug)
+												log.atDebug().setMessage("cmd object node=[{}] already active!!!!").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 												// 20201218 keep original cmd to svrcmdhis
 												String fldvals3 = String.format(hisfldvalssptrn4, cmdary[0], getSvrip(),
 														cmdary[1], cmdary[2], cmdary[1], t, cmdary[3]);
@@ -445,7 +445,7 @@ public class Conductor implements Runnable {
 														"'','STOP','" + t + "'", "SVRID", cmdary[0]);
 												log.debug("total {} records update", row);
 												Conductor.svridnodeMap.remove(cmdary[0]);
-												log.debug("cmd object node=[{}] already shutdown!!!!", cmdary[0]);
+												log.atDebug().setMessage("cmd object node=[{}] already shutdown!!!!").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 												// 20201218 keep original cmd to svrcmdhis
 												String fldvals3 = String.format(hisfldvalssptrn4, cmdary[0], getSvrip(),
 														cmdary[1], cmdary[2], cmdary[1], t, cmdary[3]);
@@ -469,13 +469,13 @@ public class Conductor implements Runnable {
 											if (Conductor.svridnodeMap.containsKey(cmdary[0])) {
 												String[] tmpsetArg = { "bin/autosvr", "restart", "--svrid", cmdary[0] };
 												monSetArg = tmpsetArg;
-												log.debug("cmd object node=[{}] try to restart process", cmdary[0]);
+												log.atDebug().setMessage("cmd object node=[{}] try to restart process").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 											} else {
 												// start to create new node and start
 												Conductor.svridnodeMap.put(cmdary[0], getSvrip());
 												String[] tmpsetArg = { "bin/autosvr", "start", "--svrid", cmdary[0] };
 												monSetArg = tmpsetArg;
-												log.debug("start to create new node=[{}]", cmdary[0]);
+												log.atDebug().setMessage("start to create new node=[{}]").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 											}
 											// 20210302 MAtsuDairaSyuMe
 											// 20210202 MatsuDairaSyume
@@ -493,8 +493,8 @@ public class Conductor implements Runnable {
 											int row = jdawcon.UPDT(cmdtbname, "CMD,CMDRESULT,CMDRESULTTIME",
 													"'','RESTART','" + t + "'", "SVRID, IP",
 													cmdary[0] + ",'" + getSvrip() + "'");
-											log.debug("total {} records update", row);
-											log.debug("cmd object node=[{}] already restart!!!!", cmdary[0]);
+											log.atDebug().setMessage("total {} records update").addArgument(row).log();//20240517 change for Log Forging(debug)
+											log.atDebug().setMessage("cmd object node=[{}] already restart!!!!").addArgument(cmdary[0]).log();//20240517 change for Log Forging(debug)
 											// 20201218 keep original cmd to svrcmdhis
 											String fldvals3 = String.format(hisfldvalssptrn4, cmdary[0], getSvrip(),
 													cmdary[1], cmdary[2], cmdary[1], t, cmdary[3]);
@@ -509,9 +509,9 @@ public class Conductor implements Runnable {
 											// ----
 											break;
 										default:
-											log.debug("!!! cmd object node=[{}] cmd [{}] ignore", cmdary[0], cmdary[1]);
+											log.atDebug().setMessage("!!! cmd object node=[{}] cmd [{}] ignore").addArgument(cmdary[0]).addArgument(cmdary[1]).log();//20240517 change for Log Forging(debug)
 											break;
-										}
+										} } else { log.error("!!! cmd error"); }
 										/*
 										 * 20220607 MatsudairaSyuMe //20210302 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
 										if (cmdhiscon != null)
@@ -521,9 +521,7 @@ public class Conductor implements Runnable {
 										// ----
 									} else {
 										// 20210204 MatsidairaSyuMe
-										final String logStr = String.format("!!! cmd object node=[%s] format error !!!",
-												((cmdary == null) || (cmdary[0] == null)) ? "" : cmdary[0]);
-										log.debug(logStr);
+										log.atDebug().setMessage("!!! cmd object node format error !!!").log();//20240517 change for Log Forging(debug)
 									}
 								} else {
 									// 20210204 ,20210427 MatsudairaSyuMe Log Forging

@@ -172,7 +172,7 @@ public class P0880TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 	
 	public void setValueRtoLfill(String fieldN, String setsV, byte fillV) throws Exception {
@@ -190,7 +190,7 @@ public class P0880TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 
 	public void setValue(String fieldN, String setsV) throws Exception {
@@ -387,7 +387,7 @@ public class P0880TEXT {
 	public byte[] getTotaTexOc(int oc) throws Exception {
 		return this.p0880totatextlist.get(oc);
 	}
-
+/*
 	public static void main(String[] args) throws Exception {
 		boolean rtn = false;
 		P0880TEXT tl = new P0880TEXT();
@@ -414,6 +414,6 @@ public class P0880TEXT {
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("4--->[{}] len={}", new String(result), tl.getP0880TotatextLen());
-	}
+	}*/
 
 }

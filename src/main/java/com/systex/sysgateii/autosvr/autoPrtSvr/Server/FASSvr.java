@@ -84,7 +84,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 	}
 
 	public void run() {
-		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+		//20240523 Poor Style: Value Never Read RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
 		//20240510 Poor Style: Value Never Read String jvmName = bean.getName();
 		//20240503 mark for no use long pid = Long.valueOf(jvmName.split("@")[0]);
 		log.info("FASSvr MainThreadId");//20240503 change log message
@@ -106,7 +106,7 @@ public class FASSvr implements MessageListener<byte[]>, Runnable {
 			NODES = _map.get("svrsubport.svrip").split(",");
 			for (int i = 0; i < NODES.length; i++) {
 				NODES[i] = NODES[i].trim();
-				log.debug("Enter createServer {}", NODES[i]);
+				log.atDebug().setMessage("Enter createServer {}").addArgument(NODES[i]).log();//20240517 change for Log Forging(debug)
 			}
 			//20210116 MatsudairaSyuMe for incoming TOTA telegram Map
 			//20220819 abolish incomingTelegramMap

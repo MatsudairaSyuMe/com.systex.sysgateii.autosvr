@@ -24,7 +24,7 @@ public class Big5FontImg {
 	private static String glyphname = "";
 	//20211004 MatsudairaSyuMe read key and glyph file every time load plyph
 	public Big5FontImg(String filenamekey, String filename) throws IOException, Exception {
-		if (filenamekey == null || filename.trim().length() == 0)
+		if (filenamekey == null || filenamekey.trim().length() == 0)//20240523 prevent Redundant Null Check
 			throw new IOException("filenamekey null or length == 0");
 		if (filename == null || filename.trim().length() == 0)
 			throw new IOException("filename null or length == 0");
@@ -124,17 +124,19 @@ public class Big5FontImg {
 			long idx = 0;
 			byte[] bs = new byte[6];
 			long key = 0l, addr = 0l;
-			while ((i = fontkeyis.read(bs)) != -1) {
-				idx += 1;
-				//20240510 Poor Style: Value Never Read key = 0l;
-				//20240510 Poor Style: Value Never Read addr = 0l;
-				key = (long) (((bs[0] & 0xFF) << 8) | (bs[1] & 0xFF));
-				addr = (long) (((bs[2] & 0xFF) << 24) | ((bs[3] & 0xFF) << 16) | ((bs[4] & 0xFF) << 8)
-						| (bs[5] & 0xFF));
-				keyadr_map.put(key, addr);
-			}
-			if (fontkeyis != null)
+			if (fontkeyis != null) {//20240523 prevent Redundant Null Check
+				while ((i = fontkeyis.read(bs)) != -1) {
+					idx += 1;
+					//20240510 Poor Style: Value Never Read key = 0l;
+					//20240510 Poor Style: Value Never Read addr = 0l;
+					key = (long) (((bs[0] & 0xFF) << 8) | (bs[1] & 0xFF));
+					addr = (long) (((bs[2] & 0xFF) << 24) | ((bs[3] & 0xFF) << 16) | ((bs[4] & 0xFF) << 8)
+							| (bs[5] & 0xFF));
+					keyadr_map.put(key, addr);
+				}
 				fontkeyis.close();
+			} else
+				throw new Exception("open exception");//20240523 prevent Redundant Null Check
 		} catch (Exception ex) {
 			//20240503 MatsudairaSyuMe mark for System Information Leak ex.printStackTrace();
 			throw new Exception("close or read exception");//20240503 message log

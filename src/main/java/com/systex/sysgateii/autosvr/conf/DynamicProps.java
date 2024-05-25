@@ -262,7 +262,7 @@ public class DynamicProps {
 							log.info("devprmtb {} {} {}", devprmtb, devprmkey, devprmfields);
 							try {
 								jsel2ins = new GwDao(fromurl, fromuser, frompass, false);
-								String origStr = "";
+								//20240523 Poor Style: Value Never Read String origStr = "";
 								log.debug("current svrprmtb=[{}] svrprmtbkey=[{}] svrprmtbsearkey=[{}]", svrprmtb, svrprmkey, SvrId);
 								String[] svrflds = jsel2ins.SELMFLD(svrprmtb, svrprmfields, svrprmkey, SvrId, false);
 								String[] svrfldsary = null; // store values of AUID,BRNO,IP,PORT,DEVTPE,RECVTIMEOUT,LOGPATH
@@ -272,7 +272,7 @@ public class DynamicProps {
 								if(svrflds != null && svrflds.length > 0) {
 									for (String s: svrflds) {
 										s = s.trim();
-										log.debug("current svrfld [{}]", s);
+										log.atDebug().setMessage("current svrfld [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 										if (s.length() > 0 && s.indexOf(',') > -1) {
 											svrfldsary = s.split(",");
 											for (int idx = 0; idx < svrfldsary.length; idx++) {
@@ -347,7 +347,7 @@ public class DynamicProps {
 											fasfld = s;
 											//20240520 Poor Style: Value Never Read origStr = conHashMap.get("svrsubport.svrip").trim();
 											conHashMap.put("svrsubport.svrip", fasfld);
-											log.debug("current fasfld set svrsubport.svrip [{}]", fasfld);
+											log.atDebug().setMessage("current fasfld set svrsubport.svrip [{}]").addArgument(fasfld).log();//20240517 change for Log Forging(debug)
 										}
 									log.debug("current devprmtb=[{}] devprmtbkey=[{}] devprmtbsearkey=[{}]", devprmtb,
 											devprmkey, SvrId);
@@ -363,7 +363,7 @@ public class DynamicProps {
 									if (devflds != null && devflds.length > 0)
 										for (String s : devflds) {
 											s = s.trim();
-											log.debug("current devflds [{}]", s);
+											log.atDebug().setMessage("current devflds [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 											if (s.length() > 0 && s.indexOf(',') > -1) {
 												devfldsary = s.split(",");
 												for (int idx = 0; idx < devfldsary.length; idx++) {
@@ -673,7 +673,7 @@ public class DynamicProps {
 					log.info("devprmtb {} {} {}", devprmtb, devprmkey, devprmfields);
 					try {
 						jsel2ins = new GwDao(fromurl, fromuser, frompass, false);
-						String origStr = "";
+						//20240523 Poor Style: Value Never Read String origStr = "";
 						log.debug("current svrprmtb=[{}] svrprmtbkey=[{}] svrprmtbsearkey=[{}]", svrprmtb, svrprmkey, SvrId);
 						String[] svrflds = jsel2ins.SELMFLD(svrprmtb, svrprmfields, svrprmkey, SvrId, false);
 						String[] svrfldsary = null; // store values of AUID,BRNO,IP,PORT,DEVTPE,RECVTIMEOUT,LOGPATH
@@ -682,7 +682,7 @@ public class DynamicProps {
 						if(svrflds != null && svrflds.length > 0) {
 							for (String s: svrflds) {
 								s = s.trim();
-								log.debug("current svrfld [{}]", s);
+								log.atDebug().setMessage("current svrfld [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 								if (s.length() > 0 && s.indexOf(',') > -1) {
 									svrfldsary = s.split(",");
 									for (int idx = 0; idx < svrfldsary.length; idx++) {
@@ -763,7 +763,7 @@ public class DynamicProps {
 										fasfld = s;
 										//20240520 Poor Style: Value Never Read origStr = conHashMap.get("svrsubport.svrip").trim();
 										conHashMap.put("svrsubport.svrip", fasfld);
-										log.debug("current fasfld set svrsubport.svrip [{}]", fasfld);
+										log.atDebug().setMessage("current fasfld set svrsubport.svrip [{}]").addArgument(fasfld).log();//20240517 change for Log Forging(debug)
 									}
 								log.debug("current devprmtb=[{}] devprmtbkey=[{}] devprmtbsearkey=[{}]", devprmtb,
 										devprmkey, SvrId);
@@ -778,7 +778,7 @@ public class DynamicProps {
 								if (devflds != null && devflds.length > 0)
 									for (String s : devflds) {
 										s = s.trim();
-										log.debug("current devflds [{}]", s);
+										log.atDebug().setMessage("current devflds [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 										if (s.length() > 0 && s.indexOf(',') > -1) {
 											devfldsary = s.split(",");
 											for (int idx = 0; idx < devfldsary.length; idx++) {
@@ -968,7 +968,7 @@ public class DynamicProps {
 					if (svrflds != null && svrflds.length > 0)
 						for (String s : svrflds) {
 							s = s.trim();
-							log.debug("current svrfld [{}]", s);
+							log.atDebug().setMessage("current svrfld [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 							if (s.length() > 0 && s.indexOf(',') > -1) {
 								svrfldsary = s.split(",");
 								for (int idx = 0; idx < svrfldsary.length; idx++) {
@@ -1051,7 +1051,7 @@ public class DynamicProps {
 								s = s.trim();
 								fasfld = s;
 								conHashMap.put("svrsubport.svrip", fasfld);
-								log.debug("current fasfld set svrsubport.svrip [{}]", fasfld);
+								log.atDebug().setMessage("current fasfld set svrsubport.svrip [{}]").addArgument(fasfld).log();//20240517 change for Log Forging(debug)
 							}
 						log.debug("current devprmtb=[{}] devprmtbkey=[{}] devprmtbsearkey=[{}]", devprmtb, devprmkey,
 								SvrId);
@@ -1064,7 +1064,7 @@ public class DynamicProps {
 						if (devflds != null && devflds.length > 0)
 							for (String s : devflds) {
 								s = s.trim();
-								log.debug("current devflds [{}]", s);
+								log.atDebug().setMessage("current devflds [{}]").addArgument(s).log();//20240517 change for Log Forging(debug)
 								if (s.length() > 0 && s.indexOf(',') > -1) {
 									devfldsary = s.split(",");
 									for (int idx = 0; idx < devfldsary.length; idx++) {

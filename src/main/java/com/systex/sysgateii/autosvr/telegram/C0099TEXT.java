@@ -90,7 +90,7 @@ public class C0099TEXT {
 		}
 		log.debug("c0099totaheadtext_lens={}", c0099totaheadtext_len);
 	}
-
+/*
 	public static void main(String[] args) throws Exception {
 		//20240510 Poor Style: Value Never Read boolean rtn;
 		C0099TEXT tl = new C0099TEXT();
@@ -100,5 +100,5 @@ public class C0099TEXT {
 		// String(result) + "]");
 		log.debug("3--->[{}] len={}", new String(result), tl.getC0099TotaheadtextLen());
 	}
-
+*/
 }

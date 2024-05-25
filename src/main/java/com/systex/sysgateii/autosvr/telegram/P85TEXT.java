@@ -98,7 +98,7 @@ public class P85TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 	
 	public void setValueRtoLfill(String fieldN, String setsV, byte fillV) throws Exception {
@@ -116,7 +116,7 @@ public class P85TEXT {
 		} else
 			ntb = setbV;
 		setValue(fieldN, ntb);
-		System.gc();
+		//20240517 Code Correctness: Call to System.gc() System.gc();
 	}
 
 	public void setValue(String fieldN, String setsV) throws Exception {
@@ -181,7 +181,7 @@ public class P85TEXT {
 		}
 		log.debug("p85titatext_lens={}", p85titatext_len);
 	}
-	public static void main(String[] args) throws Exception {
+	/*public static void main(String[] args) throws Exception {
 		boolean rtn;
 		P85TEXT tl = new P85TEXT();
 		rtn = tl.initP85TitaTEXT((byte) '0');
@@ -190,6 +190,6 @@ public class P85TEXT {
 		// System.out.println("2--->" + Arrays.toString(result) + ":[" + new
 		// String(result) + "]");
 		log.debug("2--->[{}]len={}", new String(result), tl.getP85TitatextLen());
-	}
+	}*/
 
 }
