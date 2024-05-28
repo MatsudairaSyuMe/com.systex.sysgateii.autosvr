@@ -35,14 +35,14 @@ public class MessageMappingTable {
 		//20210413 MatsudairaSyuMe prevent Unreleased Resource
 		InputStreamReader isr = null;
 		int total = 0;
+		String line;
 		m_Message.clear();
 		try {
 			//20210413 MatsudairaSyuMe prevent Unreleased Resource
 			isr = new InputStreamReader(new FileInputStream(filename));
 			reader = new BufferedReader(isr);
-			String line = reader.readLine();//20240523 prevent Redundant Null Check
 			if (reader != null)
-				while (line != null) {
+			while ((line = reader.readLine()) != null) {//20240527 Redundant Null Check
 				line = line.trim();
 				if (line.length() > 0 && !line.substring(0, 1).equals("#") && line.contains("=")) {
 					if (line.lastIndexOf('=') != (line.length() - 1)) {
@@ -55,7 +55,7 @@ public class MessageMappingTable {
 					total += 1;
 				}
 				//20240510 Poor Style: Value Never Read line = "";
-				line = reader.readLine();
+				//202405287line = reader.readLine();
 				// read next line
 			}
 			//20210413 MatsudairaSyuMe prevent Unreleased Resource
@@ -72,12 +72,12 @@ public class MessageMappingTable {
 		 }
 		log.debug("total {} records", total);
 	}
-
+/*
 	public static void main(String[] args) {
 		MessageMappingTable d = new MessageMappingTable("MESSAGE.INI");
 		System.out.println(d.m_Message.size());
 		System.out.println(d.m_Message.get("E104"));
 		System.out.println(d.m_Message.get("A104"));
 	}
-
+*/
 }

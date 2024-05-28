@@ -339,6 +339,7 @@ public class PrnSvr implements MessageListener<byte[]> {
 												for (String ss: cmdary)
 													log.debug("cmd[{}]=[{}]",idx++, ss);
 												String curcmd = ""; curcmd = cmdary[1].trim().toUpperCase();//20240523 prevent Redundant Null Check
+
 												//20201026 for cmdhis
 												if (curcmd != null && curcmd.length() > 0) {
 													/*20220607 MatsudairaSyuMe, 20230517 take out mark for closing connection after access db */
@@ -364,15 +365,16 @@ public class PrnSvr implements MessageListener<byte[]> {
 													//20201028 check sno if command already insert to cmdhis
 													String[] chksno = cmdhiscon.SELMFLD(PrnSvr.devcmdhistbname, "SNO", "BRWS,CMD,CMDCREATETIME", "'" + cmdary[0] + "','"+ cmdary[1] + "','"+ cmdary[3]+ "'", false);
 //													log.debug("chksno=[{}]",chksno);
-													if (chksno != null && chksno.length > 0 && chksno[0] != null && Integer.parseInt(chksno[0].trim()) > -1) {//20240523 prevent Redundant Null Check
+//													if (chksno != null && chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {//20240527 prevent Redundant Null Check
+													if (chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {//20240527 prevent Redundant Null Check
 														for (String sss: chksno)
 															log.atDebug().setMessage("sno[{}] already exist").addArgument(sss).log();//20240517 change for Log Forging(debug)
 														//20210413 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison change equals to 
 														if (curcmd.equalsIgnoreCase("RESTART")) { // current command is RESTART check cmdhis if already done STOP
 															for (int i = 0; i < chksno.length; i++) {
-																String chkcmdresult = ""; chkcmdresult = cmdhiscon.SELONEFLD(PrnSvr.devcmdhistbname, "CMDRESULT", "SNO", chksno[0], false);//20240523 prevent Redundant Null Check
+																String chkcmdresult = cmdhiscon.SELONEFLD(PrnSvr.devcmdhistbname, "CMDRESULT", "SNO", chksno[0], false);
 																log.atDebug().setMessage("table sno=[{}] cmdhis cmd is RESTART and cmdresult=[{}]").addArgument(chksno[i]).addArgument(chkcmdresult).log();//20240517 change for Log Forging(debug)
-																if (chkcmdresult != null && chkcmdresult.trim().length() > 0 && chkcmdresult.equals("STOP")) {
+																if (chkcmdresult != null && chkcmdresult.equals("STOP")) {//20240527 Redundant Null Check
 																	if (!restartAlreadyStop) {
 																		sno = null; // prepared to start new node
 																		restartAlreadyStop = true;
@@ -415,12 +417,14 @@ public class PrnSvr implements MessageListener<byte[]> {
 												//----
 												//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 												int selCmd = Constants.UNKNOWN;
-												if (curcmd.toUpperCase(Locale.ENGLISH).equals("START"))
+												if (curcmd != null) {
+												if (curcmd.equalsIgnoreCase("START"))//20240528 Redundant Null Check
 													selCmd = Constants.START;
-												else if(curcmd.toUpperCase(Locale.ENGLISH).equals("STOP"))
+												else if(curcmd.equalsIgnoreCase("STOP"))
 													selCmd = Constants.STOP;
-												else if(curcmd.toUpperCase(Locale.ENGLISH).equals("RESTART"))
+												else if(curcmd.equalsIgnoreCase("RESTART"))
 													selCmd = Constants.RESTART;
+												}
 												switch (selCmd) {//20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 												case Constants.START://20210426 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent Comparison
 													//20201006, 20201026 cmdhis, 20220905 change function name to create Nodefun

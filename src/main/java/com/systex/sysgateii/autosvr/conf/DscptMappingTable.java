@@ -189,9 +189,9 @@ public class DscptMappingTable {
 				//			InputStreamReader isr = new InputStreamReader(new FileInputStream(filename), "Big5");
 				isr = new InputStreamReader(new FileInputStream(filename), "Big5");
 				reader = new BufferedReader(isr);
-				String line = reader.readLine();//20240523 prevent Redundant Null Check
+				String line;
 				if (reader != null)
-				while (line != null) {
+				while ((line = reader.readLine()) != null) {//20240527 Redundant Null Check
 					line = line.trim();
 					if (line.length() > 0 && !line.substring(0, 1).equals("#")) {
 						String[] sar = line.split("=");
@@ -200,7 +200,7 @@ public class DscptMappingTable {
 						total += 1;
 					}
 					//20240510 Poor Style: Value Never Read line = "";
-					line = reader.readLine();
+					//line = reader.readLine();
 					// read next line
 				}
 				if (reader != null)// 20210413 MatsudairaSyuMe prevent Unreleased Resource

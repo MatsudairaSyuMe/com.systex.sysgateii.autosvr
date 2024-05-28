@@ -818,7 +818,7 @@ public class GwDao {
 				rtnVal = new String[1];
 				//----
 				while (rs.next()) {
-					if (rtnVal != null) {
+					//if (rtnVal != null) {
 						String[] tmpv = rtnVal;
 						rtnVal = new String[idx + 1];
 						int j = 0;
@@ -826,7 +826,7 @@ public class GwDao {
 							rtnVal[j] = s;
 							j++;
 						}
-					}
+					//}
 					for (int i = 0; i < keynameary.length; i++) {
 						if (i == 0)
 							rtnVal[idx] = rs.getString(keynameary[i]);

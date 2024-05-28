@@ -1853,7 +1853,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					} else
 					//20240327 MatsudairaSyuMe check line 13
 					{
-						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null &&  crossskipbytes.length > 0) {
+						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null) {//20240525 mark '&& crossskipbytes.length' prevent Redundant Null Check
 							log.debug("send skip line before print line 13");
 							prt.Send_hData(crossskipbytes);
 						}
@@ -2163,7 +2163,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					else
 					//20240327 MatsudairaSyuMe check line 13
 					{
-						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null &&  crossskipbytes.length > 0) {
+						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null) {//20240527 prevent Redundant Null Check
 							log.debug("send skip line before print line 13");
 							prt.Send_hData(crossskipbytes);
 						}
@@ -2518,7 +2518,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 					else
 					//20240327 MatsudairaSyuMe check line 13
 					{
-						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null && crossskipbytes.length > 0) {
+						if ((tl+this.cur_arr_idx) == 13 && crossskipbytes != null) {//20240527 prevent Redundant Null Check
 							log.debug("send skip line before print line 13");
 							prt.Send_hData(crossskipbytes);
 						}

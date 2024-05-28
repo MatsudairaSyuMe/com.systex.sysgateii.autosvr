@@ -294,8 +294,9 @@ public class Conductor implements Runnable {
 													"'" + cmdary[0] + "','" + cmdary[1] + "','" + cmdary[2] + "'",
 													false);
 //									log.debug("chksno=[{}]",chksno);
-											if (chksno != null && chksno.length > 0
-													&& Integer.parseInt(chksno[0].trim()) > -1) {//20240523 check null first for preventing Redundant Null Check
+//											if (chksno != null && chksno.length > 0
+//													&& Integer.parseInt(chksno[0].trim()) > -1) {//20240523 check null first for preventing Redundant Null Check
+											if (chksno.length > 0 && Integer.parseInt(chksno[0].trim()) > -1) {//20240523 check null first for preventing Redundant Null Check
 												for (String sss : chksno)
 													log.atDebug().setMessage("sno[{}] already exist").addArgument(sss).log();//20240517 change for Log Forging(debug)
 												// 20210413 MatsudairaSyuMe prevent Portability Flaw: Locale Dependent
