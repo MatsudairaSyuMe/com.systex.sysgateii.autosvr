@@ -238,14 +238,14 @@ public class CS2812Impl implements Printer {
 		if (conOpen)
 			this.curState = ResetPrinterInit_START;
 		if (this.curState < OpenPrinter_START) {
-			if (!ResetPrinter()) {
+			//20240529 Dead Code: Expression is Always true if (!ResetPrinter()) {
 				atlog.info("ResetPrinter() Error ! ret=[-1]");
 				return false;
-			} else {
+			/*} else {
 				log.debug("1 ===<><>{} chkChkState {} {}", this.curState, this.curChkState, data);
 				this.curState = OpenPrinter_START;
 				//Send_hData(S2812_PRESET);
-			}
+			}*/
 		}
 		if (this.curState == OpenPrinter_START || this.curState == OpenPrinter) {
 			if (this.curState == OpenPrinter_START) {
@@ -254,12 +254,12 @@ public class CS2812Impl implements Printer {
 			}
 			data = CheckStatus();
 			log.debug("2 ===<><>{} chkChkState {} {}", this.curState, this.curChkState, data);
-			if (!CheckError(data)) {
+			//20240527 Dead Code: Expression is Always true if (!CheckError(data)) {
 				return false;
-			} else {
+			/*} else {
 				this.curState = OpenPrinter_START_2;
 				Send_hData(PINIT);
-			}
+			}*/
 		}
 		if (this.curState == OpenPrinter_START_2 || this.curState == OpenPrinter_2) {
 			if (this.curState == OpenPrinter_START_2) {
@@ -268,13 +268,13 @@ public class CS2812Impl implements Printer {
 			}
 			data = CheckStatus();
 			log.debug("3 ===<><>{} chkChkState {} {}", this.curState, this.curChkState, data);
-			if (!CheckError(data)) {
+			//20240529 Dead Code: Expression is Always true if (!CheckError(data)) {
 				return false;
-			} else {
+			/*} else {
 				this.curState = OpenPrinter_FINISH;
 				log.debug("4 ===<><>{} chkChkState {}", this.curState, this.curChkState);
 				return true;
-			}
+			}*/
 		}
 		return false;
 

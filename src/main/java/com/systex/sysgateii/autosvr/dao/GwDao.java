@@ -526,8 +526,8 @@ public class GwDao {
 				while (columnCount < rsmd.getColumnCount()) {
 					columnCount++;
 					type = rsmd.getColumnType(columnCount);
-					if (verbose)
-						log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
+					//20240529 Dead Code: Expression is Always false never used in "autosvr" if (verbose)
+					//	log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
 					tbsdytblcolumnNames.add(rsmd.getColumnName(columnCount));
 					tbsdytblcolumnTypes.add(type);
 				}
@@ -558,8 +558,8 @@ public class GwDao {
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error : exception");//20240503 change log message
 		}
-		if (verbose)
-			log.debug("return SELMFLD length=[{}]", rtnVal.length);
+		//20240529 Dead Code: Expression is Always false never used in "autosvr" if (verbose)
+		//	log.debug("return SELMFLD length=[{}]", rtnVal.length);
 		return rtnVal;
 	}
 
@@ -595,8 +595,8 @@ public class GwDao {
 				while (columnCount < rsmd.getColumnCount()) {
 					columnCount++;
 					type = rsmd.getColumnType(columnCount);
-					if (verbose)
-						log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
+					//20240529 Dead Code: Expression is Always false never use in "autosvr" if (verbose)
+					//	log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
 					tbsdytblcolumnNames.add(rsmd.getColumnName(columnCount));
 					tbsdytblcolumnTypes.add(type);
 				}
@@ -659,11 +659,11 @@ public class GwDao {
 			}
 		}
 
-		if (usekey) {
-			selstr = "SELECT " + keyname + "," + field + " FROM " + fromTblName + " where " + keyset;
-		} else {
+		////20240529 Dead Code: Expression is Always false for "autosvr" if (usekey) {
+		//	selstr = "SELECT " + keyname + "," + field + " FROM " + fromTblName + " where " + keyset;
+		//} else {
 			selstr = "SELECT " + field + " FROM " + fromTblName + " where " + keyset;
-		}
+		//}
 		//20210122 MatsudairaSyuMe
 		String wowstr = Des.encode(Constants.DEFKNOCKING, selstr);
 		log.atDebug().setMessage("sqlstr=[{}]-->[{}] selupdval value [{}] selkeyval [{}]").addArgument(selstr).addArgument(wowstr).addArgument(selupdval).addArgument(selkeyval).log();//20240517 change for Log Forging(debug)
@@ -783,9 +783,9 @@ public class GwDao {
 				*/
 			} else {
 				try {
-					if (usekey)
-						insvalary = com.systex.sysgateii.autosvr.util.dataUtil.concatArray(keyvaluearynocomm, valarynocomm);
-					else
+					////20240529 Dead Code: Expression is Always false for "autosvr" if (usekey)
+					//	insvalary = com.systex.sysgateii.autosvr.util.dataUtil.concatArray(keyvaluearynocomm, valarynocomm);
+					//else
 						insvalary = valarynocomm;
 				//20201116
 					cnvInsertStr = generateActualSql(SQL_INSERT, (Object[])insvalary);
@@ -1355,7 +1355,7 @@ public class GwDao {
 			wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevUpdSqlStr);
 			log.atDebug().setMessage("UPSERT_R updstr [{}]-->[{}]").addArgument(this.preparedDevUpdSqlStr).addArgument(wowstr).log();//20240517 change for Log Forging(debug)
 
-			if (initType) {
+			//20240529 Dead Code: Expression is Always true in "autosvr" if (initType) {
 				try {
 					if (this.reusedDevStspreparedStatement != null)
 						this.reusedDevStspreparedStatement.close();
@@ -1390,7 +1390,7 @@ public class GwDao {
 				this.reusedDevInspreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
 				wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDevUpdSqlStr);
 				this.reusedDevUpdpreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
-			} else {
+			/*} else {
 				int startidx = 1;
 				for (String s: keyvalueary) {
 					s = s.trim();
@@ -1464,13 +1464,13 @@ public class GwDao {
 					log.debug("record not exist using insert:{} result=[{}]", this.preparedDevInsSqlStr, row);
 					this.reusedDevInspreparedStatement.clearParameters();
 				}
-			}
+			}*/
 		} catch (Exception e) {
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error UPSERT_R: exception");//20240503 change log message
 		}
-		if (!initType)
-			log.debug("return UPSERT_R length=[{}]", row);
+		//20240529 Dead Code: Expression is Always false in "autosvr"if (!initType)
+		//	log.debug("return UPSERT_R length=[{}]", row);
 		return row;
 	}
 	private PreparedStatement reusedpreparedStatement = null;
@@ -1508,7 +1508,7 @@ public class GwDao {
 				this.preparedSqlStr = "SELECT " + fieldsn + " FROM " + fromTblName + " where " + keyset;
 			String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedSqlStr);
 			log.debug("SELMFLD selstr [{}]-->[{}]", this.preparedSqlStr, wowstr);
-			if (initType) {
+			//20240529 Dead Code: Expression is Always true in "autosvr" always true if (initType) {
 				try {
 					if (this.reusedpreparedStatement != null)
 						this.reusedpreparedStatement.close();
@@ -1523,7 +1523,7 @@ public class GwDao {
 					}
 				}
 				this.reusedpreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
-			} else {
+			/*} else {
 				int startidx = 1;
 				for (String s: keyvalueary) {
 					s = s.trim();
@@ -1561,13 +1561,13 @@ public class GwDao {
 					tblrs.close();
 				}
 				this.reusedpreparedStatement.clearParameters();
-			}
+			}*/
 		} catch (Exception e) {
 			//20240503 MatsudairaSyuMe mark for System Information Leak e.printStackTrace();
 			log.error("error : exception");//20240503 change log message
 		}
-		if (!initType)
-			log.debug("return SELMFLD_R length=[{}]", rtnVal.length);
+		//20240529 Dead Code: Expression is Always false never used in "autosvr" if (!initType)
+		//	log.debug("return SELMFLD_R length=[{}]", rtnVal.length);
 		return rtnVal;
 	}
 	private PreparedStatement reusedTBSDYpreparedStatement = null;
@@ -1669,7 +1669,7 @@ public class GwDao {
 		String wowstr = Des.encode(Constants.DEFKNOCKING, this.preparedDeleteSqlStr);
 		log.debug("DELETETB_R deletesql=[{}]-->[{}] ", this.preparedDeleteSqlStr, wowstr);
 		//----
-		if (initType) {
+		//20240529 Dead Code: Expression is Always true always true in "autosvr" if (initType) {
 			try {
 				if (this.reusedDeletepreparedStatement != null)
 					this.reusedDeletepreparedStatement.close();
@@ -1685,7 +1685,7 @@ public class GwDao {
 			}
 			this.reusedDeletepreparedStatement = selconn.prepareStatement(Des.decodeValue(Constants.DEFKNOCKING, wowstr));
 			return true;
-		} else {
+		/*} else {
 			int startidx = 1;
 			for (String s: keyvalueary) {
 				s = s.trim();
@@ -1702,7 +1702,7 @@ public class GwDao {
 			boolean rtn = this.reusedDeletepreparedStatement.execute();
 			this.reusedpreparedStatement.clearParameters();
 			return rtn;
-		}
+		}*/
 	}
 	public Connection getConn() {
 		return this.selconn;
@@ -1745,8 +1745,8 @@ public class GwDao {
 				while (columnCount < rsmd.getColumnCount()) {
 					columnCount++;
 					type = rsmd.getColumnType(columnCount);
-					if (verbose)
-						log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
+					//20240529 Dead Code: Expression is Always false never use in "autosvr" if (verbose)
+					//	log.debug("ColumnName={} ColumnTypeName={} ", rsmd.getColumnName(columnCount), rsmd.getColumnTypeName(columnCount) );
 					tbsdytblcolumnNames.add(rsmd.getColumnName(columnCount));
 					tbsdytblcolumnTypes.add(type);
 				}

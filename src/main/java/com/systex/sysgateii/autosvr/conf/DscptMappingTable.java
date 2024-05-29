@@ -41,7 +41,7 @@ public class DscptMappingTable {
 		byte[] dm = null;
 		try {
 			//20220613 MatsudairaSyuMe
-			if (conn == null || conn.isClosed())
+			//20240529 Dead Code: Expression is Always true if (conn == null || conn.isClosed())
 			conn = DriverManager.getConnection(DB_URL, USER, PASS);
 			log.debug("Connected database successfully...");
 			// STEP 2: Register JDBC driver

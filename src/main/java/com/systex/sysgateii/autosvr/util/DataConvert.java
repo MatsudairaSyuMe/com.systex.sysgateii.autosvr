@@ -84,12 +84,12 @@ public class DataConvert {
 			return (byte) (b ^ (1 << pos));
 		}
 	}
-
+/*
 	public static void main(String[] args) {
 		System.out.println(toByteArray("0102030405060708090A0B0C0D0F0102030405060708090A0B0C0D0F01020304").length);
 
 		byte[] b = intToByteArray(1);
 		System.out.println(b.length);
 		System.out.println(byteArrayToInt(intToByteArray(1), true));
-	}
+	}*/
 }

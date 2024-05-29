@@ -1448,20 +1448,20 @@ public class CS5240Impl implements Printer {
 		this.skiplinebuf.clear();
 	}
 	public boolean SkipnLineBuf(int nLine) {
-		if (nLine == 0)
-			return true;
-		if (nLine < 0) {
-			nLine = nLine * -1;
-			for(int i = 0;i < nLine; i++)
-				this.skiplinebuf.writeBytes(S5240_PREVERSE_LINEFEED);
-		} else {
+		//20240529 Dead Code: Expression is Always false never used in "autosvr" if (nLine == 0)
+		//	return true;
+		//20240529 Dead Code: Expression is Always false never used in "autosvr" if (nLine < 0) {
+		//	nLine = nLine * -1;
+		//	for(int i = 0;i < nLine; i++)
+		//		this.skiplinebuf.writeBytes(S5240_PREVERSE_LINEFEED);
+		//} else {
 			byte[] pData = {ESQ, (byte)0x49, 0x0, 0x0, 0x0};
 			String sptrn = String.format("%03d",nLine);
 			int i = 0;
 			for (final byte b: sptrn.getBytes())
 				pData[2 + i++] = b;
 			this.skiplinebuf.writeBytes(pData);
-		}
+		//}
 		return true;
 
 	}
@@ -1635,7 +1635,7 @@ public class CS5240Impl implements Printer {
 					return false;
 				}
 			}
-			if (data != null && !CheckError(data)) {
+			if (CheckError(data)) {//20240528 mark data != null && !CheckError(data)
 				amlog.info("[{}][{}][{}]:95補摺機硬體錯誤！(EJT)", brws, pasname, account);
 				this.curChkState = CheckStatus_FINISH;
 				return false;

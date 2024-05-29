@@ -3068,7 +3068,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	private byte[] DataINQ(int iVal, int currentifig, String dCount, byte[] opttotatext)
 	{
 		// optotatext only used while iVal == TXP.RECVFHOST mode, 20240523 prevent Redundant Null Check
-		byte[] rtn = null;if (iVal != TXP.SENDTHOST && (opttotatext == null || opttotatext.length == 0)) {log.error("0 TXP.RECVFHOST--> opttotatext == null or opttotatext.length == 0");return new byte[0];}
+		byte[] rtn = null;if (iVal != TXP.SENDTHOST && opttotatext == null) {log.error("0 TXP.RECVFHOST--> opttotatext == null");return new byte[0];}//20240529 Dead Code: Expression is Always true
 		P0080TEXT p0080text = null;
 		Q0880TEXT q0880text = null;
 		P0880TEXT p0880text = null;
@@ -3076,8 +3076,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		int totCnt = Integer.parseInt(con);
 		int inqiLine = Integer.parseInt(tx_area.get("cline").trim());
 		log.debug("1--->iVal={} ifig={} begin=>{} totCnt={} inqiLine={}", iVal, currentifig, begin, totCnt, inqiLine);
-		if (opttotatext != null && opttotatext.length > 0)
-			log.debug("1.1--->opttotatext.length=>{}", opttotatext.length);
+		//20240529 Dead Code: Expression is Always false if (opttotatext != null && opttotatext.length > 0)
+		//	log.debug("1.1--->opttotatext.length=>{}", opttotatext.length);
 		try {
 			if (iVal == TXP.SENDTHOST) { // send to host
 				if (currentifig == TXP.PBTYPE) {

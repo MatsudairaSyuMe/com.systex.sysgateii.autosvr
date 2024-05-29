@@ -88,13 +88,13 @@ public class MultiNodeConnPoolImpl implements NonBlockingConnPool {
 		this.connectTimeOut = connectTimeOut;
 		this.connectTimeUnit = connectTimeUnit;
 		this.n = nodes.length;
-		if (reconnectInterval > 0) {
+		//20240529 Dead Code: Expression is Always true for "autosvr" if (reconnectInterval > 0) {
 			this.timer_ = new Timer();
 			this.reconnectInterval = reconnectInterval;
-		} else {
+		/*} else {
 			this.timer_ = null;
 			this.reconnectInterval = -1;
-		}
+		}*/
 		bootstraps = new HashMap<>(n);
 		allConns = new ConcurrentHashMap<>(n);
 		availableConns = new ConcurrentHashMap<>(n);
