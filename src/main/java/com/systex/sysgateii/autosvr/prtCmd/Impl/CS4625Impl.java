@@ -392,9 +392,23 @@ public class CS4625Impl implements Printer {
 					//20201208 add
 					if ((size > 3 ) && (buf[1] == (byte)'r') && (buf[2] != (byte)'A' && buf[2] != (byte)'P')) {
 						rtn = new byte[size];
-					} else
+					} else {
+					//20240605
+						if (size > 3) {
+							int start = 0;
+							byte skipbary[] = new byte[3];
+							while ((size > 3) && (buf[start] == (byte)0x1b) && (buf[start + 1] == (byte)'r') && (buf[start + 2] == (byte)'A' || buf[start + 2] == (byte)'P')) {
+								pc.clientMessageBuf.readBytes(skipbary, 0, 3); //20240605 drop the previous redundancy ESC r A or ESC r P
+								size -= 3;
+								start += 3;
+								log.atDebug().setMessage("drop the previous redundancy ESC r A or ESC r P result size={}").addArgument(size).log();
+							}
+							skipbary = null;
+						}
+						//----20240605
 						//20201208 modify
-						rtn = new byte[3];
+						rtn = new byte[size];//20240605 change to sdjust size
+					}
 					log.debug("Rcv_Data get {} bytes", rtn.length);
 					pc.clientMessageBuf.readBytes(rtn, 0, rtn.length);
 					//20240403 mark atlog.info("[{}]-[{}]",rtn.length,new String(rtn, 0, rtn.length)); //20201002
@@ -1742,14 +1756,21 @@ public class CS4625Impl implements Printer {
 						return true;
 					//20240420 MatsudairaSyuMe
 					case (byte) '6': // read error response
+						/*20240605 mark up for ignore 6xx status code
 						byte[] nr = new byte[1];
 						nr[0] = (byte)'W';
 						this.curmsdata = nr;
 						amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1, Charset.forName("UTF-8")));
 						String s = "94補摺機狀態錯誤！磁條寫入時回傳硬體錯誤碼代碼:" + toAsciiStr(data);
 						pc.InsertAMStatus(brws, "", "", s);
+						*/
+						amlog.info("[{}][{}][{}]:95硬體錯誤代碼5[{}]", brws, "        ", "            ", new String(data, 1, data.length - 1, Charset.forName("UTF-8")));
 						Send_hData(S4625_CANCEL);
 						ResetPrinter();
+						this.curState = MS_Write_FINISH;
+						rtn = true;
+						break;
+						/*20240605 mark up for ignore 6xx status code and just ignore and reset
 						this.curState = ResetPrinterInit_START;
 						ResetPrinterInit();
 						data = CheckStatus();
@@ -1758,7 +1779,7 @@ public class CS4625Impl implements Printer {
 							this.curState = ResetPrinterInit_FINISH;
 							amlog.info("[{}][{}][{}]:00補摺機重置完成！", brws, "        ", "            ");	
 						}
-						return true;
+						return true;*/
 					//----20240420
 					default:
 						// 20060713 , RECEVIE UNKNOWN ERROR , JUST RESET

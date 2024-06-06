@@ -387,12 +387,25 @@ public class CS5240Impl implements Printer {
 					//20201208 add
 					if ((size > 3 ) && (buf[1] == (byte)'r') && (buf[2] != (byte)'A' && buf[2] != (byte)'P')) {
 						rtn = new byte[size];
-					} else
+					} else {
+					//20240605
+						if (size > 3) {
+							int start = 0;
+							byte skipbary[] = new byte[3];
+							while ((size > 3) && (buf[start] == (byte)0x1b) && (buf[start + 1] == (byte)'r') && (buf[start + 2] == (byte)'A' || buf[start + 2] == (byte)'P')) {
+								pc.clientMessageBuf.readBytes(skipbary, 0, 3); //20240605 drop the previous redundancy ESC r A or ESC r P
+								size -= 3;
+								start += 3;
+								log.atDebug().setMessage("drop the previous redundancy ESC r A or ESC r P result size={}").addArgument(size).log();
+							}
+							skipbary = null;
+						}
+						//----20240605
 						//20201208 modify
-						rtn = new byte[3];
+						rtn = new byte[size];//20240605 change to sdjust size
+					}
 					log.debug("Rcv_Data get {} bytes", rtn.length);
 					pc.clientMessageBuf.readBytes(rtn, 0, rtn.length);
-					//20240403 mark atlog.info("[{}]-[{}]",rtn.length,new String(rtn, 0, rtn.length));
 					return rtn;
 					//20240403 MatsudairaqSyuMe add for purge garbage data for CS4625
 				} else {

@@ -355,7 +355,10 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	public void setActorStatusListeners(List<ActorStatusListener> actorStatusListeners) {
 		this.actorStatusListeners = actorStatusListeners;
 	}
-
+	//20240605 add updRetryCnt for MSR update check
+	private int updRetryCnt = 0;
+	public static final int MAXMSRRETRYCNT = 3;
+	//----20240605
 	//20210627 change to use MDP take off dispatcher
 //	public PrtCli(ConcurrentHashMap<String, Object> map, FASSvr dispatcher, Timer timer)
 	//20220905 MAtsudairaSyuMe using RouteConnection as dispatcher
@@ -1872,7 +1875,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
 						this.done1stCheckPaper = false;
 						//Sleep(100);//20240327
-						prt.CheckPaper(true, 1000);
+						prt.CheckPaper(false, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n"
@@ -1890,6 +1893,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //						    return false;
 						sndbary = chgpgary;
 						prt.Prt_Text(sndbary);
+						prt.CheckPaper(false, 1000);//20240605 add for get confirm return
 						rtn =  true;
 					}
 					this.done1stCheckPaper = false;
@@ -2182,7 +2186,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("FcDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
 						this.done1stCheckPaper = false;
 						//Sleep(100);//20240327
-						prt.CheckPaper(true, 1000);
+						prt.CheckPaper(false, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n"
@@ -2200,6 +2204,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //							return false;
 						sndbary = chgpgary;
 						prt.Prt_Text(sndbary);
+						prt.CheckPaper(false, 1000);//20240605 add for get confirm return
 						rtn =  true;
 					}
 					this.done1stCheckPaper = false;
@@ -2537,7 +2542,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
 						this.done1stCheckPaper = false;
 						//Sleep(100);//20240327
-						prt.CheckPaper(true, 1000);
+						prt.CheckPaper(false, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n";
@@ -2555,6 +2560,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 //						    return false;
 						sndbary = chgpgary;
 						prt.Prt_Text(sndbary);
+						prt.CheckPaper(false, 1000);//20240605 add for get confirm return
 						rtn =  true;
 					}
 					this.done1stCheckPaper = false;
@@ -2622,7 +2628,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		Arrays.fill(wpage, (byte) 0x0);
 		byte c_Msr[] = tx_area.get("c_Msr").getBytes();
 		log.debug("{} {} {} WMSRFormat before to write flag={} PBTYPE {} MSR [{}]", brws, catagory, account, start, this.iFig, new String(c_Msr, Charset.forName("UTF-8")));
-		if (start) {
+		if (start && this.updRetryCnt == 0) { //20240605 add updRetryCnt for MSR update check
 			if (this.iFig == TXP.PBTYPE) {
 				if (p0080DataFormat == null)
 					p0080DataFormat = new P0080TEXT();
@@ -2661,7 +2667,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		try {
 			switch (this.iFig) {
 			case TXP.PBTYPE:
-				if (start) {
+				if (start && this.updRetryCnt == 0) {//20240605 add updRetryCnt for MSR update check
 					//20221102 MSR new format negative symbol '<' immediately before the number characters
 					byte[] spbbal = p0080DataFormat.getTotaTextValueSrc("spbbal", pb_arr.get(iCnt - 1));
 					/*if (new String(spbbal).equals("-"))
@@ -2693,7 +2699,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug(" after to write new PBTYPE line={} page={} MSR {} changeLight=[{}]", l, p, new String(tx_area.get("c_Msr")), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 				break;
 			case TXP.FCTYPE:
-				if (start) {
+				if (start && this.updRetryCnt == 0) {//20240605 add updRetryCnt for MSR update check
 					System.arraycopy("0".getBytes(), 0, c_Msr, 16, 1);
 					System.arraycopy(q0880DataFormat.getTotaTextValueSrc("pbbal", fc_arr.get(iCnt - 1)), 0, c_Msr, 17,
 							13);
@@ -2710,7 +2716,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				log.debug(" after to write new FCTYPE line={} page={} MSR {} changeLight=[{}]", l, p, tx_area.get("c_Msr"), (this.changeLightOnLastPage ? "Yes": "No")); //20220927
 				break;
 			case TXP.GLTYPE:
-				if (start ) {
+				if (start && this.updRetryCnt == 0) {//20240605 add updRetryCnt for MSR update check
 					System.arraycopy("000".getBytes(), 0, c_Msr, 16, 3);
 					System.arraycopy(p0880DataFormat.getTotaTextValueSrc("avebal", gl_arr.get(iCnt - 1)), 0, c_Msr, 15,
 							9);
@@ -4291,7 +4297,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 		// 20230522 MasudairaSyuMe register last time read data from pass book print
 		this.lastTimeFromPrt = 0l;
 		//20231212
-		this.alreadyWrite = false;
+		this.alreadyWrite = false;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 		//----
 		return;
 	}
@@ -4323,7 +4329,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			// 20230522 MasudairaSyuMe register last time read data from pass book print
 			this.lastTimeFromPrt = 0l;
 			//20231212
-			this.alreadyWrite = false;
+			this.alreadyWrite = false;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 			//20231212----
 			return;
 		}
@@ -5137,19 +5143,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				case TXP.PBTYPE:
 					log.debug("STARTPROCTLM pb_arr.size=>{}=====check prtcliFSM", pb_arr.size());
 					if (PbDataFormat()) {
-						this.curState = WRITEMSR;
+						this.curState = WRITEMSR;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 					}
 					break;
 				case TXP.FCTYPE:
 					log.debug("STARTPROCTLM fc_arr.size=>{}=====check prtcliFSM", fc_arr.size());
 					if (FcDataFormat()) {
-						this.curState = WRITEMSR;
+						this.curState = WRITEMSR;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 					}
 					break;
 				case TXP.GLTYPE:
 					log.debug("STARTPROCTLM gl_arr.size=>{}=====check prtcliFSM", gl_arr.size());
 					if (GlDataFormat()) {
-						this.curState = WRITEMSR;
+						this.curState = WRITEMSR;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 					}
 					break;
 			}
@@ -5175,19 +5181,19 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 				case TXP.PBTYPE:
 					log.debug("PBDATAFORMAT pb_arr.size=>{}=====check prtcliFSM", pb_arr.size());
 					if (PbDataFormat()) {
-						this.curState = WRITEMSR;
+						this.curState = WRITEMSR;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 					}
 					break;
 				case TXP.FCTYPE:
 					log.debug("PBDATAFORMAT fc_arr.size=>{}=====check prtcliFSM", fc_arr.size());
 					if (FcDataFormat()) {
-						this.curState = WRITEMSR;
+						this.curState = WRITEMSR;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 					}
 					break;
 				case TXP.GLTYPE:
 					log.debug("PBDATAFORMAT gl_arr.size=>{}=====check prtcliFSM", gl_arr.size());
 					if (GlDataFormat()) {
-						this.curState = WRITEMSR;
+						this.curState = WRITEMSR;this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
 					}
 					break;
 			}
@@ -5266,8 +5272,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							amlog.info("[{}][{}][{}]:13磁條比對成功", brws, pasname, account);
 							log.debug("{} {} {} AutoPrnCls : --re-read and check Account: from WRITEMSR", brws, catagory, account);
 						} else {
+							//20240605 add updRetryCnt for MSR update check
+							if (this.updRetryCnt < MAXMSRRETRYCNT - 1) {
+								this.updRetryCnt += 1;
+								log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再測").addArgument(this.updRetryCnt).log();
+								this.done1stCheckPaper = false;
+								prt.CheckPaper(true, 1000);
+								this.curState = WRITEMSR;
+							} else {
+								this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
+							//----20240605
 							// amlog.info("[{}][{}][{}]:12存摺磁條比對失敗(1)！{} {}", brws, pasname, account, tx_area.get("c_Msr"), reReadsid);20211203 MatsudairaSyuMe
-							atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
+							//20240605 mark atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
 							// InsertAMStatus(brws, pasname, account, "12存摺磁條比對失敗(1)！");20211203 MatsudairaSyuMe
 							amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
 							InsertAMStatus(brws, pasname, account, "13磁條比對不符");
@@ -5277,6 +5293,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							prt.Eject(firstOpenConn);
 							Sleep(2 * 1000);
 							resetPassBook();
+							//20240605 add updRetryCnt for MSR update check
+							}
+							//----20240605
 						}
 					}
 				}
@@ -5335,8 +5354,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							amlog.info("[{}][{}][{}]:13磁條比對成功", brws, pasname, account);
 							log.debug("{} {} {} AutoPrnCls : --re-read and check Account: from WRITEMSRWAITCONFIRM", brws, catagory, account);
 						} else {
+							//20240605 add updRetryCnt for MSR update check
+							if (this.updRetryCnt < MAXMSRRETRYCNT - 1) {
+								this.updRetryCnt += 1;
+								log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再測").addArgument(this.updRetryCnt).log();
+								this.done1stCheckPaper = false;
+								prt.CheckPaper(true, 1000);
+								this.curState = WRITEMSR;
+							} else {
+								this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
+							//----20240605
 							//amlog.info("[{}][{}][{}]:12存摺磁條比對失敗(1)！{} {}", brws, pasname, account, tx_area.get("c_Msr"), reReadsid); 20211203 MatsudairaSyuMe
-							atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
+							//20240605 mark up atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
 							//InsertAMStatus(brws, pasname, account, "12存摺磁條比對失敗(1)！"); 20211203 MatsudairaSyuMe
 							amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
 							InsertAMStatus(brws, pasname, account, "13磁條比對不符");
@@ -5346,6 +5375,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							prt.Eject(firstOpenConn);
 							Sleep(2 * 1000);
 							resetPassBook();
+							//20240605 add updRetryCnt for MSR update check
+							}
+							//----20240605
 						}
 					}
 				}
@@ -5393,8 +5425,18 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						amlog.info("[{}][{}][{}]:72存摺資料補登成功！", brws, pasname, account);
 						log.debug("{} {} {} AutoPrnCls : --re-read and check Account: from READANDCHECKMSR", brws, catagory, account);
 					} else {
+						//20240605 add updRetryCnt for MSR update check
+						if (this.updRetryCnt < MAXMSRRETRYCNT - 1) {
+							this.updRetryCnt += 1;
+							log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再測").addArgument(this.updRetryCnt).log();
+							this.done1stCheckPaper = false;
+							prt.CheckPaper(true, 1000);
+							this.curState = WRITEMSR;
+						} else {
+							this.updRetryCnt = 0;//20240605 add updRetryCnt for MSR update check
+						//----20240605
 						//amlog.info("[{}][{}][{}]:12存摺磁條比對失敗(1)！{} {}", brws, pasname, account, tx_area.get("c_Msr"), reReadsid); 20211203 MatsudairaSyuMe
-						atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
+						//20240605 mark atlog.info("[{}]:AutoPrnCls : WMSRFormat() ERR -- c_Msr=[{}][{}]", brws, tx_area.get("c_Msr"),reReadsid);
 						//InsertAMStatus(brws, pasname, account, "12存摺磁條比對失敗(1)！"); 20211203 MatsudairaSyuMe
 						amlog.info("[{}][{}][{}]:13磁條比對不符", brws, pasname, account);
 						InsertAMStatus(brws, pasname, account, "13磁條比對不符");
@@ -5403,6 +5445,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						prt.Eject(firstOpenConn);
 						Sleep(2 * 1000);
 						resetPassBook();
+						//20240605 add updRetryCnt for MSR update check
+						}
+						//----20240605
 					}
 				}
 			}
