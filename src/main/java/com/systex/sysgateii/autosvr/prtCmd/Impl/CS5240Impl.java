@@ -229,6 +229,8 @@ public class CS5240Impl implements Printer {
 	//20200915 for keep skip control code data
 	private ByteBuf skiplinebuf = Unpooled.buffer(16384);
 	//--
+	//20240605
+	private String pn = "", act = ""; //20240605
 
 	public CS5240Impl(final PrtCli pc, final String brws, final String type, final String autoturnpage) {
 		this.pc = pc;
@@ -945,7 +947,7 @@ public class CS5240Impl implements Printer {
 		if (curState == Eject_FINISH) {
 			amlog.info("[{}][{}][{}]:06存摺退出成功！", brws, "        ", "            ");
 			//20231116
-			pc.InsertAMStatus(brws, "", "", "06存摺退出成功");
+			pc.InsertAMStatus(brws, this.pn, this.act, "06存摺退出成功");//20240506 add pasname and account
 			//----
 			return true;
 		} else
@@ -1593,7 +1595,7 @@ public class CS5240Impl implements Printer {
 	public boolean MS_Write(boolean start, String brws, String account, byte[] buff) {
 		// TODO Auto-generated method stub
 		boolean rtn = false;
-		String pasname = setpasname(account);
+		String pasname = setpasname(account);this.pn = pasname;this.act = account; //20240605
 		if (start) {
 			if ((buff == null || buff.length == 0)) {
 				log.debug("MS_Write ERROR!!! msr dat null on initial status");

@@ -1875,7 +1875,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
 						this.done1stCheckPaper = false;
 						//Sleep(100);//20240327
-						prt.CheckPaper(false, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);
+						prt.CheckPaper(true, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);,20240618
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n"
@@ -2186,7 +2186,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("FcDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
 						this.done1stCheckPaper = false;
 						//Sleep(100);//20240327
-						prt.CheckPaper(false, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);
+						prt.CheckPaper(true, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);20240618
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n"
@@ -2542,7 +2542,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						log.debug("PbDataFormat() return 1 cur_arr_idx=[{}] this.curState=[{}] this.iEnd=[{}]",this.cur_arr_idx,this.curState, this.iEnd);//20240327 MatsudairaSyuMe TEST
 						this.done1stCheckPaper = false;
 						//Sleep(100);//20240327
-						prt.CheckPaper(false, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);
+						prt.CheckPaper(true, 1000);//20240605 add for get confirm return orig prt.CheckPaper(true, 1000);20240618
 						return true;
 					}
 //					pr_data = "                                                     請翻下頁繼續補登\n";
@@ -3994,8 +3994,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 												mt, mnostr, cMsg);
 									}
 									amlog.info("[{}][{}][{}]:52[{}{}]{}！", brws, pasname, this.account,mt,mnostr, cMsg);
-		                                			//20231116
-		                                			InsertAMStatus(brws, pasname, this.account, "52" + charcnv.BIG5UTF8str(cMsg));
+		                            //20231116
+		                            InsertAMStatus(brws, pasname, this.account, "52" + charcnv.BIG5UTF8str(cMsg));
 		                                			//----
 								}
 								// E194 , 補登資料超過可印行數, 應至服務台換摺
@@ -4168,6 +4168,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 								DataDEL(TXP.RECVFHOST, iflg, "");
 								amlog.info("[{}][{}][{}]:56存摺已補登資料刪除成功！", brws, pasname, this.account);
 								this.curState = SNDANDRCVDELTLMCHKEND;
+								//20240605 add eject message with pasname and account
+								InsertAMStatus(brws,this.pasname, this.account, "06存摺補登後刪除完成, 退摺");
 								break;
 							}
 //20200724							this.curState = STARTPROCTLM;
@@ -5275,7 +5277,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							//20240605 add updRetryCnt for MSR update check
 							if (this.updRetryCnt < MAXMSRRETRYCNT - 1) {
 								this.updRetryCnt += 1;
-								log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再測").addArgument(this.updRetryCnt).log();
+								log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再比對").addArgument(this.updRetryCnt).log();
+								amlog.atInfo().setMessage("[{}][{}][{}]:13磁條第{}次比對不符, 重寫後再比對").addArgument(brws).addArgument(pasname).addArgument(account).addArgument(this.updRetryCnt).log();
 								this.done1stCheckPaper = false;
 								prt.CheckPaper(true, 1000);
 								this.curState = WRITEMSR;
@@ -5357,7 +5360,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							//20240605 add updRetryCnt for MSR update check
 							if (this.updRetryCnt < MAXMSRRETRYCNT - 1) {
 								this.updRetryCnt += 1;
-								log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再測").addArgument(this.updRetryCnt).log();
+								log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再比對").addArgument(this.updRetryCnt).log();
+								amlog.atInfo().setMessage("[{}][{}][{}]:13磁條第{}次比對不符, 重寫後再比對").addArgument(brws).addArgument(pasname).addArgument(account).addArgument(this.updRetryCnt).log();
 								this.done1stCheckPaper = false;
 								prt.CheckPaper(true, 1000);
 								this.curState = WRITEMSR;
@@ -5428,7 +5432,8 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						//20240605 add updRetryCnt for MSR update check
 						if (this.updRetryCnt < MAXMSRRETRYCNT - 1) {
 							this.updRetryCnt += 1;
-							log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再測").addArgument(this.updRetryCnt).log();
+							log.atDebug().setMessage("磁條第{}次比對不符, 重寫後再比對").addArgument(this.updRetryCnt).log();
+							amlog.atInfo().setMessage("[{}][{}][{}]:13磁條第{}次比對不符, 重寫後再比對").addArgument(brws).addArgument(pasname).addArgument(account).addArgument(this.updRetryCnt).log();
 							this.done1stCheckPaper = false;
 							prt.CheckPaper(true, 1000);
 							this.curState = WRITEMSR;
@@ -5472,9 +5477,9 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 
 					this.curState = SESSIONBREAK;resetPassBook();//20220914 MatsudairaSyuMe
 					amlog.info("[{}][{}][{}]:73存摺資料補登刪除失敗！", brws, pasname, account);				
-                                        //20231116
-                                        InsertAMStatus(brws, pasname, account, "73存摺資料補登刪除失敗！");
-                                        //----              
+                    //20231116
+                    InsertAMStatus(brws, pasname, account, "73存摺資料補登刪除失敗！");
+                    //----              
 				}
 			}
 			log.debug("SNDANDRCVDELTLM r = {} pb_arr.size()=>{}=====check prtcliFSM", r, pb_arr.size());
@@ -5537,7 +5542,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 							log.debug("{}=====resetPassBook for turn page prtcliFSM", this.curState);
 							iFirst = 1;
 //20200401							Sleep(2 * 1000);
-							atlog.info("翻頁...");
+							//20240605 mark up atlog.info("翻頁...");
 							//----
 						}
 					}
@@ -5584,7 +5589,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 						SetSignal(firstOpenConn, firstOpenConn, "1100000000", "0000010000");
 						log.debug("{}=====resetPassBook for turn page prtcliFSM", this.curState);
 //20200401						Sleep(2 * 1000);
-						atlog.info("翻頁...");
+						//20240605 mark atlog.info("翻頁...");
 						iFirst = 1;
 					}
 				}
@@ -5607,7 +5612,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 			if (iEnd == 2)
 				iEnd = 0;
 			resetPassBook();
-			atlog.info("完成！！.");
+			//20240605 mark up atlog.info("完成！！.");
 			//20200718
 			lastCheck(before);
 			log.debug("after {}=>{} iEnd={} =====check prtcliFSM", before, this.curState, iEnd);
@@ -5874,7 +5879,7 @@ public class PrtCli extends ChannelDuplexHandler implements Runnable, EventListe
 	//20201119 insert AM error status data
 	public void InsertAMStatus(String brws, String passname, String act, String desc) {
 		//20231212 MatsudairaSyuMe check if need to write AU_AMlog or reset to false
-		if (desc != null && desc.trim().length() > 1  && (desc.trim().substring(0, 2).equals("52") || desc.trim().substring(0, 2).equals("01"))) {
+		if (desc != null && desc.trim().length() > 1  && (desc.trim().substring(0, 2).equals("01"))) {//20240605 add 52 
 			this.alreadyWrite = false;
 			return;
 		} else {

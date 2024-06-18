@@ -509,9 +509,11 @@ public class DynamicProps {
 			//----
 			for (@SuppressWarnings("rawtypes")
 			Map.Entry entry : cfg.entrySet()) {
+				if (!"system.db[@pass]".equals(entry.getKey().toString())) { // 20240604 log.info excluded pass
 				//20200420 add logpath
 				log.info("ChkCfg ConfProc info! {}, {} len={}", entry.getKey(), entry.getValue().toString(),
 						entry.getValue().toString().length());
+	            } //--
 				if (entry.getKey().equals("system.ip") || entry.getKey().equals("system.port")
 						//20200912 read data from center
 						|| entry.getKey().equals("center")
@@ -605,6 +607,9 @@ public class DynamicProps {
 					} else
 					//----
 						conHashMap.put(entry.getKey().toString(), entry.getValue().toString());
+						if ("system.db[@pass]".equals(entry.getKey().toString())) {	 // 20240604 log.info excluded pass
+							continue;
+						} // --
 					log.info("ConfProc put to config map info! {}, {}", entry.getKey(), entry.getValue());
 				} else {
 					String schk = entry.getKey().toString().trim();
