@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
+
+
 /*
  * Get Big5 72 bytes image font data utility
  * MatsudairaSyuMe
@@ -89,7 +91,7 @@ public class Big5FontImg {
 			long l = keyadr_map.get(start);
  //          System.out.println("key=" + start + " addr=" + l + ": addr * 72 = " + (l * 72) + " size=" + this.fsize);
 			//20240514 MatsudairaSyuMe Unchecked Return Value
-			if (fontis.skip(l) != 1)
+			if (fontis.skip(l) != l)//20240621 err change to parameter "l"
 				Arrays.fill(rtn, (byte) 0x0);
 			else {
 				//----20240515
