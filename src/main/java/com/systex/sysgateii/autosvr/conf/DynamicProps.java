@@ -672,7 +672,8 @@ public class DynamicProps {
 						|| devprmtb.length() <= 0 || devprmkey.length() <= 0 || devprmfields.length() <= 0 || SvrId.length() <= 0)
 					log.info("connect parameters error {} {} {} SvrID=[{}]", fromurl, fromuser, frompass, SvrId);
 				else {
-					log.info("using {} {} {}", fromurl, fromuser, frompass);
+//					log.info("using {} {} {}", fromurl, fromuser, frompass);
+					log.info("using {} {}", fromurl, fromuser);
 					log.info("svrprmtb {} {} {}", svrprmtb, svrprmkey, svrprmfields);
 					log.info("fasprmtb {} {} {}", fasprmtb, fasprmkey, fasprmfields);
 					log.info("devprmtb {} {} {}", devprmtb, devprmkey, devprmfields);
