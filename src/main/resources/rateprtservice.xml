@@ -25,7 +25,8 @@
 <!--		<logpath>/gwlog/autosvr</logpath>-->
 		<logpath>/home/scotthong/tmp</logpath>
 		<!--<db url="jdbc:db2://192.168.56.101:50000/BISDB" user="BIS_USER" pass="bisuser"/>-->
-		<db url="jdbc:db2://127.0.0.1:50000/BISDB" user="bisuser" pass="bisuser"/>
+		<!--<db url="jdbc:db2://127.0.0.1:50000/BISDB" user="bisuser" pass="bisuser"/>-->
+		<db url="jdbc:db2://192.168.56.102:50000/BISDB:currentSchema=BISAP;" user="bisuser" pass="bisuser"/>
 		<!-- 20201116 -->
 		<!--svrprmtb name="BISAP.TB_AUSVRPRM" mkey="SVRID" fields="AUID,BRNO,IP,PORT,DEVTPE,RECVTIMEOUT,LOGPATH"/-->
 		<svrprmtb name="BISAP.TB_AUSVRPRM" mkey="SVRID" fields="AUID,IP,PORT,DEVTPE,RECVTIMEOUT,LOGPATH"/>
